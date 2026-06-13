@@ -95,6 +95,7 @@ const translations = {
     free_test_title: "Попробуйте PRO+ бесплатно",
     free_test_desc: "Установите расширение сейчас и получите 48 часов полного доступа ко всем Enterprise-функциям автоматически.",
     btn_start_test: "Начать бесплатный тест",
+    limited_offer: "Ограниченное предложение",
     ready: 'Готово!'
   },
   en: {
@@ -175,6 +176,7 @@ const translations = {
     free_test_title: "Try PRO+ for Free",
     free_test_desc: "Install the extension now and get 48 hours of full access to all Enterprise features automatically.",
     btn_start_test: "Start Free Test",
+    limited_offer: "Limited Offer",
     ready: 'Ready!'
   },
   zh: {
@@ -245,6 +247,7 @@ const translations = {
     free_test_title: "免费试用 PRO+",
     free_test_desc: "立即安装扩展程序，即可自动获得 48 小时所有企业级功能的完整访问权限。",
     btn_start_test: "开始免费测试",
+    limited_offer: "限时优惠",
     ready: '完成！'
   },
   kk: {
@@ -315,6 +318,7 @@ const translations = {
     free_test_title: "PRO+ нұсқасын тегін қолданып көріңіз",
     free_test_desc: "Кеңейтімді қазір орнатыңыз және барлық Enterprise функцияларына 48 сағаттық толық қолжетімділікті автоматты түрде алыңыз.",
     btn_start_test: "Тегін тестті бастау",
+    limited_offer: "Шектеулі ұсыныс",
     ready: 'Дайын!'
   },
   de: {
@@ -385,6 +389,7 @@ const translations = {
     free_test_title: "PRO+ kostenlos testen",
     free_test_desc: "Installieren Sie die Erweiterung jetzt und erhalten Sie automatisch 48 Stunden vollen Zugriff auf alle Enterprise-Funktionen.",
     btn_start_test: "Kostenlosen Test starten",
+    limited_offer: "Befristetes Angebot",
     ready: 'Fertig!'
   },
   uk: {
@@ -464,7 +469,8 @@ const translations = {
     capability_8: '100% приватність: розширення не збирає дані та не має бекенду.',
     free_test_title: "Спробуйте PRO+ безкоштовно",
     free_test_desc: "Встановіть розширення зараз та отримайте 48 годин повного доступу до всіх Enterprise-функцій автоматично.",
-    btn_start_test: "Почати безкоштовний тест"
+    btn_start_test: "Почати безкоштовний тест",
+    limited_offer: "Обмежена пропозиція"
   },
   es: {
     title: 'SyncRate',
@@ -544,6 +550,7 @@ const translations = {
     free_test_title: "Pruebe PRO+ Gratis",
     free_test_desc: "Instale la extensión ahora y obtenga automáticamente 48 horas de acceso completo a todas las funciones Enterprise.",
     btn_start_test: "Comenzar Prueba Gratis",
+    limited_offer: "Oferta por tiempo limitado",
     ready: '¡Listo!'
   }
 };
@@ -1171,9 +1178,9 @@ export default function App() {
           >
             <div className="inline-flex items-center gap-2 bg-[#f39c12]/10 text-[#f39c12] px-4 py-2 rounded-full text-sm font-black mb-8 border border-[#f39c12]/20 uppercase tracking-widest">
               <Sparkles className="w-4 h-4" />
-              Limited Offer
+              {t.limited_offer}
             </div>
-            <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-none">
+            <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-tight">
               {t.free_test_title}
             </h2>
             <p className="text-xl text-[#8b949e] leading-relaxed mb-12 max-w-2xl mx-auto">

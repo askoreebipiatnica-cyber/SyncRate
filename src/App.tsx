@@ -38,7 +38,7 @@ const translations = {
     feature_nat_banks: 'Нацбанки (СНГ, ЕС)',
     feature_top30_crypto: 'Поддержка Топ-30 крипты',
     instant_conversion: 'МГНОВЕННАЯ КОНВЕРТАЦИЯ',
-    version_badge: 'V15.0 Enterprise Edition',
+    version_badge: 'Enterprise Edition',
     tariffs_subtitle: 'Выберите план, который подходит именно вам.',
     popular_badge: 'Популярный',
     demo_price: 'Цена: 129.99 $',
@@ -64,7 +64,7 @@ const translations = {
     legal_desc: 'Этот инструмент предназначен для авторизованных разработчиков. Реверс-инжиниринг, несанкционированное распространение или модификация ядра SyncRate строго запрещены и защищены международными законами об авторском праве и DMCA.',
     copyright: '© 2026 SyncRate. Все права защищены.',
     bundling: 'Сборка...',
-    download_zip_desc: 'Загрузите полный исходный код расширения SyncRate v15.0 для ручной установки или деплоя.',
+    download_zip_desc: 'Загрузите полный исходный код расширения SyncRate для ручной установки.',
     btn_instructions: 'Инструкция по установке',
     btn_capabilities: 'Возможности',
     modal_instructions_title: 'Как установить SyncRate?',
@@ -119,7 +119,7 @@ const translations = {
     feature_nat_banks: 'National Banks (CIS, EU)',
     feature_top30_crypto: 'Top-30 Crypto Support',
     instant_conversion: 'INSTANT CONVERSION',
-    version_badge: 'V15.0 Enterprise Edition',
+    version_badge: 'Enterprise Edition',
     tariffs_subtitle: 'Choose the plan that fits your needs.',
     popular_badge: 'Popular',
     demo_price: 'Price: 129.99 $',
@@ -145,7 +145,7 @@ const translations = {
     legal_desc: 'This tool is provided for authorized developers only. Reverse engineering, unauthorized distribution, or modification of the SyncRate core engine is strictly prohibited and protected under international copyright and DMCA laws.',
     copyright: '© 2026 SyncRate. All rights reserved.',
     bundling: 'Bundling...',
-    download_zip_desc: 'Download the complete source code for SyncRate v15.0 for manual installation or deployment.',
+    download_zip_desc: 'Download the complete source code for SyncRate for manual installation.',
     btn_instructions: 'Installation Guide',
     btn_capabilities: 'Capabilities',
     modal_instructions_title: 'How to install SyncRate?',
@@ -200,7 +200,7 @@ const translations = {
     feature_nat_banks: '国家银行（独联体、欧盟）',
     feature_top30_crypto: '前30名加密货币支持',
     instant_conversion: '即时转换',
-    version_badge: 'V15.0 企业版',
+    version_badge: '企业版',
     tariffs_subtitle: '选择适合您需求的计划。',
     popular_badge: '热门',
     demo_price: '价格: 129.99 $',
@@ -226,7 +226,7 @@ const translations = {
     legal_desc: '此工具仅供授权开发人员使用。严禁对 SyncRate 核心引擎进行逆向工程、未经授权的分发或修改，并受国际版权法和 DMCA 的保护。',
     copyright: '© 2026 SyncRate。保留所有权利。',
     bundling: '打包中...',
-    download_zip_desc: '下载 SyncRate v15.0 的完整源代码，用于手动安装或部署。',
+    download_zip_desc: '下载 SyncRate 的完整源代码，用于手动安装。',
     btn_instructions: '安装指南',
     btn_capabilities: '功能介绍',
     modal_instructions_title: '如何安装 SyncRate？',
@@ -271,7 +271,7 @@ const translations = {
     feature_nat_banks: 'Ұлттық банктер (ТМД, ЕО)',
     feature_top30_crypto: 'Топ-30 криптоны қолдау',
     instant_conversion: 'ЛЕЗДЕ КОНВЕРТАЦИЯЛАУ',
-    version_badge: 'V15.0 Enterprise Edition',
+    version_badge: 'Enterprise Edition',
     tariffs_subtitle: 'Сіздің қажеттіліктеріңізге сәйкес келетін жоспарды таңдаңыз.',
     popular_badge: 'Танымал',
     demo_price: 'Бағасы: 129.99 $',
@@ -297,7 +297,7 @@ const translations = {
     legal_desc: 'Бұл құрал тек уәкілетті әзірлеушілерге арналған. SyncRate негізгі қозғалтқышын кері инжинирингтеуге, рұқсатсыз таратуға немесе өзгертуге қатаң тыйым салынады және халықаралық авторлық құқық және DMCA заңдарымен қорғалады.',
     copyright: '© 2026 SyncRate. Барлық құқықтар қорғалған.',
     bundling: 'Жинақтау...',
-    download_zip_desc: 'Қолмен орнату немесе деплой жасау үшін SyncRate v15.0 кеңейтімінің толық бастапқы кодын жүктеңіз.',
+    download_zip_desc: 'Қолмен орнату үшін SyncRate кеңейтімінің толық бастапқы кодын жүктеңіз.',
     btn_instructions: 'Орнату нұсқаулығы',
     btn_capabilities: 'Мүмкіндіктер',
     modal_instructions_title: 'SyncRate қалай орнатылады?',
@@ -342,7 +342,7 @@ const translations = {
     feature_nat_banks: 'Nationalbanken (GUS, EU)',
     feature_top30_crypto: 'Top-30 Krypto-Unterstützung',
     instant_conversion: 'SOFORTIGE KONVERTIERUNG',
-    version_badge: 'V15.0 Enterprise Edition',
+    version_badge: 'Enterprise Edition',
     tariffs_subtitle: 'Wählen Sie den Plan, der zu Ihren Bedürfnissen passt.',
     popular_badge: 'Beliebt',
     demo_price: 'Preis: 129.99 $',
@@ -368,7 +368,7 @@ const translations = {
     legal_desc: 'Dieses Tool wird nur für autorisierte Entwickler bereitgestellt. Reverse Engineering, unbefugte Verbreitung oder Modifikation der SyncRate Core Engine ist strengstens untersagt.',
     copyright: '© 2026 SyncRate. Alle Rechte vorbehalten.',
     bundling: 'Bündelung...',
-    download_zip_desc: 'Laden Sie den vollständigen Quellcode von SyncRate v15.0 für die manuelle Installation herunter.',
+    download_zip_desc: 'Laden Sie den vollständigen Quellcode von SyncRate für die manuelle Installation herunter.',
     btn_instructions: 'Installationsanleitung',
     btn_capabilities: 'Funktionen',
     modal_instructions_title: 'Wie installiere ich SyncRate?',
@@ -398,7 +398,7 @@ const translations = {
     btn_download_zip: 'Завантажити ZIP',
     hero_title: 'Миттєва конвертація валют у вашому браузері',
     hero_subtitle: 'Просто виділіть суму на будь-якому сайті, і SyncRate миттєво покаже еквівалент у вашій валюті.',
-    download: 'Завантажити SyncRate v15.0',
+    download: 'Завантажити SyncRate',
     features_title: 'Можливості',
     product_desc_title: 'Що таке SyncRate?',
     product_desc_text: 'SyncRate — це потужне розширення для браузера, яке позбавляє необхідності копіювати ціни та відкривати калькулятор. Просто виділіть суму на будь-якому сайті, і розширення миттєво покаже еквівалент у вашій валюті прямо біля курсору. Ідеально для онлайн-шопінгу, криптотрейдингу та аналізу іноземних ринків.',
@@ -413,7 +413,7 @@ const translations = {
     feature_nat_banks: 'Нацбанки (СНД, ЄС)',
     feature_top30_crypto: 'Підтримка топ-30 крипто',
     instant_conversion: 'МИТТЄВА КОНВЕРТАЦІЯ',
-    version_badge: 'V15.0 Enterprise Edition',
+    version_badge: 'Enterprise Edition',
     tariffs_subtitle: 'Оберіть план, який відповідає вашим потребам.',
     popular_badge: 'Популярно',
     demo_price: 'Ціна: 129.99 $',
@@ -439,7 +439,7 @@ const translations = {
     legal_desc: 'Цей інструмент надається тільки для авторизованих розробників. Реверс-інжиніринг, несанкціоноване розповсюдження або модифікація SyncRate Core Engine суворо заборонені та захищені міжнародними законами про авторське право та DMCA.',
     copyright: '© 2026 SyncRate. Всі права захищені.',
     bundling: 'Збірка...',
-    download_zip_desc: 'Завантажте повний вихідний код SyncRate v15.0 для ручного встановлення або розгортання.',
+    download_zip_desc: 'Завантажте повний вихідний код SyncRate для ручного встановлення.',
     btn_instructions: 'Інструкція зі встановлення',
     btn_capabilities: 'Можливості',
     modal_instructions_title: 'Як встановити SyncRate?',
@@ -495,7 +495,7 @@ const translations = {
     feature_nat_banks: 'Bancos Nacionales (GUS, UE)',
     feature_top30_crypto: 'Top-30 Criptomonedas',
     instant_conversion: 'CONVERSIÓN INSTANTÁNEA',
-    version_badge: 'Edición empresarial V15.0',
+    version_badge: 'Edición empresarial',
     tariffs_subtitle: 'Elija el plan que se adapte a sus necesidades.',
     popular_badge: 'Popular',
     feature_1_title: 'Análisis Inteligente',
@@ -519,7 +519,7 @@ const translations = {
     legal_desc: 'Esta herramienta se proporciona solo para desarrolladores autorizados. La ingeniería inversa, distribución no autorizada o modificación del motor central de SyncRate está estrictamente prohibida.',
     copyright: '© 2026 SyncRate. Todos los derechos reservados.',
     bundling: 'Empaquetando...',
-    download_zip_desc: 'Descarga el código fuente completo de SyncRate v15.0 para instalación manual.',
+    download_zip_desc: 'Descarga el código fuente completo de SyncRate para instalación manual.',
     btn_instructions: 'Guía de Instalación',
     btn_capabilities: 'Capacidades',
     modal_instructions_title: '¿Cómo instalar SyncRate?',
@@ -584,52 +584,93 @@ const ConversionAnimation = ({ price, result }: { price: string, result: string 
             );
           })}
           
-          {/* Tooltip */}
+          {/* Tooltip with smooth float */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            initial={{ opacity: 0, scale: 0.85, y: 15 }}
             animate={{ 
               opacity: [0, 0, 1, 1, 0],
-              scale: [0.8, 0.8, 1, 1, 0.8],
-              y: [10, 10, 0, 0, 10]
+              scale: [0.85, 0.85, 1, 1, 0.85],
+              y: [15, 15, 0, 0, 15]
             }}
-            transition={{ duration: 4, repeat: Infinity, times: [0, 0.4, 0.5, 0.8, 1] }}
-            className="absolute left-[140px] top-[45px] bg-[#161b22] border border-[#30363d] p-3 rounded-xl shadow-xl z-20 min-w-[120px]"
+            transition={{ duration: 4, repeat: Infinity, times: [0, 0.38, 0.46, 0.82, 1], ease: "easeInOut" }}
+            className="absolute left-[140px] top-[45px] z-20 min-w-[120px]"
           >
-            <div className="text-sm font-bold text-[#f0f6fc] mb-1">{result}</div>
-            <div className="text-[10px] text-[#8b949e] flex items-center gap-1">
-              <span>⚡</span> Live Market
-            </div>
+            <motion.div
+              animate={{ 
+                y: [0, -4, 0] 
+              }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="bg-[#161b22] border border-[#30363d] p-3 rounded-xl shadow-2xl"
+            >
+              <div className="text-sm font-bold text-[#f0f6fc] mb-1">{result}</div>
+              <div className="text-[10px] text-[#8b949e] flex items-center gap-1">
+                <span>⚡</span> Live Market
+              </div>
+            </motion.div>
           </motion.div>
           
-          {/* Cursor */}
+          {/* Cursor with smooth float */}
           <motion.div
-            initial={{ x: -20, y: 10, opacity: 0 }}
+            initial={{ x: -30, y: 25, opacity: 0 }}
             animate={{ 
-              x: [-20, 40, 160, 160, -20],
-              y: [10, 10, 10, 10, 10],
+              x: [-30, 40, 160, 160, -30],
+              y: [25, 25, 12, 12, 25],
               opacity: [0, 1, 1, 1, 0]
             }}
-            transition={{ duration: 4, repeat: Infinity, times: [0, 0.1, 0.8, 0.9, 1] }}
+            transition={{ duration: 4, repeat: Infinity, times: [0, 0.12, 0.82, 0.9, 1], ease: "easeInOut" }}
             className="absolute top-1 left-0 pointer-events-none z-20"
           >
-            <MousePointer2 className="w-5 h-5 text-white fill-white shadow-lg" />
+            <motion.div
+              animate={{ 
+                y: [0, -3, 0],
+                rotate: [0, 2, -2, 0]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <MousePointer2 className="w-5 h-5 text-white fill-white shadow-lg" />
+            </motion.div>
           </motion.div>
 
-          {/* Tooltip */}
+          {/* Secondary Tooltip (Floating status-badge) */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            initial={{ opacity: 0, scale: 0.85, y: 15 }}
             animate={{ 
               opacity: [0, 0, 1, 1, 0],
-              scale: [0.8, 0.8, 1, 1, 0.8],
-              y: [10, 10, 0, 0, 10]
+              scale: [0.85, 0.85, 1, 1, 0.85],
+              y: [15, 15, 0, 0, 15]
             }}
-            transition={{ duration: 4, repeat: Infinity, times: [0, 0.4, 0.5, 0.8, 0.9] }}
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-4 bg-[#161b22] border border-[#6e40c9] rounded-xl px-4 py-2 shadow-[0_0_20px_rgba(110,64,201,0.3)] flex items-center gap-2 whitespace-nowrap z-30"
+            transition={{ duration: 4, repeat: Infinity, times: [0, 0.38, 0.46, 0.82, 0.92], ease: "easeInOut" }}
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-4 z-30"
           >
-            <div className="w-6 h-6 bg-[#6e40c9] rounded flex items-center justify-center">
-              <RefreshCw className="w-3 h-3 text-white animate-spin-slow" />
-            </div>
-            <span className="text-sm font-bold text-white">{result}</span>
+            <motion.div
+              animate={{ 
+                y: [0, -5, 0],
+                boxShadow: [
+                  "0 0 15px rgba(110,64,201,0.25)",
+                  "0 0 25px rgba(110,64,201,0.45)",
+                  "0 0 15px rgba(110,64,201,0.25)"
+                ]
+              }}
+              transition={{
+                duration: 2.2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="bg-[#161b22] border border-[#6e40c9] rounded-xl px-4 py-2 flex items-center gap-2 whitespace-nowrap"
+            >
+              <div className="w-6 h-6 bg-[#6e40c9] rounded flex items-center justify-center">
+                <RefreshCw className="w-3 h-3 text-white animate-spin-slow" />
+              </div>
+              <span className="text-sm font-bold text-white">{result}</span>
+            </motion.div>
           </motion.div>
         </div>
 
@@ -708,25 +749,22 @@ export default function App() {
 
     try {
       const zip = new JSZip();
-      const root = zip.folder('SyncRate');
-      if (root) {
-        root.file('manifest.json', templates.manifest);
-        root.file('popup.html', templates.popupHtml);
-        root.file('popup.js', templates.popupJs);
-        root.file('background.js', templates.background);
-        root.file('content.js', templates.content);
-        root.file('store_ru.txt', templates.storeRu);
-        root.file('store_en.txt', templates.storeEn);
+      zip.file('manifest.json', templates.manifest);
+      zip.file('popup.html', templates.popupHtml);
+      zip.file('popup.js', templates.popupJs);
+      zip.file('background.js', templates.background);
+      zip.file('content.js', templates.content);
+      zip.file('store_ru.txt', templates.storeRu);
+      zip.file('store_en.txt', templates.storeEn);
 
-        const iconFolder = root.folder('icons');
-        if (iconFolder) {
-          const icon16 = await generateIcon(16);
-          const icon48 = await generateIcon(48);
-          const icon128 = await generateIcon(128);
-          iconFolder.file('icon16.png', icon16);
-          iconFolder.file('icon48.png', icon48);
-          iconFolder.file('icon128.png', icon128);
-        }
+      const iconFolder = zip.folder('icons');
+      if (iconFolder) {
+        const icon16 = await generateIcon(16);
+        const icon48 = await generateIcon(48);
+        const icon128 = await generateIcon(128);
+        iconFolder.file('icon16.png', icon16);
+        iconFolder.file('icon48.png', icon48);
+        iconFolder.file('icon128.png', icon128);
       }
 
       const content = await zip.generateAsync({ type: 'blob' });
@@ -1238,7 +1276,7 @@ export default function App() {
               </div>
               <div className="flex items-center gap-3 text-[#a371f7] font-black text-lg">
                 <RefreshCw className="w-6 h-6 animate-spin-slow" />
-                Enterprise v15.0
+                Enterprise
               </div>
             </motion.div>
           </div>

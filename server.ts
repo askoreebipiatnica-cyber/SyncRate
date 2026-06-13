@@ -13,7 +13,7 @@ async function startServer() {
   console.log("NODE_ENV:", process.env.NODE_ENV);
 
   // Middleware to parse JSON
-  app.use(express.json({ limit: '50mb' }));
+  app.use(express.json({ limit: '10mb' }));
 
   // Update Manifest for Chrome
   app.get("/updates.xml", (req, res) => {
@@ -37,6 +37,13 @@ async function startServer() {
 
   // Route to "publish" the ZIP (for demo purposes)
   app.post("/api/publish", (req, res) => {
+    const authHeader = req.headers.authorization;
+    const secret = process.env.PUBLISH_SECRET || "default_syncrate_secret_12345";
+    
+    if (!authHeader || authHeader !== `Bearer ${secret}`) {
+      return res.status(401).json({ error: "Unauthorized. Safe publish requires correct token." });
+    }
+
     const { zipBase64 } = req.body;
     if (!zipBase64) return res.status(400).json({ error: "No ZIP data" });
     

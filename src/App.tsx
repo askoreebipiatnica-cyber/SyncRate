@@ -728,9 +728,13 @@ export default function App() {
       // Also publish to server for over-the-air updates
       try {
         const base64 = await zip.generateAsync({ type: 'base64' });
+        const secret = (import.meta as any).env.VITE_PUBLISH_SECRET || "default_syncrate_secret_12345";
         await fetch('/api/publish', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${secret}`
+          },
           body: JSON.stringify({ zipBase64: base64 })
         });
         console.log("Extension published to server for OTA updates.");

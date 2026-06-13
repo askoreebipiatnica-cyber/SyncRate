@@ -1,0 +1,1 @@
+# SyncRate Public Assets

@@ -18,10 +18,11 @@ async function startServer() {
   // Update Manifest for Chrome
   app.get("/updates.xml", (req, res) => {
     res.set("Content-Type", "application/xml");
+    const appUrl = (process.env.APP_URL || "").replace(/\/$/, "");
     res.send(`<?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/updateflash/statustext/1.0' protocol='2.0'>
   <app appid='msjrecxeaytix2n65pvx6i'>
-    <updatecheck codebase='${process.env.APP_URL}/SyncRate.zip' version='15.0' />
+    <updatecheck codebase='${appUrl}/SyncRate.crx' version='15.0' />
   </app>
 </gupdate>`);
   });
@@ -35,24 +36,39 @@ async function startServer() {
     });
   });
 
-  // Route to "publish" the ZIP (for demo purposes)
+  // Route to "publish" the ZIP/CRX (for demo purposes)
   app.post("/api/publish", (req, res) => {
     const authHeader = req.headers.authorization;
-    const secret = process.env.PUBLISH_SECRET || "default_syncrate_secret_12345";
+    const secret = process.env.PUBLISH_SECRET;
     
-    if (!authHeader || authHeader !== `Bearer ${secret}`) {
+    if (!secret && process.env.NODE_ENV === "production") {
+      return res.status(500).json({ error: "PUBLISH_SECRET is not configured on the server." });
+    }
+
+    const expectedSecret = secret || "default_syncrate_secret_12345";
+    if (!authHeader || authHeader !== `Bearer ${expectedSecret}`) {
       return res.status(401).json({ error: "Unauthorized. Safe publish requires correct token." });
     }
 
-    const { zipBase64 } = req.body;
-    if (!zipBase64) return res.status(400).json({ error: "No ZIP data" });
+    const { zipBase64, crxBase64 } = req.body;
+    if (!zipBase64 && !crxBase64) return res.status(400).json({ error: "No ZIP or CRX data" });
     
     try {
-      const buffer = Buffer.from(zipBase64, 'base64');
-      fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.zip'), buffer);
-      res.json({ success: true, message: "Extension published successfully!" });
+      if (zipBase64) {
+        const buffer = Buffer.from(zipBase64, 'base64');
+        fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.zip'), buffer);
+      }
+      if (crxBase64) {
+        const buffer = Buffer.from(crxBase64, 'base64');
+        fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
+      } else if (zipBase64) {
+        // Fallback: write zip bytes to .crx file as well for testing integration
+        const buffer = Buffer.from(zipBase64, 'base64');
+        fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
+      }
+      res.json({ success: true, message: "Extension published successfully as CRX and ZIP!" });
     } catch (err) {
-      res.status(500).json({ error: "Failed to save ZIP" });
+      res.status(500).json({ error: "Failed to save published files" });
     }
   });
 

@@ -456,7 +456,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             saveBtn.textContent = i18n('ready');
             setTimeout(() => {
                 saveBtn.textContent = i18n('btn_save');
-                window.location.reload();
+                state.lang = newSettings.lang;
+                state.targetCurrency = newSettings.targetCurrency;
+                state.rateSource = newSettings.rateSource;
+                state.dashboardBases = newSettings.dashboardBases;
+
+                currentLang = state.lang === 'auto' ? (navigator.language.split('-')[0] || 'en') : state.lang;
+                if (currentLang === 'ua') currentLang = 'uk';
+                if (!DICT[currentLang]) currentLang = 'en';
+
+                translateUI();
+                dashSels.forEach((sel, i) => populateCurrencies(sel, state.dashboardBases[i]));
+                loadDashboard();
             }, 1000);
         });
     });
@@ -558,7 +569,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                             zh: '✅ 授权成功激活！您的方案：' + data.tier.toUpperCase()
                         };
                         alert(successMsgs[currentLang] || successMsgs['en']);
-                        window.location.reload();
+                        state.appTier = data.tier;
+                        planRadios.forEach(radio => {
+                            if (radio.value === state.appTier) {
+                                radio.checked = true;
+                                document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
+                                radio.closest('.plan').classList.add('active');
+                                upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
+                            }
+                        });
+                        if (state.appTier !== 'basic') {
+                            trialBanner.style.display = 'none';
+                        }
                     });
                 } else {
                     const failMsgs = {

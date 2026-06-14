@@ -412,13 +412,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Save Settings
     saveBtn.addEventListener('click', () => {
-        const selectedTier = document.querySelector('input[name="tier"]:checked').value;
         const newSettings = {
             lang: langSel.value,
             targetCurrency: targetSel.value,
             rateSource: sourceSel.value,
-            dashboardBases: dashSels.map(s => s.value),
-            appTier: selectedTier
+            dashboardBases: dashSels.map(s => s.value)
         };
         chrome.storage.local.set(newSettings, () => {
             saveBtn.textContent = i18n('ready');
@@ -487,6 +485,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             radio.closest('.plan').classList.add('active');
             upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
         });
+    });
+
+    // Handle Buy / Mock Upgrade
+    upgradeBtn.addEventListener('click', () => {
+        const checked = document.querySelector('input[name="tier"]:checked');
+        if (checked) {
+            const selectedTier = checked.value;
+            chrome.storage.local.set({ appTier: selectedTier }, () => {
+                const isRu = currentLang === 'ru' || currentLang === 'uk' || currentLang === 'kk';
+                const msg = isRu 
+                    ? '💳 Платёжный шлюз: Оплата прошла успешно! Ваш тариф обновлен.' 
+                    : '💳 Payment Gateway: Payment successful! Your plan has been upgraded.';
+                alert(msg);
+                window.location.reload();
+            });
+        }
     });
 
     document.getElementById('donate-btn').addEventListener('click', () => {

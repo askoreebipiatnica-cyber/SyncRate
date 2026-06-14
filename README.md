@@ -49,14 +49,23 @@ Start the production server:
 npm start
 ```
 
-## Chrome Extension Installation
+## Chrome Extension Installation / Установка расширения в браузер
 
-1. Download the ZIP archive from the application landing page.
-2. Extract the archive to a permanent folder on your disk.
-3. Open the extensions page in your browser (`chrome://extensions`).
-4. Enable "Developer mode" in the top right corner.
-5. Click "Load unpacked" and select the folder with the extension.
-6. Pin the extension to your toolbar for quick access.
+### 🇬🇧 English: If you downloaded/cloned this repository from GitHub:
+1. **Open your browser's extensions page**: Go to `chrome://extensions/` (or `edge://extensions/`).
+2. **Enable Developer mode**: Toggle the switch in the top-right corner.
+3. **Click "Load unpacked"**: Click the button on the top-left.
+4. **Choose the correct folder**: Select the **`extension`** folder **inside** this downloaded project directory, **NOT** the main root directory of the project.
+5. Setup is complete! The extension is now active.
+
+---
+
+### 🇷🇺 Русский: Если вы скачали или клонировали проект с GitHub:
+1. **Откройте страницу расширений**: Перейдите по адресу `chrome://extensions/` (в Chrome) или `edge://extensions/` (в Edge).
+2. **Включите режим разработчика**: Переключите тумблер «Режим разработчика» в правом верхнем углу.
+3. **Нажмите «Загрузить распакованное расширение»**: Кнопка в левом верхнем углу.
+4. **Выберите ПРАВИЛЬНУЮ папку**: Выберите папку **`extension`**, которая находится **внутри** скачанного каталога проекта, а **НЕ** сам корень проекта (не главную папку всего проекта).
+5. На этом установка завершена! Расширение готово к работе.
 
 ## License
 

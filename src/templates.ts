@@ -168,6 +168,13 @@ SyncRate respects your privacy. The extension DOES NOT read passwords, credit ca
         <label class="plan" id="plan-pro"><input type="radio" name="tier" value="pro"><div class="plan-header"><div class="plan-title">PRO <span class="badge pro">PRO</span></div><div style="color:var(--primary); font-weight:800;">2 $ <span data-i18n="lifetime">навсегда</span></div></div><p class="plan-desc" data-i18n="desc_pro">Топ-8 фиатных валют мира.</p></label>
         <label class="plan" id="plan-pro_plus"><input type="radio" name="tier" value="pro_plus"><div class="plan-header"><div class="plan-title">PRO+ <span class="badge pro-plus">PRO+</span></div><div style="color:#e53935; font-weight:800;">5 $ <span data-i18n="lifetime">навсегда</span></div></div><p class="plan-desc" data-i18n="desc_pro_plus">Нацбанки СНГ, Все валюты, Топ-30 Крипты.</p></label>
         <button class="btn-save" id="btn-upgrade" style="display:none; background:#f39c12;" data-i18n="btn_pay">💳 Оплатить доступ</button>
+        <div style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <label style="display: block; font-size: 11px; color: var(--text); margin-bottom: 6px;" data-i18n="lbl_license">Активация лицензии</label>
+            <div style="display: flex; gap: 6px;">
+                <input type="text" id="input-license" placeholder="PRO-XXXXXX / PLUS-XXXXXX" style="flex: 1; padding: 6px 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-family: monospace; font-size: 11px;">
+                <button id="btn-activate" style="padding: 6px 12px; background: var(--primary); border: none; border-radius: 6px; color: white; font-weight: 600; font-size: 11px; cursor: pointer;" data-i18n="btn_activate">Активировать</button>
+            </div>
+        </div>
     </div>
     <div class="footer">
         v15.0 | SyncRate Enterprise
@@ -348,6 +355,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             el.textContent = i18n(el.getAttribute('data-i18n'));
         });
         targetLbl.textContent = state.targetCurrency;
+        
+        const lblLicense = document.querySelector('[data-i18n="lbl_license"]');
+        const btnActivate = document.querySelector('[data-i18n="btn_activate"]');
+        if (lblLicense) {
+            const licenseLabels = {
+                ru: 'Лицензионный ключ',
+                uk: 'Ліцензійний ключ',
+                kk: 'Лицензиялық кілт',
+                en: 'License Key',
+                de: 'Lizenzschlüssel',
+                es: 'Clave de licencia',
+                zh: '授权密钥'
+            };
+            lblLicense.textContent = licenseLabels[currentLang] || licenseLabels['en'];
+        }
+        if (btnActivate) {
+            const activateBtns = {
+                ru: 'Активировать',
+                uk: 'Активувати',
+                kk: 'Белсендіру',
+                en: 'Activate',
+                de: 'Aktivieren',
+                es: 'Activar',
+                zh: '激活'
+            };
+            btnActivate.textContent = activateBtns[currentLang] || activateBtns['en'];
+        }
     };
     translateUI();
 
@@ -487,21 +521,64 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Handle Buy / Mock Upgrade
+    // Handle Buy / Real Redirect to Stripe Checkout or Billing portal
     upgradeBtn.addEventListener('click', () => {
         const checked = document.querySelector('input[name="tier"]:checked');
         if (checked) {
             const selectedTier = checked.value;
-            chrome.storage.local.set({ appTier: selectedTier }, () => {
-                const isRu = currentLang === 'ru' || currentLang === 'uk' || currentLang === 'kk';
-                const msg = isRu 
-                    ? '💳 Платёжный шлюз: Оплата прошла успешно! Ваш тариф обновлен.' 
-                    : '💳 Payment Gateway: Payment successful! Your plan has been upgraded.';
-                alert(msg);
-                window.location.reload();
-            });
+            chrome.tabs.create({ url: 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app/checkout?tier=' + selectedTier });
         }
     });
+
+    // License Activation via Server API
+    const activateBtn = document.getElementById('btn-activate');
+    const licenseInput = document.getElementById('input-license');
+    if (activateBtn && licenseInput) {
+        activateBtn.addEventListener('click', async () => {
+            const licenseKey = licenseInput.value.trim();
+            if (!licenseKey) return;
+            const originalText = activateBtn.textContent;
+            activateBtn.textContent = '...';
+            try {
+                const response = await fetch('https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app/api/verify-license', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ licenseKey })
+                });
+                const data = await response.json();
+                if (data.success && data.tier) {
+                    chrome.storage.local.set({ appTier: data.tier }, () => {
+                        const successMsgs = {
+                            ru: '✅ Лицензия успешно активирована! Ваш тариф: ' + data.tier.toUpperCase(),
+                            uk: '✅ Ліцензію успішно активовано! Ваш тариф: ' + data.tier.toUpperCase(),
+                            kk: '✅ Лицензия сәтті белсендірілді! Сіздің тарифіңіз: ' + data.tier.toUpperCase(),
+                            en: '✅ License activated successfully! Your plan: ' + data.tier.toUpperCase(),
+                            de: '✅ Lizenz erfolgreich aktiviert! Ihr Plan: ' + data.tier.toUpperCase(),
+                            es: '✅ ¡Licencia activada con éxito! Su plan: ' + data.tier.toUpperCase(),
+                            zh: '✅ 授权成功激活！您的方案：' + data.tier.toUpperCase()
+                        };
+                        alert(successMsgs[currentLang] || successMsgs['en']);
+                        window.location.reload();
+                    });
+                } else {
+                    const failMsgs = {
+                        ru: '❌ Неверный или истекший лицензионный ключ',
+                        uk: '❌ Невірний або прострочений ліцензійний ключ',
+                        kk: '❌ Қате немесе мерзімі өткен лицензиялық кілт',
+                        en: '❌ Invalid or expired license key',
+                        de: '❌ Ungültiger oder abgelaufener Lizenzschlüssel',
+                        es: '❌ Clave de licencia no válida o caducada',
+                        zh: '❌ 授权密钥无效或已过期'
+                    };
+                    alert(failMsgs[currentLang] || failMsgs['en']);
+                }
+            } catch (err) {
+                alert('Connection error');
+            } finally {
+                activateBtn.textContent = originalText;
+            }
+        });
+    }
 
     document.getElementById('donate-btn').addEventListener('click', () => {
         chrome.tabs.create({ url: 'https://buymeacoffee.com' });
@@ -542,7 +619,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 `,
-  background: `const API_FIAT="https://open.er-api.com/v6/latest/";const CRYPTO_API="https://min-api.cryptocompare.com/data/price?fsym=";const CBRF_API="https://www.cbr-xml-daily.ru/daily_json.js";const NBU_API="https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";const NBRB_API="https://api.nbrb.by/exrates/rates?periodicity=0";const CRYPTO_CODES=['BTC','ETH','USDT','BNB','SOL','XRP','USDC','ADA','AVAX','DOGE','DOT','TRX','LINK','MATIC','TON','SHIB','LTC','BCH','ATOM','XLM','NEAR','UNI','XMR','ETC','ICP','FIL','APT','LDO','ARB','VET','MKR','SAT','WAVES'];chrome.runtime.onInstalled.addListener(()=>{chrome.storage.local.get(['trialStart'],(res)=>{if(!res.trialStart)chrome.storage.local.set({trialStart:Date.now()});});});chrome.runtime.onMessage.addListener((request,sender,sendResponse)=>{if(request.action==="GET_RATE"){getCrossRate(request.from,request.to,request.source).then(sendResponse);return true;}if(request.action==="GET_DASHBOARD"){Promise.all(request.bases.map(b=>getCrossRate(b,request.target,request.source))).then(results=>{sendResponse({success:true,rates:results.map(r=>r.success?r.rate:null)});});return true;}});async function cleanExpiredCache(){try{const all=await chrome.storage.local.get(null);const now=Date.now();const keysToDelete=[];for(const key in all){if(key.startsWith("v15_rate_")){const item=all[key];if(!item||!item.timestamp||(now-item.timestamp>24*60*60*1000)){keysToDelete.push(key);}}}if(keysToDelete.length>0){await chrome.storage.local.remove(keysToDelete);}}catch(e){}}async function getCryptoUsdPrice(coin){try{const res=await fetch(CRYPTO_API+coin+"&tsyms=USD");const data=await res.json();if(data.USD)return parseFloat(data.USD);if(coin==='USDT'||coin==='USDC')return 1;throw new Error();}catch(e){if(coin==='USDT'||coin==='USDC')return 1;throw e;}}async function getCrossRate(fromCode,targetCode,sourceCode){if(fromCode===targetCode)return{success:true,rate:1,date:"Live"};try{const cacheKey="v15_rate_"+fromCode+"_"+targetCode+"_"+sourceCode;const cachedWrap=await chrome.storage.local.get([cacheKey]);const cachedItem=cachedWrap[cacheKey];const isCrypto=CRYPTO_CODES.includes(fromCode);const CACHE_TTL=isCrypto?60*1000:(sourceCode==='official'?12*60*60*1000:60*60*1000);if(cachedItem&&cachedItem.timestamp&&(Date.now()-cachedItem.timestamp<CACHE_TTL)){return{success:true,rate:cachedItem.rate,date:cachedItem.date};}let finalRate=null,dateToReturn="";if(sourceCode==='official'){try{let targetUsdRate=null;let targetBankName="";if(targetCode==='RUB'){const res=await fetch(CBRF_API);const data=await res.json();if(data.Valute && data.Valute['USD']){targetUsdRate=data.Valute['USD'].Value;targetBankName="ЦБ РФ";if(!isCrypto&&fromCode!=='USD'){if(fromCode==='EUR' && data.Valute['EUR'])finalRate=data.Valute['EUR'].Value;else if(data.Valute[fromCode])finalRate=data.Valute[fromCode].Value/data.Valute[fromCode].Nominal;}}}else if(targetCode==='UAH'){const res=await fetch(NBU_API);const data=await res.json();const usd=data.find(c=>c.cc==='USD');if(usd){targetUsdRate=usd.rate;targetBankName="НБУ";if(!isCrypto&&fromCode!=='USD'){const curObj=data.find(c=>c.cc===fromCode);if(curObj)finalRate=curObj.rate;}}}else if(targetCode==='BYN'){const res=await fetch(NBRB_API);const data=await res.json();const usdObj=data.find(c=>c.Cur_Abbreviation==='USD');if(usdObj){targetUsdRate=usdObj.Cur_OfficialRate/usdObj.Cur_Scale;targetBankName="НБРБ";if(!isCrypto&&fromCode!=='USD'){const curObj=data.find(c=>c.Cur_Abbreviation===fromCode);if(curObj)finalRate=curObj.Cur_OfficialRate/curObj.Cur_Scale;}}}else if(targetCode==='EUR'){const res=await fetch(API_FIAT+"EUR");const data=await res.json();if(data.rates && data.rates['USD']){targetUsdRate=1/data.rates['USD'];targetBankName="ECB";if(!isCrypto && data.rates[fromCode])finalRate=1/data.rates[fromCode];}}if(!finalRate&&targetUsdRate){if(isCrypto){finalRate=await getCryptoUsdPrice(fromCode)*targetUsdRate;}else if(fromCode==='USD'){finalRate=targetUsdRate;}}if(finalRate)dateToReturn=targetBankName;else throw new Error();}catch(e){sourceCode='market';}}if(!finalRate||sourceCode==='market'){if(isCrypto){const cryptoUsd=await getCryptoUsdPrice(fromCode);if(targetCode==='USD'){finalRate=cryptoUsd;dateToReturn="Live";}else{const res=await fetch(API_FIAT+"USD");const data=await res.json();finalRate=cryptoUsd*data.rates[targetCode];dateToReturn="Live";}}else{const res=await fetch(API_FIAT+fromCode);const data=await res.json();finalRate=data.rates[targetCode];dateToReturn="Live";}}if(finalRate){if(Math.random()<0.05){await cleanExpiredCache();}await chrome.storage.local.set({[cacheKey]:{rate:finalRate,date:dateToReturn,timestamp:Date.now()}});return{success:true,rate:finalRate,date:dateToReturn};}throw new Error();}catch(error){return{success:false};}},`,
+  background: `const API_FIAT="https://open.er-api.com/v6/latest/";const CRYPTO_API="https://min-api.cryptocompare.com/data/price?fsym=";const CBRF_API="https://www.cbr-xml-daily.ru/daily_json.js";const NBU_API="https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";const NBRB_API="https://api.nbrb.by/exrates/rates?periodicity=0";const CRYPTO_CODES=['BTC','ETH','USDT','BNB','SOL','XRP','USDC','ADA','AVAX','DOGE','DOT','TRX','LINK','MATIC','TON','SHIB','LTC','BCH','ATOM','XLM','NEAR','UNI','XMR','ETC','ICP','FIL','APT','LDO','ARB','VET','MKR','SAT','WAVES'];chrome.runtime.onInstalled.addListener(()=>{chrome.storage.local.get(['trialStart'],(res)=>{if(!res.trialStart)chrome.storage.local.set({trialStart:Date.now()});});});chrome.runtime.onMessage.addListener((request,sender,sendResponse)=>{if(request.action==="GET_RATE"){getCrossRate(request.from,request.to,request.source).then(sendResponse);return true;}if(request.action==="GET_DASHBOARD"){Promise.all(request.bases.map(b=>getCrossRate(b,request.target,request.source))).then(results=>{sendResponse({success:true,rates:results.map(r=>r.success?r.rate:null)});});return true;}});async function cleanExpiredCache(){try{const all=await chrome.storage.local.get(null);const now=Date.now();const keysToDelete=[];for(const key in all){if(key.startsWith("v15_rate_")){const item=all[key];if(!item||!item.timestamp||(now-item.timestamp>24*60*60*1000)){keysToDelete.push(key);}}}if(keysToDelete.length>0){await chrome.storage.local.remove(keysToDelete);}}catch(e){}}async function getCryptoUsdPrice(coin){try{const res=await fetch(CRYPTO_API+coin+"&tsyms=USD");const data=await res.json();if(data.USD)return parseFloat(data.USD);throw new Error();}catch(e){throw e;}}async function getCrossRate(fromCode,targetCode,sourceCode){if(fromCode===targetCode)return{success:true,rate:1,date:"Live"};try{const cacheKey="v15_rate_"+fromCode+"_"+targetCode+"_"+sourceCode;const cachedWrap=await chrome.storage.local.get([cacheKey]);const cachedItem=cachedWrap[cacheKey];const isCrypto=CRYPTO_CODES.includes(fromCode);const CACHE_TTL=isCrypto?60*1000:(sourceCode==='official'?12*60*60*1000:60*60*1000);if(cachedItem&&cachedItem.timestamp&&(Date.now()-cachedItem.timestamp<CACHE_TTL)){return{success:true,rate:cachedItem.rate,date:cachedItem.date};}let finalRate=null,dateToReturn="";if(sourceCode==='official'){try{let targetUsdRate=null;let targetBankName="";if(targetCode==='RUB'){const res=await fetch(CBRF_API);const data=await res.json();if(data.Valute && data.Valute['USD']){targetUsdRate=data.Valute['USD'].Value;targetBankName="ЦБ РФ";if(!isCrypto&&fromCode!=='USD'){if(fromCode==='EUR' && data.Valute['EUR'])finalRate=data.Valute['EUR'].Value;else if(data.Valute[fromCode])finalRate=data.Valute[fromCode].Value/data.Valute[fromCode].Nominal;}}}else if(targetCode==='UAH'){const res=await fetch(NBU_API);const data=await res.json();const usd=data.find(c=>c.cc==='USD');if(usd){targetUsdRate=usd.rate;targetBankName="НБУ";if(!isCrypto&&fromCode!=='USD'){const curObj=data.find(c=>c.cc===fromCode);if(curObj)finalRate=curObj.rate;}}}else if(targetCode==='BYN'){const res=await fetch(NBRB_API);const data=await res.json();const usdObj=data.find(c=>c.Cur_Abbreviation==='USD');if(usdObj){targetUsdRate=usdObj.Cur_OfficialRate/usdObj.Cur_Scale;targetBankName="НБРБ";if(!isCrypto&&fromCode!=='USD'){const curObj=data.find(c=>c.Cur_Abbreviation===fromCode);if(curObj)finalRate=curObj.Cur_OfficialRate/curObj.Cur_Scale;}}}else if(targetCode==='EUR'){const res=await fetch(API_FIAT+"EUR");const data=await res.json();if(data.rates && data.rates['USD']){targetUsdRate=1/data.rates['USD'];targetBankName="ECB";if(!isCrypto && data.rates[fromCode])finalRate=1/data.rates[fromCode];}}if(!finalRate&&targetUsdRate){if(isCrypto){finalRate=await getCryptoUsdPrice(fromCode)*targetUsdRate;}else if(fromCode==='USD'){finalRate=targetUsdRate;}}if(finalRate)dateToReturn=targetBankName;else throw new Error();}catch(e){sourceCode='market';}}if(!finalRate||sourceCode==='market'){if(isCrypto){const cryptoUsd=await getCryptoUsdPrice(fromCode);if(targetCode==='USD'){finalRate=cryptoUsd;dateToReturn="Live";}else{const res=await fetch(API_FIAT+"USD");const data=await res.json();finalRate=cryptoUsd*data.rates[targetCode];dateToReturn="Live";}}else{const res=await fetch(API_FIAT+fromCode);const data=await res.json();finalRate=data.rates[targetCode];dateToReturn="Live";}}if(finalRate){if(Math.random()<0.05){await cleanExpiredCache();}await chrome.storage.local.set({[cacheKey]:{rate:finalRate,date:dateToReturn,timestamp:Date.now()}});return{success:true,rate:finalRate,date:dateToReturn};}throw new Error();}catch(error){return{success:false};}},`,
   content: `const CRYPTO_MAP={'BTC':'BTC','BITCOIN':'BTC','БИТКОИН':'BTC','БИТОК':'BTC','ETH':'ETH','ETHEREUM':'ETH','ЭФИРИУМ':'ETH','ЭФИР':'ETH','USDT':'USDT','TETHER':'USDT','ТЕЗЕР':'USDT','BNB':'BNB','BINANCECOIN':'BNB','SOL':'SOL','SOLANA':'SOL','СОЛАНА':'SOL','XRP':'XRP','RIPPLE':'XRP','РИПЛ':'XRP','USDC':'USDC','USDCOIN':'USDC','ADA':'ADA','CARDANO':'ADA','КАРДАНО':'ADA','AVAX':'AVAX','AVALANCHE':'AVAX','АВАКС':'AVAX','DOGE':'DOGE','DOGECOIN':'DOGE','ДОГИКОИН':'DOGE','ДОГИ':'DOGE','DOT':'DOT','POLKADOT':'DOT','ПОЛКАДОТ':'DOT','TRX':'TRX','TRON':'TRX','ТРОН':'TRX','LINK':'LINK','CHAINLINK':'LINK','ЛИНК':'LINK','MATIC':'MATIC','POLYGON':'MATIC','МАТИК':'MATIC','TON':'TON','TONCOIN':'TON','ТОН':'TON','SHIB':'SHIB','SHIBAINU':'SHIB','ШИБА':'SHIB','LTC':'LTC','LITECOIN':'LTC','ЛАЙТКОИН':'LTC','BCH':'BCH','BITCOINCASH':'BCH','БИТКОИНКЕШ':'BCH','SAT':'SAT','SATOSHI':'SAT','САТОШИ':'SAT','WAVES':'WAVES','ВЕЙВС':'WAVES'};const FIAT_MAP={'$':'USD','USD':'USD','€':'EUR','EUR':'EUR','£':'GBP','GBP':'GBP','¥':'CNY','CNY':'CNY','JPY':'JPY','₣':'CHF','FR.':'CHF','CHF':'CHF','A$':'AUD','AUD':'AUD','C$':'CAD','CAD':'CAD','₺':'TRY','TRY':'TRY','AED':'AED','₴':'UAH','UAH':'UAH','ГРН':'UAH','ГРИВНА':'UAH','ГРИВЕН':'UAH','₸':'KZT','KZT':'KZT','ТНГ':'KZT','ТЕНГЕ':'KZT','₼':'AZN','AZN':'AZN','BGN':'BGN','LEV':'BGN','BR':'BYN','BYN':'BYN','БР':'BYN','БЕЛРУБ':'BYN','BYR':'BYN','РБ':'BYN','₹':'INR','INR':'INR','KGS':'KGS','₩':'KRW','KRW':'KRW','L':'MDL','MDL':'MDL','SM':'TJS','TJS':'TJS','TMT':'TMT','UZS':'UZS','SUM':'UZS','₪':'ILS','ILS':'ILS','¢':'USD','₽':'RUB','Р':'RUB','P':'RUB','p':'RUB','РУБ':'RUB','РУБ.':'RUB','РУБЛЕЙ':'RUB','RUB':'RUB','ДОЛЛАР':'USD','ДОЛЛАРОВ':'USD','ЕВРО':'EUR','ЮАНЬ':'CNY','ИЕНА':'JPY','ТЕНГЕ':'KZT'};const CURRENCY_MAP={...FIAT_MAP,...CRYPTO_MAP};const CRYPTO_CODES=Object.values(CRYPTO_MAP);const PRO_CURRENCIES=['USD','EUR','GBP','CHF','JPY','CAD','CNY','AED'];let hideTimeout=null,currentTooltip=null;document.addEventListener('mouseup',handleSelection);document.addEventListener('mousedown',(e)=>{if(currentTooltip&&currentTooltip.contains(e.target))return;removeTooltip();});async function handleSelection(event){try{if(!chrome.runtime?.id)return;const selection=window.getSelection();let text=selection.toString();text=text.replace(/[\\u00A0\\u202F\\u200B-\\u200D\\uFEFF]/g,' ').trim();if(!text||text.length>50)return;function isSelectionInSensitiveField(){const sel=window.getSelection();if(!sel.rangeCount)return false;const node=sel.getRangeAt(0).commonAncestorContainer;const el=node.nodeType===1?node:node.parentElement;if(!el)return false;if(el.closest('[contenteditable="true"]'))return true;const closestInput=el.closest('input, textarea');if(!closestInput)return false;const type=(closestInput.type||'').toLowerCase();const name=(closestInput.name||'').toLowerCase();const id=(closestInput.id||'').toLowerCase();return type==='password'||type==='hidden'||name.includes('cc')||name.includes('card')||name.includes('cvv')||name.includes('password')||name.includes('secret')||id.includes('cc')||id.includes('card')||id.includes('cvv')||id.includes('password')||id.includes('secret');}if(isSelectionInSensitiveField())return;const parseResult=parseCurrencyString(text);if(!parseResult)return;const settings=await chrome.storage.local.get({appTier:'basic',targetCurrency:'RUB',rateSource:'market',trialStart:null,lang:'auto'});let currentLang=settings.lang==='auto'?(navigator.language.split('-')[0]||'en'):settings.lang;if(currentLang==='ua')currentLang='uk';const C_DICT={'uk':{lock:'Блокування',req:'Потрібен тариф'},'ru':{lock:'Блокировка',req:'Требуется тариф'},'en':{lock:'Locked',req:'Requires plan'},'de':{lock:'Gesperrt',req:'Erfordert Plan'},'es':{lock:'Bloqueado',req:'Requiere plan'},'zh':{lock:'已锁定',req:'需要方案'},'kk':{lock:'Блокталған',req:'Тариф қажет'}};const m=C_DICT[currentLang]||C_DICT['en'];if(parseResult.isSat){showTooltip(event.pageX,event.pageY,parseResult.amount,"Live","BTC",currentLang);return;}const targetCurrencyUpper = (settings.targetCurrency || "RUB").trim().toUpperCase();if(parseResult.currency===targetCurrencyUpper){showTooltip(event.pageX,event.pageY,parseResult.amount,"Live",targetCurrencyUpper,currentLang);return;}const isTrialActive=settings.trialStart&&((Date.now()-settings.trialStart)<48*60*60*1000);const activeTier=(settings.appTier==='pro_plus'||isTrialActive)?'pro_plus':settings.appTier;const isByDomain=window.location.hostname.endsWith('.by');const allowedBasic=['USD','EUR','RUB'];if(isByDomain)allowedBasic.push('BYN');if(activeTier==='basic'&&!allowedBasic.includes(parseResult.currency))return showUpsell(event.pageX,event.pageY,parseResult.currency,"PRO",m);if(activeTier==='pro'&&!PRO_CURRENCIES.includes(parseResult.currency))return showUpsell(event.pageX,event.pageY,parseResult.currency,"PRO+",m);const actualSource=activeTier==='pro_plus'?settings.rateSource:'market';const res=await chrome.runtime.sendMessage({action:"GET_RATE",from:parseResult.currency,to:targetCurrencyUpper,source:actualSource});if(res&&res.success&&res.rate)showTooltip(event.pageX,event.pageY,parseResult.amount*res.rate,res.date,targetCurrencyUpper,currentLang);}catch(e){}}function parseCurrencyString(text){    const suffixRegex=/^([0-9\\s.,]+)\\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\\.?|млн\\.?|млрд\\.?|трлн\\.?))?\\s*([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\\s]{1,25})$/i;
     const prefixRegex=/^([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\\s]{1,25})\\s*([0-9\\s.,]+)\\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\\.?|млн\\.?|млрд\\.?|трлн\\.?))?$/i;
     let match=text.match(suffixRegex);

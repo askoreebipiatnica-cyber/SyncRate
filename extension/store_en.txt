@@ -1,0 +1,23 @@
+[TITLE]
+SyncRate: Currency & Crypto Converter
+
+[SHORT DESCRIPTION]
+Highlight any price on any website to instantly convert it to your local currency. 160+ fiats, National Banks, and Top-30 Crypto.
+
+[FULL DESCRIPTION]
+SyncRate is the ultimate financial tool for your browser. Forget about copying numbers and opening new tabs with calculators. Simply highlight any amount (e.g., "$ 5,040" or "0.5 BTC") on any website, and SyncRate will instantly show its equivalent in your national currency right next to your cursor!
+
+🌟 CORE FEATURES (FREE):
+- Convert from USD to your local currency.
+- Smart parsing: understands suffixes like K, M, B, millions, billions.
+- Convenient built-in dashboard with main currency pairs.
+
+💎 PRO+ FEATURES:
+- 160+ fiat currencies from around the world.
+- Integration with Official National Banks (ECB, CBRF, NBU, NBRB) for precise accounting and tax calculations.
+- Support for Top-30 Cryptocurrencies (BTC, ETH, SOL, USDT, etc.) with rates updated every minute!
+- Smart Dark Mode.
+- Interface translated into 10 languages (including English, Russian, Chinese, German, Spanish).
+
+🔒 PRIVACY & SECURITY:
+SyncRate respects your privacy. The extension DOES NOT read passwords, credit card numbers, or hidden fields. All calculations happen instantly without collecting your personal browsing history.

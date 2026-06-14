@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "SyncRate: Currency & Crypto Converter",
+  "version": "15.0",
+  "description": "Мгновенная конвертация. Нацбанки и Крипта. Внимание: Реверс-инжиниринг и взлом PRO версии преследуется по закону (DMCA).",
+  "permissions":["storage"],
+  "host_permissions":[
+    "https://open.er-api.com/*",
+    "https://min-api.cryptocompare.com/*",
+    "https://www.cbr-xml-daily.ru/*",
+    "https://bank.gov.ua/*",
+    "https://api.nbrb.by/*"
+  ],
+  "action": { "default_popup": "popup.html", "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" } },
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "background": { "service_worker": "background.js" },
+  "content_scripts":[ { "matches":["<all_urls>"], "js":["content.js"], "run_at": "document_end", "all_frames": true } ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

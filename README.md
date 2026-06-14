@@ -49,6 +49,13 @@ Start the production server:
 npm start
 ```
 
+## ⚠️ CRITICAL NOTICE / ВАЖНОЕ ПРИМЕЧАНИЕ ⚠️
+
+> [!WARNING]
+> **ENGLISH:** When installing as a Chrome extension, you **MUST** select the subfolder named **`extension`** inside this project, **NOT** the repository's main folder. Selecting the main folder will throw an error: *"Manifest file is missing or unreadable"*.
+>
+> **РУССКИЙ:** При установке расширения в Chrome вы **ОБЯЗАТЕЛЬНО** должны выбрать подпапку **`extension`** внутри папки проекта, а **НЕ** саму главную корневую папку репозитория. Если выбрать саму корневую папку всего репозитория, то Chrome выдаст ошибку: *"Файл манифеста отсутствует или недоступен для чтения"*.
+
 ## Chrome Extension Installation / Установка расширения в браузер
 
 ### 🇬🇧 English: If you downloaded/cloned this repository from GitHub:
@@ -71,3 +78,4 @@ npm start
 
 © 2026 SyncRate. All rights reserved.
 This tool is provided for authorized developers only. Reverse engineering or unauthorized distribution is strictly prohibited.
+

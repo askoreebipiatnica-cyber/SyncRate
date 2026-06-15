@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         lang: 'auto',
         targetCurrency: 'RUB',
         rateSource: 'market',
-        dashboardBases: ['USD', 'EUR', 'BTC', 'ETH'],
+        dashboardBases: ['USD', 'EUR', 'RUB', 'GBP'],
         theme: 'dark',
         appTier: 'basic',
         trialStart: null
@@ -418,7 +418,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Check Trial
     const isTrialActive = state.trialStart && (Date.now() - state.trialStart < 48 * 60 * 60 * 1000);
-    const activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
+    let activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
+
+    const updateDashboardSels = (tier) => {
+        if (tier === 'basic') {
+            dashSels[2].disabled = true;
+            dashSels[3].disabled = true;
+            dashSels[2].style.opacity = '0.5';
+            dashSels[3].style.opacity = '0.5';
+        } else {
+            dashSels[2].disabled = false;
+            dashSels[3].disabled = false;
+            dashSels[2].style.opacity = '1';
+            dashSels[3].style.opacity = '1';
+        }
+    };
+    updateDashboardSels(activeTier);
 
     if (isTrialActive && state.appTier === 'basic') {
         const hoursLeft = Math.max(0, Math.floor((48 * 60 * 60 * 1000 - (Date.now() - state.trialStart)) / (1000 * 60 * 60)));
@@ -467,6 +482,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 translateUI();
                 dashSels.forEach((sel, i) => populateCurrencies(sel, state.dashboardBases[i]));
+                updateDashboardSels(activeTier);
                 loadDashboard();
             }, 1000);
         });
@@ -488,7 +504,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (res && res.success) {
                 dashGrid.textContent = '';
-                state.dashboardBases.forEach((base, i) => {
+                const maxSlots = activeTier === 'basic' ? 2 : 4;
+                state.dashboardBases.slice(0, maxSlots).forEach((base, i) => {
                     const rate = res.rates[i];
                     const card = document.createElement('div');
                     card.className = 'dash-card';
@@ -581,6 +598,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if (state.appTier !== 'basic') {
                             trialBanner.style.display = 'none';
                         }
+                        activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
+                        updateDashboardSels(activeTier);
+                        loadDashboard();
                     });
                 } else {
                     const failMsgs = {
@@ -641,8 +661,220 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 `,
-  background: `const API_FIAT="https://open.er-api.com/v6/latest/";const CRYPTO_API="https://min-api.cryptocompare.com/data/price?fsym=";const CBRF_API="https://www.cbr-xml-daily.ru/daily_json.js";const NBU_API="https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";const NBRB_API="https://api.nbrb.by/exrates/rates?periodicity=0";const CRYPTO_CODES=['BTC','ETH','USDT','BNB','SOL','XRP','USDC','ADA','AVAX','DOGE','DOT','TRX','LINK','MATIC','TON','SHIB','LTC','BCH','ATOM','XLM','NEAR','UNI','XMR','ETC','ICP','FIL','APT','LDO','ARB','VET','MKR','SAT','WAVES'];chrome.runtime.onInstalled.addListener(()=>{chrome.storage.local.get(['trialStart'],(res)=>{if(!res.trialStart)chrome.storage.local.set({trialStart:Date.now()});});});chrome.runtime.onMessage.addListener((request,sender,sendResponse)=>{if(request.action==="GET_RATE"){getCrossRate(request.from,request.to,request.source).then(sendResponse);return true;}if(request.action==="GET_DASHBOARD"){Promise.all(request.bases.map(b=>getCrossRate(b,request.target,request.source))).then(results=>{sendResponse({success:true,rates:results.map(r=>r.success?r.rate:null)});});return true;}});async function cleanExpiredCache(){try{const all=await chrome.storage.local.get(null);const now=Date.now();const keysToDelete=[];for(const key in all){if(key.startsWith("v15_rate_")){const item=all[key];if(!item||!item.timestamp||(now-item.timestamp>24*60*60*1000)){keysToDelete.push(key);}}}if(keysToDelete.length>0){await chrome.storage.local.remove(keysToDelete);}}catch(e){}}async function getCryptoUsdPrice(coin){try{const res=await fetch(CRYPTO_API+coin+"&tsyms=USD");const data=await res.json();if(data.USD)return parseFloat(data.USD);throw new Error();}catch(e){throw e;}}async function getCrossRate(fromCode,targetCode,sourceCode){if(fromCode===targetCode)return{success:true,rate:1,date:"Live"};try{const cacheKey="v15_rate_"+fromCode+"_"+targetCode+"_"+sourceCode;const cachedWrap=await chrome.storage.local.get([cacheKey]);const cachedItem=cachedWrap[cacheKey];const isCrypto=CRYPTO_CODES.includes(fromCode);const CACHE_TTL=isCrypto?60*1000:(sourceCode==='official'?12*60*60*1000:60*60*1000);if(cachedItem&&cachedItem.timestamp&&(Date.now()-cachedItem.timestamp<CACHE_TTL)){return{success:true,rate:cachedItem.rate,date:cachedItem.date};}let finalRate=null,dateToReturn="";if(sourceCode==='official'){try{let targetUsdRate=null;let targetBankName="";if(targetCode==='RUB'){const res=await fetch(CBRF_API);const data=await res.json();if(data.Valute && data.Valute['USD']){targetUsdRate=data.Valute['USD'].Value;targetBankName="ЦБ РФ";if(!isCrypto&&fromCode!=='USD'){if(fromCode==='EUR' && data.Valute['EUR'])finalRate=data.Valute['EUR'].Value;else if(data.Valute[fromCode])finalRate=data.Valute[fromCode].Value/data.Valute[fromCode].Nominal;}}}else if(targetCode==='UAH'){const res=await fetch(NBU_API);const data=await res.json();const usd=data.find(c=>c.cc==='USD');if(usd){targetUsdRate=usd.rate;targetBankName="НБУ";if(!isCrypto&&fromCode!=='USD'){const curObj=data.find(c=>c.cc===fromCode);if(curObj)finalRate=curObj.rate;}}}else if(targetCode==='BYN'){const res=await fetch(NBRB_API);const data=await res.json();const usdObj=data.find(c=>c.Cur_Abbreviation==='USD');if(usdObj){targetUsdRate=usdObj.Cur_OfficialRate/usdObj.Cur_Scale;targetBankName="НБРБ";if(!isCrypto&&fromCode!=='USD'){const curObj=data.find(c=>c.Cur_Abbreviation===fromCode);if(curObj)finalRate=curObj.Cur_OfficialRate/curObj.Cur_Scale;}}}else if(targetCode==='EUR'){const res=await fetch(API_FIAT+"EUR");const data=await res.json();if(data.rates && data.rates['USD']){targetUsdRate=1/data.rates['USD'];targetBankName="ECB";if(!isCrypto && data.rates[fromCode])finalRate=1/data.rates[fromCode];}}if(!finalRate&&targetUsdRate){if(isCrypto){finalRate=await getCryptoUsdPrice(fromCode)*targetUsdRate;}else if(fromCode==='USD'){finalRate=targetUsdRate;}}if(finalRate)dateToReturn=targetBankName;else throw new Error();}catch(e){sourceCode='market';}}if(!finalRate||sourceCode==='market'){if(isCrypto){const cryptoUsd=await getCryptoUsdPrice(fromCode);if(targetCode==='USD'){finalRate=cryptoUsd;dateToReturn="Live";}else{const res=await fetch(API_FIAT+"USD");const data=await res.json();finalRate=cryptoUsd*data.rates[targetCode];dateToReturn="Live";}}else{const res=await fetch(API_FIAT+fromCode);const data=await res.json();finalRate=data.rates[targetCode];dateToReturn="Live";}}if(finalRate){if(Math.random()<0.05){await cleanExpiredCache();}await chrome.storage.local.set({[cacheKey]:{rate:finalRate,date:dateToReturn,timestamp:Date.now()}});return{success:true,rate:finalRate,date:dateToReturn};}throw new Error();}catch(error){return{success:false};}}`,
-  content: `const CRYPTO_MAP={'BTC':'BTC','BITCOIN':'BTC','БИТКОИН':'BTC','БИТОК':'BTC','ETH':'ETH','ETHEREUM':'ETH','ЭФИРИУМ':'ETH','ЭФИР':'ETH','USDT':'USDT','TETHER':'USDT','ТЕЗЕР':'USDT','BNB':'BNB','BINANCECOIN':'BNB','SOL':'SOL','SOLANA':'SOL','СОЛАНА':'SOL','XRP':'XRP','RIPPLE':'XRP','РИПЛ':'XRP','USDC':'USDC','USDCOIN':'USDC','ADA':'ADA','CARDANO':'ADA','КАРДАНО':'ADA','AVAX':'AVAX','AVALANCHE':'AVAX','АВАКС':'AVAX','DOGE':'DOGE','DOGECOIN':'DOGE','ДОГИКОИН':'DOGE','ДОГИ':'DOGE','DOT':'DOT','POLKADOT':'DOT','ПОЛКАДОТ':'DOT','TRX':'TRX','TRON':'TRX','ТРОН':'TRX','LINK':'LINK','CHAINLINK':'LINK','ЛИНК':'LINK','MATIC':'MATIC','POLYGON':'MATIC','МАТИК':'MATIC','TON':'TON','TONCOIN':'TON','ТОН':'TON','SHIB':'SHIB','SHIBAINU':'SHIB','ШИБА':'SHIB','LTC':'LTC','LITECOIN':'LTC','ЛАЙТКОИН':'LTC','BCH':'BCH','BITCOINCASH':'BCH','БИТКОИНКЕШ':'BCH','SAT':'SAT','SATOSHI':'SAT','САТОШИ':'SAT','WAVES':'WAVES','ВЕЙВС':'WAVES'};const FIAT_MAP={'$':'USD','USD':'USD','€':'EUR','EUR':'EUR','£':'GBP','GBP':'GBP','¥':'CNY','CNY':'CNY','JPY':'JPY','₣':'CHF','FR.':'CHF','CHF':'CHF','A$':'AUD','AUD':'AUD','C$':'CAD','CAD':'CAD','₺':'TRY','TRY':'TRY','AED':'AED','₴':'UAH','UAH':'UAH','ГРН':'UAH','ГРИВНА':'UAH','ГРИВЕН':'UAH','₸':'KZT','KZT':'KZT','ТНГ':'KZT','ТЕНГЕ':'KZT','₼':'AZN','AZN':'AZN','BGN':'BGN','LEV':'BGN','BR':'BYN','BYN':'BYN','БР':'BYN','БЕЛРУБ':'BYN','BYR':'BYN','РБ':'BYN','₹':'INR','INR':'INR','KGS':'KGS','₩':'KRW','KRW':'KRW','L':'MDL','MDL':'MDL','SM':'TJS','TJS':'TJS','TMT':'TMT','UZS':'UZS','SUM':'UZS','₪':'ILS','ILS':'ILS','¢':'USD','₽':'RUB','Р':'RUB','P':'RUB','p':'RUB','РУБ':'RUB','РУБ.':'RUB','РУБЛЕЙ':'RUB','RUB':'RUB','ДОЛЛАР':'USD','ДОЛЛАРОВ':'USD','ЕВРО':'EUR','ЮАНЬ':'CNY','ИЕНА':'JPY','ТЕНГЕ':'KZT'};const CURRENCY_MAP={...FIAT_MAP,...CRYPTO_MAP};const CRYPTO_CODES=Object.values(CRYPTO_MAP);const PRO_CURRENCIES=['USD','EUR','GBP','CHF','JPY','CAD','CNY','AED'];let hideTimeout=null,currentTooltip=null;document.addEventListener('mouseup',handleSelection);document.addEventListener('mousedown',(e)=>{if(currentTooltip&&currentTooltip.contains(e.target))return;removeTooltip();});async function handleSelection(event){try{if(!chrome.runtime?.id)return;const selection=window.getSelection();let text=selection.toString();text=text.replace(/[\\u00A0\\u202F\\u200B-\\u200D\\uFEFF]/g,' ').trim();if(!text||text.length>50)return;function isSelectionInSensitiveField(){const sel=window.getSelection();if(!sel.rangeCount)return false;const node=sel.getRangeAt(0).commonAncestorContainer;const el=node.nodeType===1?node:node.parentElement;if(!el)return false;if(el.closest('[contenteditable="true"]'))return true;const closestInput=el.closest('input, textarea');if(!closestInput)return false;const type=(closestInput.type||'').toLowerCase();const name=(closestInput.name||'').toLowerCase();const id=(closestInput.id||'').toLowerCase();return type==='password'||type==='hidden'||name.includes('cc')||name.includes('card')||name.includes('cvv')||name.includes('password')||name.includes('secret')||id.includes('cc')||id.includes('card')||id.includes('cvv')||id.includes('password')||id.includes('secret');}if(isSelectionInSensitiveField())return;const parseResult=parseCurrencyString(text);if(!parseResult)return;const settings=await chrome.storage.local.get({appTier:'basic',targetCurrency:'RUB',rateSource:'market',trialStart:null,lang:'auto'});let currentLang=settings.lang==='auto'?(navigator.language.split('-')[0]||'en'):settings.lang;if(currentLang==='ua')currentLang='uk';const C_DICT={'uk':{lock:'Блокування',req:'Потрібен тариф'},'ru':{lock:'Блокировка',req:'Требуется тариф'},'en':{lock:'Locked',req:'Requires plan'},'de':{lock:'Gesperrt',req:'Erfordert Plan'},'es':{lock:'Bloqueado',req:'Requiere plan'},'zh':{lock:'已锁定',req:'需要方案'},'kk':{lock:'Блокталған',req:'Тариф қажет'}};const m=C_DICT[currentLang]||C_DICT['en'];if(parseResult.isSat){showTooltip(event.pageX,event.pageY,parseResult.amount,"Live","BTC",currentLang);return;}const targetCurrencyUpper = (settings.targetCurrency || "RUB").trim().toUpperCase();if(parseResult.currency===targetCurrencyUpper){showTooltip(event.pageX,event.pageY,parseResult.amount,"Live",targetCurrencyUpper,currentLang);return;}const isTrialActive=settings.trialStart&&((Date.now()-settings.trialStart)<48*60*60*1000);const activeTier=(settings.appTier==='pro_plus'||isTrialActive)?'pro_plus':settings.appTier;const isByDomain=window.location.hostname.endsWith('.by');const allowedBasic=['USD','EUR','RUB'];if(isByDomain)allowedBasic.push('BYN');if(activeTier==='basic'&&!allowedBasic.includes(parseResult.currency))return showUpsell(event.pageX,event.pageY,parseResult.currency,"PRO",m);if(activeTier==='pro'&&!PRO_CURRENCIES.includes(parseResult.currency))return showUpsell(event.pageX,event.pageY,parseResult.currency,"PRO+",m);const actualSource=activeTier==='pro_plus'?settings.rateSource:'market';const res=await chrome.runtime.sendMessage({action:"GET_RATE",from:parseResult.currency,to:targetCurrencyUpper,source:actualSource});if(res&&res.success&&res.rate)showTooltip(event.pageX,event.pageY,parseResult.amount*res.rate,res.date,targetCurrencyUpper,currentLang);}catch(e){}}function parseCurrencyString(text){    const suffixRegex=/^([0-9\\s.,]+)\\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\\.?|млн\\.?|млрд\\.?|трлн\\.?))?\\s*([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\\s]{1,25})$/i;
+  background: `const API_FIAT = "https://open.er-api.com/v6/latest/";
+const CRYPTO_API = "https://min-api.cryptocompare.com/data/price?fsym=";
+const CBRF_API = "https://www.cbr-xml-daily.ru/daily_json.js";
+const NBU_API = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";
+const NBRB_API = "https://api.nbrb.by/exrates/rates?periodicity=0";
+const CRYPTO_CODES = ['BTC','ETH','USDT','BNB','SOL','XRP','USDC','ADA','AVAX','DOGE','DOT','TRX','LINK','MATIC','TON','SHIB','LTC','BCH','ATOM','XLM','NEAR','UNI','XMR','ETC','ICP','FIL','APT','LDO','ARB','VET','MKR','SAT','WAVES'];
+
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.storage.local.get(['trialStart'], (res) => {
+        if (!res.trialStart) {
+            chrome.storage.local.set({ trialStart: Date.now() });
+        }
+    });
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "GET_RATE") {
+        getCrossRate(request.from, request.to, request.source)
+            .then(res => sendResponse(res))
+            .catch(() => sendResponse({ success: false }));
+        return true; // Важно! Оставляем канал открытым
+    }
+    if (request.action === "GET_DASHBOARD") {
+        Promise.all(request.bases.map(b => 
+            getCrossRate(b, request.target, request.source)
+                .catch(() => ({ success: false }))
+        )).then(results => {
+            sendResponse({
+                success: true,
+                rates: results.map(r => r && r.success ? r.rate : null)
+            });
+        }).catch(() => sendResponse({ success: false, rates: [] }));
+        return true;
+    }
+});
+
+async function cleanExpiredCache() {
+    try {
+        const all = await chrome.storage.local.get(null);
+        const now = Date.now();
+        const keysToDelete = [];
+        for (const key in all) {
+            if (key.startsWith("v15_rate_")) {
+                const item = all[key];
+                if (!item || !item.timestamp || (now - item.timestamp > 24 * 60 * 60 * 1000)) {
+                    keysToDelete.push(key);
+                }
+            }
+        }
+        if (keysToDelete.length > 0) {
+            await chrome.storage.local.remove(keysToDelete);
+        }
+    } catch (e) {}
+}
+
+async function getCryptoUsdPrice(coin) {
+    try {
+        const res = await fetch(CRYPTO_API + coin + "&tsyms=USD");
+        const data = await res.json();
+        if (data.USD) return parseFloat(data.USD);
+        throw new Error();
+    } catch (e) {
+        throw e;
+    }
+}
+
+async function getCrossRate(fromCode, targetCode, sourceCode) {
+    if (fromCode === targetCode) return { success: true, rate: 1, date: "Live" };
+    
+    // Проверяем тип валюты до кэширования
+    const isCrypto = CRYPTO_CODES.includes(fromCode) || CRYPTO_CODES.includes(targetCode);
+    
+    // Корректируем источник сразу, если это крипта (у нацбанков нет курсов крипты)
+    if (isCrypto && sourceCode === 'official') {
+        sourceCode = 'market';
+    }
+
+    const cacheKey = \`v15_rate_\${fromCode}_\${targetCode}_\${sourceCode}\`;
+    
+    try {
+        const cachedWrap = await chrome.storage.local.get([cacheKey]);
+        const cachedItem = cachedWrap[cacheKey];
+        const CACHE_TTL = isCrypto ? 60 * 1000 : (sourceCode === 'official' ? 12 * 60 * 60 * 1000 : 60 * 60 * 1000);
+
+        if (cachedItem && cachedItem.timestamp && (Date.now() - cachedItem.timestamp < CACHE_TTL)) {
+            return { success: true, rate: cachedItem.rate, date: cachedItem.date };
+        }
+
+        let finalRate = null, dateToReturn = "";
+
+        if (sourceCode === 'official') {
+            try {
+                let targetUsdRate = null;
+                let targetBankName = "";
+                if (targetCode === 'RUB') {
+                    const res = await fetch(CBRF_API);
+                    const data = await res.json();
+                    if (data.Valute) {
+                        targetBankName = "ЦБ РФ";
+                        const getRateInRUB = (code) => {
+                            if (code === 'RUB') return 1;
+                            const entry = data.Valute[code];
+                            return entry ? parseFloat(entry.Value) / parseInt(entry.Nominal || 1, 10) : null;
+                        };
+                        const rFrom = getRateInRUB(fromCode);
+                        const rTarget = getRateInRUB(targetCode);
+                        if (rFrom !== null && rTarget !== null) {
+                            finalRate = rFrom / rTarget;
+                        } else if (data.Valute['USD']) {
+                            targetUsdRate = parseFloat(data.Valute['USD'].Value);
+                        }
+                    }
+                } else if (targetCode === 'UAH') {
+                    const res = await fetch(NBU_API);
+                    const data = await res.json();
+                    targetBankName = "НБУ";
+                    const getRateInUAH = (code) => {
+                        if (code === 'UAH') return 1;
+                        const entry = data.find(c => c.cc === code);
+                        return entry ? parseFloat(entry.rate) : null;
+                    };
+                    const rFrom = getRateInUAH(fromCode);
+                    const rTarget = getRateInUAH(targetCode);
+                    if (rFrom !== null && rTarget !== null) {
+                        finalRate = rFrom / rTarget;
+                    } else {
+                        const usd = data.find(c => c.cc === 'USD');
+                        if (usd) targetUsdRate = parseFloat(usd.rate);
+                    }
+                } else if (targetCode === 'BYN') {
+                    const res = await fetch(NBRB_API);
+                    const data = await res.json();
+                    targetBankName = "НБРБ";
+                    const getRateInBYN = (code) => {
+                        if (code === 'BYN') return 1;
+                        const entry = data.find(c => c.Cur_Abbreviation === code);
+                        return entry ? parseFloat(entry.Cur_OfficialRate) / parseFloat(entry.Cur_Scale || 1) : null;
+                    };
+                    const rFrom = getRateInBYN(fromCode);
+                    const rTarget = getRateInBYN(targetCode);
+                    if (rFrom !== null && rTarget !== null) {
+                        finalRate = rFrom / rTarget;
+                    } else {
+                        const usdObj = data.find(c => c.Cur_Abbreviation === 'USD');
+                        if (usdObj) targetUsdRate = parseFloat(usdObj.Cur_OfficialRate) / parseFloat(usdObj.Cur_Scale || 1);
+                    }
+                } else if (targetCode === 'EUR') {
+                    const res = await fetch(API_FIAT + "EUR");
+                    const data = await res.json();
+                    if (data.rates) {
+                        targetBankName = "ECB";
+                        const rFrom = fromCode === 'EUR' ? 1 : (data.rates[fromCode] ? 1 / data.rates[fromCode] : null);
+                        const rTarget = targetCode === 'EUR' ? 1 : (data.rates[targetCode] ? 1 / data.rates[targetCode] : null);
+                        if (rFrom !== null && rTarget !== null) {
+                            finalRate = rFrom / rTarget;
+                        } else if (data.rates['USD']) {
+                            targetUsdRate = 1 / data.rates['USD'];
+                        }
+                    }
+                }
+                if (!finalRate && targetUsdRate) {
+                    if (isCrypto) {
+                        finalRate = await getCryptoUsdPrice(fromCode) * targetUsdRate;
+                    } else if (fromCode === 'USD') {
+                        finalRate = targetUsdRate;
+                    }
+                }
+                if (finalRate) {
+                    dateToReturn = targetBankName;
+                } else {
+                    throw new Error("Official rate look up failed");
+                }
+            } catch (e) {
+                sourceCode = 'market';
+                return getCrossRate(fromCode, targetCode, 'market');
+            }
+        }
+        
+        if (!finalRate || sourceCode === 'market') {
+            if (isCrypto) {
+                const cryptoUsd = await getCryptoUsdPrice(fromCode);
+                if (targetCode === 'USD') {
+                    finalRate = cryptoUsd;
+                    dateToReturn = "Live";
+                } else {
+                    const res = await fetch(API_FIAT + "USD");
+                    const data = await res.json();
+                    finalRate = cryptoUsd * data.rates[targetCode];
+                    dateToReturn = "Live";
+                }
+            } else {
+                const res = await fetch(API_FIAT + fromCode);
+                const data = await res.json();
+                finalRate = data.rates[targetCode];
+                dateToReturn = "Live";
+            }
+        }
+        
+        if (finalRate) {
+            if (Math.random() < 0.05) {
+                await cleanExpiredCache();
+            }
+            await chrome.storage.local.set({
+                [cacheKey]: { rate: finalRate, date: dateToReturn, timestamp: Date.now() }
+            });
+            return { success: true, rate: finalRate, date: dateToReturn };
+        }
+        throw new Error();
+    } catch (error) {
+        return { success: false };
+    }
+}
+`,
+  content: `const CRYPTO_MAP={'BTC':'BTC','BITCOIN':'BTC','БИТКОИН':'BTC','БИТОК':'BTC','ETH':'ETH','ETHEREUM':'ETH','ЭФИРИУМ':'ETH','ЭФИР':'ETH','USDT':'USDT','TETHER':'USDT','ТЕЗЕР':'USDT','BNB':'BNB','BINANCECOIN':'BNB','SOL':'SOL','SOLANA':'SOL','СОЛАНА':'SOL','XRP':'XRP','RIPPLE':'XRP','РИПЛ':'XRP','USDC':'USDC','USDCOIN':'USDC','ADA':'ADA','CARDANO':'ADA','КАРДАНО':'ADA','AVAX':'AVAX','AVALANCHE':'AVAX','АВАКС':'AVAX','DOGE':'DOGE','DOGECOIN':'DOGE','ДОГИКОИН':'DOGE','ДОГИ':'DOGE','DOT':'DOT','POLKADOT':'DOT','ПОЛКАДОТ':'DOT','TRX':'TRX','TRON':'TRX','ТРОН':'TRX','LINK':'LINK','CHAINLINK':'LINK','ЛИНК':'LINK','MATIC':'MATIC','POLYGON':'MATIC','МАТИК':'MATIC','TON':'TON','TONCOIN':'TON','ТОН':'TON','SHIB':'SHIB','SHIBAINU':'SHIB','ШИБА':'SHIB','LTC':'LTC','LITECOIN':'LTC','ЛАЙТКОИН':'LTC','BCH':'BCH','BITCOINCASH':'BCH','БИТКОИНКЕШ':'BCH','SAT':'SAT','SATOSHI':'SAT','САТОШИ':'SAT','WAVES':'WAVES','ВЕЙВС':'WAVES'};const FIAT_MAP={'$':'USD','USD':'USD','€':'EUR','EUR':'EUR','£':'GBP','GBP':'GBP','¥':'CNY','CNY':'CNY','JPY':'JPY','₣':'CHF','FR.':'CHF','CHF':'CHF','A$':'AUD','AUD':'AUD','C$':'CAD','CAD':'CAD','₺':'TRY','TRY':'TRY','AED':'AED','₴':'UAH','UAH':'UAH','ГРН':'UAH','ГРИВНА':'UAH','ГРИВЕН':'UAH','₸':'KZT','KZT':'KZT','ТНГ':'KZT','ТЕНГЕ':'KZT','₼':'AZN','AZN':'AZN','BGN':'BGN','LEV':'BGN','BR':'BYN','BYN':'BYN','БР':'BYN','БЕЛРУБ':'BYN','BYR':'BYN','РБ':'BYN','₹':'INR','INR':'INR','KGS':'KGS','₩':'KRW','KRW':'KRW','L':'MDL','MDL':'MDL','SM':'TJS','TJS':'TJS','TMT':'TMT','UZS':'UZS','SUM':'UZS','₪':'ILS','ILS':'ILS','¢':'USD','₽':'RUB','Р':'RUB','РУБ':'RUB','РУБ.':'RUB','РУБЛЕЙ':'RUB','RUB':'RUB','ДОЛЛАР':'USD','ДОЛЛАРОВ':'USD','ЕВРО':'EUR','ЮАНЬ':'CNY','ИЕНА':'JPY','ТЕНГЕ':'KZT'};const CURRENCY_MAP={...FIAT_MAP,...CRYPTO_MAP};const CRYPTO_CODES=Object.values(CRYPTO_MAP);const PRO_CURRENCIES=['USD','EUR','GBP','CHF','JPY','CAD','CNY','AED'];let hideTimeout=null,currentTooltip=null;document.addEventListener('mouseup',handleSelection);document.addEventListener('mousedown',(e)=>{if(currentTooltip&&currentTooltip.contains(e.target))return;removeTooltip();});async function handleSelection(event){try{if(!chrome.runtime?.id)return;const selection=window.getSelection();let text=selection.toString();text=text.replace(/[\\u00A0\\u202F\\u200B-\\u200D\\uFEFF]/g,' ').trim();if(!text||text.length>50)return;function isSelectionInSensitiveField(){const sel=window.getSelection();if(!sel.rangeCount)return false;const node=sel.getRangeAt(0).commonAncestorContainer;const el=node.nodeType===1?node:node.parentElement;if(!el)return false;if(el.closest('[contenteditable="true"]'))return true;const closestInput=el.closest('input, textarea');if(!closestInput)return false;const type=(closestInput.type||'').toLowerCase();const name=(closestInput.name||'').toLowerCase();const id=(closestInput.id||'').toLowerCase();return type==='password'||type==='hidden'||name.includes('cc')||name.includes('card')||name.includes('cvv')||name.includes('password')||name.includes('secret')||id.includes('cc')||id.includes('card')||id.includes('cvv')||id.includes('password')||id.includes('secret');}if(isSelectionInSensitiveField())return;const parseResult=parseCurrencyString(text);if(!parseResult)return;const settings=await chrome.storage.local.get({appTier:'basic',targetCurrency:'RUB',rateSource:'market',trialStart:null,lang:'auto'});let currentLang=settings.lang==='auto'?(navigator.language.split('-')[0]||'en'):settings.lang;if(currentLang==='ua')currentLang='uk';const C_DICT={'uk':{lock:'Блокування',req:'Потрібен тариф'},'ru':{lock:'Блокировка',req:'Требуется тариф'},'en':{lock:'Locked',req:'Requires plan'},'de':{lock:'Gesperrt',req:'Erfordert Plan'},'es':{lock:'Bloqueado',req:'Requiere plan'},'zh':{lock:'已锁定',req:'需要方案'},'kk':{lock:'Блокталған',req:'Тариф қажет'}};const m=C_DICT[currentLang]||C_DICT['en'];if(parseResult.isSat){showTooltip(event.pageX,event.pageY,parseResult.amount,"Live","BTC",currentLang);return;}const targetCurrencyUpper = (settings.targetCurrency || "RUB").trim().toUpperCase();if(parseResult.currency===targetCurrencyUpper){showTooltip(event.pageX,event.pageY,parseResult.amount,"Live",targetCurrencyUpper,currentLang);return;}const isTrialActive=settings.trialStart&&((Date.now()-settings.trialStart)<48*60*60*1000);const activeTier=(settings.appTier==='pro_plus'||isTrialActive)?'pro_plus':settings.appTier;const isByDomain=window.location.hostname.endsWith('.by');const allowedBasic=['USD','EUR','RUB'];if(isByDomain)allowedBasic.push('BYN');if(activeTier==='basic'&&!allowedBasic.includes(parseResult.currency))return showUpsell(event.pageX,event.pageY,parseResult.currency,"PRO",m);if(activeTier==='pro'&&!PRO_CURRENCIES.includes(parseResult.currency))return showUpsell(event.pageX,event.pageY,parseResult.currency,"PRO+",m);const actualSource=activeTier==='pro_plus'?settings.rateSource:'market';const res=await chrome.runtime.sendMessage({action:"GET_RATE",from:parseResult.currency,to:targetCurrencyUpper,source:actualSource});if(res&&res.success&&res.rate)showTooltip(event.pageX,event.pageY,parseResult.amount*res.rate,res.date,targetCurrencyUpper,currentLang);}catch(e){}}function parseCurrencyString(text){    const suffixRegex=/^([0-9\\s.,]+)\\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\\.?|млн\\.?|млрд\\.?|трлн\\.?))?\\s*([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\\s]{1,25})$/i;
     const prefixRegex=/^([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\\s]{1,25})\\s*([0-9\\s.,]+)\\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\\.?|млн\\.?|млрд\\.?|трлн\\.?))?$/i;
     let match=text.match(suffixRegex);
     let isSuffix=true;
@@ -671,10 +903,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(!isoCode)return null;
     if(isoCode==='RUB'&&(cleanCurStr==='Р'||cleanCurStr==='P')){
         if(!isSuffix)return null;
-        if(cleanCurStr==='P'){
-            const charBefore=text.charAt(text.length-originalMatchedCur.length-1);
-            if(!/[\\s.,]/.test(charBefore))return null;
-        }
+        const rawCur = originalMatchedCur.trim();
+        if(rawCur==='P'||rawCur==='p')return null;
+        const charBefore=text.charAt(text.length-originalMatchedCur.length-1);
+        if(!/[\\s.,]/.test(charBefore))return null;
     }
     if(window.location.hostname.endsWith('.by')&&isoCode==='RUB'&&curStr!=='RUB')isoCode='BYN';
     let cleanNum=numStr.replace(/\\s/g,'');
@@ -704,7 +936,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(isSatVal)amount*=0.00000001;
     const finalCur=isSatVal?'BTC':isoCode;
     return{amount,currency:finalCur,isSat:isSatVal};
-}function createBase(x,y,callback){removeTooltip();const t=document.createElement('div');t.id='edge-currency-converter-tooltip';t.style.cssText='all: initial; position: absolute !important; left: '+(x+15)+'px !important; top: '+(y+35)+'px !important; padding: 12px 16px !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; z-index: 2147483647 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important; pointer-events: none !important; opacity: 0 !important; transform: translateY(5px) !important; transition: opacity 0.2s, transform 0.2s !important; display: flex !important; flex-direction: column !important; min-width: 140px !important; background-color: #161b22 !important; color: #f0f6fc !important; border: 1px solid #30363d !important;';chrome.storage.local.get({theme:'dark'},(res)=>{const isDark=res.theme==='dark';const bgColor=isDark?'#161b22':'#ffffff';const textColor=isDark?'#f0f6fc':'#1a1a1a';const borderColor=isDark?'#30363d':'#e0e0e0';t.style.setProperty('background',bgColor,'important');t.style.setProperty('background-color',bgColor,'important');t.style.setProperty('color',textColor,'important');t.style.setProperty('border','1px solid '+borderColor,'important');callback(t,textColor);requestAnimationFrame(()=>{t.style.setProperty('opacity','1','important');t.style.setProperty('transform','translateY(0)','important');});});document.body.appendChild(t);currentTooltip=t;hideTimeout=setTimeout(removeTooltip,7000);}function showTooltip(x,y,val,date,target,lang){
+}function createBase(x,y,callback){removeTooltip();const duplicate=document.getElementById('edge-currency-converter-tooltip');if(duplicate)duplicate.remove();const t=document.createElement('div');t.id='edge-currency-converter-tooltip';t.style.cssText='all: initial; position: absolute !important; left: '+(x+15)+'px !important; top: '+(y+35)+'px !important; padding: 12px 16px !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; z-index: 2147483647 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important; pointer-events: none !important; opacity: 0 !important; transform: translateY(5px) !important; transition: opacity 0.2s, transform 0.2s !important; display: flex !important; flex-direction: column !important; min-width: 140px !important; background-color: #161b22 !important; color: #f0f6fc !important; border: 1px solid #30363d !important;';chrome.storage.local.get({theme:'dark'},(res)=>{const isDark=res.theme==='dark';const bgColor=isDark?'#161b22':'#ffffff';const textColor=isDark?'#f0f6fc':'#1a1a1a';const borderColor=isDark?'#30363d':'#e0e0e0';t.style.setProperty('background',bgColor,'important');t.style.setProperty('background-color',bgColor,'important');t.style.setProperty('color',textColor,'important');t.style.setProperty('border','1px solid '+borderColor,'important');callback(t,textColor);requestAnimationFrame(()=>{t.style.setProperty('opacity','1','important');t.style.setProperty('transform','translateY(0)','important');});});document.body.appendChild(t);currentTooltip=t;hideTimeout=setTimeout(removeTooltip,7000);}function showTooltip(x,y,val,date,target,lang){
     const locales = {
         'uk': 'uk-UA',
         'ru': 'ru-RU',
@@ -717,7 +949,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     createBase(x,y,(t,textColor)=>{
         const formatted=new Intl.NumberFormat(locale,{
             style:'decimal',
-            minimumFractionDigits: val < 0.01 ? 4 : 2,
+            minimumFractionDigits: val < 0.01 ? 2 : 2,
             maximumFractionDigits: val < 0.01 ? 8 : 2
         }).format(val);
         const icon=date==='Live'?'⚡':'🏛';

@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         lang: 'auto',
         targetCurrency: 'RUB',
         rateSource: 'market',
-        dashboardBases: ['USD', 'EUR', 'BTC', 'ETH'],
+        dashboardBases: ['USD', 'EUR', 'RUB', 'GBP'],
         theme: 'dark',
         appTier: 'basic',
         trialStart: null
@@ -54,6 +54,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             el.textContent = i18n(el.getAttribute('data-i18n'));
         });
         targetLbl.textContent = state.targetCurrency;
+        
+        const lblLicense = document.querySelector('[data-i18n="lbl_license"]');
+        const btnActivate = document.querySelector('[data-i18n="btn_activate"]');
+        if (lblLicense) {
+            const licenseLabels = {
+                ru: 'Лицензионный ключ',
+                uk: 'Ліцензійний ключ',
+                kk: 'Лицензиялық кілт',
+                en: 'License Key',
+                de: 'Lizenzschlüssel',
+                es: 'Clave de licencia',
+                zh: '授权密钥'
+            };
+            lblLicense.textContent = licenseLabels[currentLang] || licenseLabels['en'];
+        }
+        if (btnActivate) {
+            const activateBtns = {
+                ru: 'Активировать',
+                uk: 'Активувати',
+                kk: 'Белсендіру',
+                en: 'Activate',
+                de: 'Aktivieren',
+                es: 'Activar',
+                zh: '激活'
+            };
+            btnActivate.textContent = activateBtns[currentLang] || activateBtns['en'];
+        }
     };
     translateUI();
 
@@ -90,7 +117,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Check Trial
     const isTrialActive = state.trialStart && (Date.now() - state.trialStart < 48 * 60 * 60 * 1000);
-    const activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
+    let activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
+
+    const updateDashboardSels = (tier) => {
+        if (tier === 'basic') {
+            dashSels[2].disabled = true;
+            dashSels[3].disabled = true;
+            dashSels[2].style.opacity = '0.5';
+            dashSels[3].style.opacity = '0.5';
+        } else {
+            dashSels[2].disabled = false;
+            dashSels[3].disabled = false;
+            dashSels[2].style.opacity = '1';
+            dashSels[3].style.opacity = '1';
+        }
+    };
+    updateDashboardSels(activeTier);
 
     if (isTrialActive && state.appTier === 'basic') {
         const hoursLeft = Math.max(0, Math.floor((48 * 60 * 60 * 1000 - (Date.now() - state.trialStart)) / (1000 * 60 * 60)));
@@ -128,7 +170,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             saveBtn.textContent = i18n('ready');
             setTimeout(() => {
                 saveBtn.textContent = i18n('btn_save');
-                window.location.reload();
+                state.lang = newSettings.lang;
+                state.targetCurrency = newSettings.targetCurrency;
+                state.rateSource = newSettings.rateSource;
+                state.dashboardBases = newSettings.dashboardBases;
+
+                currentLang = state.lang === 'auto' ? (navigator.language.split('-')[0] || 'en') : state.lang;
+                if (currentLang === 'ua') currentLang = 'uk';
+                if (!DICT[currentLang]) currentLang = 'en';
+
+                translateUI();
+                dashSels.forEach((sel, i) => populateCurrencies(sel, state.dashboardBases[i]));
+                updateDashboardSels(activeTier);
+                loadDashboard();
             }, 1000);
         });
     });
@@ -149,7 +203,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (res && res.success) {
                 dashGrid.textContent = '';
-                state.dashboardBases.forEach((base, i) => {
+                const maxSlots = activeTier === 'basic' ? 2 : 4;
+                state.dashboardBases.slice(0, maxSlots).forEach((base, i) => {
                     const rate = res.rates[i];
                     const card = document.createElement('div');
                     card.className = 'dash-card';
@@ -193,24 +248,81 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Handle Buy / Mock Upgrade
+    // Handle Buy / Real Redirect to Stripe Checkout or Billing portal
     upgradeBtn.addEventListener('click', () => {
         const checked = document.querySelector('input[name="tier"]:checked');
         if (checked) {
             const selectedTier = checked.value;
-            chrome.storage.local.set({ appTier: selectedTier }, () => {
-                const isRu = currentLang === 'ru' || currentLang === 'uk' || currentLang === 'kk';
-                const msg = isRu 
-                    ? '💳 Платёжный шлюз: Оплата прошла успешно! Ваш тариф обновлен.' 
-                    : '💳 Payment Gateway: Payment successful! Your plan has been upgraded.';
-                alert(msg);
-                window.location.reload();
-            });
+            chrome.tabs.create({ url: 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app/checkout?tier=' + selectedTier });
         }
     });
 
+    // License Activation via Server API
+    const activateBtn = document.getElementById('btn-activate');
+    const licenseInput = document.getElementById('input-license');
+    if (activateBtn && licenseInput) {
+        activateBtn.addEventListener('click', async () => {
+            const licenseKey = licenseInput.value.trim();
+            if (!licenseKey) return;
+            const originalText = activateBtn.textContent;
+            activateBtn.textContent = '...';
+            try {
+                const response = await fetch('https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app/api/verify-license', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ licenseKey })
+                });
+                const data = await response.json();
+                if (data.success && data.tier) {
+                    chrome.storage.local.set({ appTier: data.tier }, () => {
+                        const successMsgs = {
+                            ru: '✅ Лицензия успешно активирована! Ваш тариф: ' + data.tier.toUpperCase(),
+                            uk: '✅ Ліцензію успішно активовано! Ваш тариф: ' + data.tier.toUpperCase(),
+                            kk: '✅ Лицензия сәтті белсендірілді! Сіздің тарифіңіз: ' + data.tier.toUpperCase(),
+                            en: '✅ License activated successfully! Your plan: ' + data.tier.toUpperCase(),
+                            de: '✅ Lizenz erfolgreich aktiviert! Ihr Plan: ' + data.tier.toUpperCase(),
+                            es: '✅ ¡Licencia activada con éxito! Su plan: ' + data.tier.toUpperCase(),
+                            zh: '✅ 授权成功激活！您的方案：' + data.tier.toUpperCase()
+                        };
+                        alert(successMsgs[currentLang] || successMsgs['en']);
+                        state.appTier = data.tier;
+                        planRadios.forEach(radio => {
+                            if (radio.value === state.appTier) {
+                                radio.checked = true;
+                                document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
+                                radio.closest('.plan').classList.add('active');
+                                upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
+                            }
+                        });
+                        if (state.appTier !== 'basic') {
+                            trialBanner.style.display = 'none';
+                        }
+                        activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
+                        updateDashboardSels(activeTier);
+                        loadDashboard();
+                    });
+                } else {
+                    const failMsgs = {
+                        ru: '❌ Неверный или истекший лицензионный ключ',
+                        uk: '❌ Невірний або прострочений ліцензійний ключ',
+                        kk: '❌ Қате немесе мерзімі өткен лицензиялық кілт',
+                        en: '❌ Invalid or expired license key',
+                        de: '❌ Ungültiger oder abgelaufener Lizenzschlüssel',
+                        es: '❌ Clave de licencia no válida o caducada',
+                        zh: '❌ 授权密钥无效或已过期'
+                    };
+                    alert(failMsgs[currentLang] || failMsgs['en']);
+                }
+            } catch (err) {
+                alert('Connection error');
+            } finally {
+                activateBtn.textContent = originalText;
+            }
+        });
+    }
+
     document.getElementById('donate-btn').addEventListener('click', () => {
-        chrome.tabs.create({ url: 'https://buymeacoffee.com' });
+        chrome.tabs.create({ url: 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app/checkout?type=donation' });
     });
 
     document.getElementById('feedback-btn').addEventListener('click', () => {

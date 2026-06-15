@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     document.getElementById('donate-btn').addEventListener('click', () => {
-        chrome.tabs.create({ url: 'https://buymeacoffee.com' });
+        chrome.tabs.create({ url: 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app/checkout?type=donation' });
     });
 
     document.getElementById('feedback-btn').addEventListener('click', () => {

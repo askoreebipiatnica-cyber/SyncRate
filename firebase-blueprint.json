@@ -1,0 +1,52 @@
+{
+  "entities": {
+    "License": {
+      "title": "License",
+      "description": "Premium customer license key record",
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Unique key matching activeLicenses"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of key creation"
+        }
+      },
+      "required": ["key", "createdAt"]
+    },
+    "File": {
+      "title": "File",
+      "description": "Hosted binary files such as CRX or ZIP updates",
+      "type": "object",
+      "properties": {
+        "filename": {
+          "type": "string",
+          "description": "The name of the file (SyncRate.zip, SyncRate.crx)"
+        },
+        "base64Data": {
+          "type": "string",
+          "description": "Base64 encoded binary content"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of modification"
+        }
+      },
+      "required": ["filename", "base64Data", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "licenses/{licenseId}": {
+      "schema": "License",
+      "description": "Collection of activated license keys"
+    },
+    "files/{fileId}": {
+      "schema": "File",
+      "description": "Collection of uploaded update files"
+    }
+  }
+}

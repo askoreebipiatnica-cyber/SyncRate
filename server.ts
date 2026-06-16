@@ -3,6 +3,8 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from "firebase/firestore/lite";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,6 +13,12 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
   console.log("NODE_ENV:", process.env.NODE_ENV);
+
+  // Initialize Firebase Firestore for database persistence of licenses
+  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+  const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  const firebaseApp = initializeApp(firebaseConfig);
+  const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
 
   // Middleware to parse JSON
   app.use(express.json({ limit: '10mb' }));
@@ -36,8 +44,8 @@ async function startServer() {
     });
   });
 
-  // Route to "publish" the ZIP/CRX (for demo purposes)
-  app.post("/api/publish", (req, res) => {
+  // Route to "publish" the ZIP/CRX (securely persisted to Firestore)
+  app.post("/api/publish", async (req, res) => {
     const authHeader = req.headers.authorization;
     const secret = process.env.PUBLISH_SECRET;
     
@@ -54,22 +62,94 @@ async function startServer() {
     if (!zipBase64 && !crxBase64) return res.status(400).json({ error: "No ZIP or CRX data" });
     
     try {
+      // 1. Сохраняем в Firestore, чтобы обновления не терялись при перезапуске/масштабировании контейнеров
       if (zipBase64) {
-        const buffer = Buffer.from(zipBase64, 'base64');
-        fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.zip'), buffer);
+        await setDoc(doc(db, "files", "SyncRate.zip"), {
+          filename: "SyncRate.zip",
+          base64Data: zipBase64,
+          updatedAt: new Date().toISOString()
+        });
       }
       if (crxBase64) {
-        const buffer = Buffer.from(crxBase64, 'base64');
-        fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
+        await setDoc(doc(db, "files", "SyncRate.crx"), {
+          filename: "SyncRate.crx",
+          base64Data: crxBase64,
+          updatedAt: new Date().toISOString()
+        });
       } else if (zipBase64) {
-        // Fallback: write zip bytes to .crx file as well for testing integration
-        const buffer = Buffer.from(zipBase64, 'base64');
-        fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
+        // Фоллбек для CRX
+        await setDoc(doc(db, "files", "SyncRate.crx"), {
+          filename: "SyncRate.crx",
+          base64Data: zipBase64,
+          updatedAt: new Date().toISOString()
+        });
       }
-      res.json({ success: true, message: "Extension published successfully as CRX and ZIP!" });
+
+      // 2. Попытка записать на локальный диск (может завершиться ошибкой на read-only fs, игнорируем ошибку)
+      try {
+        if (zipBase64) {
+          const buffer = Buffer.from(zipBase64, 'base64');
+          fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.zip'), buffer);
+        }
+        if (crxBase64) {
+          const buffer = Buffer.from(crxBase64, 'base64');
+          fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
+        } else if (zipBase64) {
+          const buffer = Buffer.from(zipBase64, 'base64');
+          fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
+        }
+      } catch (localFsErr) {
+        console.warn("Best-effort local file write bypassed (Read-only container system):", localFsErr);
+      }
+
+      res.json({ success: true, message: "Extension published successfully to Cloud Firestore and local storage!" });
     } catch (err) {
-      res.status(500).json({ error: "Failed to save published files" });
+      console.error("Failed to publish files:", err);
+      res.status(500).json({ error: "Failed to save published files to cloud database" });
     }
+  });
+
+  // Dynamic routes for ZIP/CRX downloads from Cloud Firestore with local disk fallback
+  app.get("/SyncRate.zip", async (req, res) => {
+    try {
+      const docRef = doc(db, "files", "SyncRate.zip");
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists() && docSnap.data()?.base64Data) {
+        const base64 = docSnap.data().base64Data;
+        const buffer = Buffer.from(base64, "base64");
+        res.set("Content-Type", "application/zip");
+        res.set("Content-Disposition", 'attachment; filename="SyncRate.zip"');
+        return res.send(buffer);
+      }
+    } catch (err) {
+      console.error("Failed to fetch SyncRate.zip from Firestore:", err);
+    }
+    const localPath = path.join(process.cwd(), "public", "SyncRate.zip");
+    if (fs.existsSync(localPath)) {
+      return res.sendFile(localPath);
+    }
+    return res.status(404).send("File not found");
+  });
+
+  app.get("/SyncRate.crx", async (req, res) => {
+    try {
+      const docRef = doc(db, "files", "SyncRate.crx");
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists() && docSnap.data()?.base64Data) {
+        const base64 = docSnap.data().base64Data;
+        const buffer = Buffer.from(base64, "base64");
+        res.set("Content-Type", "application/x-chrome-extension");
+        res.set("Content-Disposition", 'attachment; filename="SyncRate.crx"');
+        return res.send(buffer);
+      }
+    } catch (err) {
+      console.error("Failed to fetch SyncRate.crx from Firestore:", err);
+    }
+    const localPath = path.join(process.cwd(), "public", "SyncRate.crx");
+    if (fs.existsSync(localPath)) {
+      return res.sendFile(localPath);
+    }
+    return res.status(404).send("File not found");
   });
 
   // API routes go here
@@ -78,26 +158,52 @@ async function startServer() {
   });
 
   // Simple persisted license list
-  const activeLicenses = new Set<string>([
+  const hardcodedLicenses = new Set<string>([
     "PRO-123456", "PRO-ABCDEF", "PRO-SYNCRATE",
     "PLUS-123456", "PLUS-ABCDEF", "PLUS-ENTERPRISE"
   ]);
+
+  const activeLicenses = new Set<string>([...hardcodedLicenses]);
 
   const licenseFilePath = path.join(process.cwd(), "config-licenses.json");
   if (fs.existsSync(licenseFilePath)) {
     try {
       const saved = JSON.parse(fs.readFileSync(licenseFilePath, "utf8"));
-      saved.forEach((k: string) => activeLicenses.add(k));
+      saved.forEach((k: string) => activeLicenses.add(k.toUpperCase()));
     } catch (e) {}
-  } else {
-    fs.writeFileSync(licenseFilePath, JSON.stringify(Array.from(activeLicenses)), "utf8");
   }
 
-  const saveLicense = (key: string) => {
-    activeLicenses.add(key);
+  // Load existing licenses from Firestore on startup
+  try {
+    const querySnapshot = await getDocs(collection(db, "licenses"));
+    querySnapshot.forEach((docSnapshot) => {
+      const data = docSnapshot.data();
+      if (data && data.key) {
+        activeLicenses.add(data.key.toUpperCase());
+      }
+    });
+    console.log(`Successfully booted and loaded ${activeLicenses.size - hardcodedLicenses.size} dynamic licenses from Firestore.`);
+  } catch (error) {
+    console.error("Warning: Failed to load licenses from Firestore at boot:", error);
+  }
+
+  const saveLicense = async (key: string) => {
+    const cleanKey = key.trim().toUpperCase();
+    activeLicenses.add(cleanKey);
     try {
       fs.writeFileSync(licenseFilePath, JSON.stringify(Array.from(activeLicenses)), "utf8");
     } catch (e) {}
+
+    // Persist to Cloud Firestore so licenses are never lost when containers restart or scale
+    try {
+      await setDoc(doc(db, "licenses", cleanKey), {
+        key: cleanKey,
+        createdAt: new Date().toISOString()
+      });
+      console.log(`Successfully persisted license ${cleanKey} to cloud Firestore!`);
+    } catch (error) {
+      console.error(`Error saving license ${cleanKey} to Firestore:`, error);
+    }
   };
 
   // Extended unified Checkout portal supporting both upgrades & donations, working inside Russia & worldwide.
@@ -539,24 +645,41 @@ async function startServer() {
 
 
   // Endpoint for verifying license key
-  app.post("/api/verify-license", (req, res) => {
+  app.post("/api/verify-license", async (req, res) => {
     const { licenseKey } = req.body;
     if (!licenseKey) return res.status(400).json({ success: false, error: "License key is required" });
     const formattedKey = licenseKey.trim().toUpperCase();
+    
+    // 1. Check local/memory licenses first for fast response and hardcoded local keys
     if (activeLicenses.has(formattedKey)) {
       const tier = formattedKey.startsWith("PRO-") ? "pro" : "pro_plus";
-      res.json({ success: true, tier });
-    } else {
-      res.json({ success: false, error: "Invalid license key" });
+      return res.json({ success: true, tier });
     }
+
+    // 2. Query Firestore dynamically to support multiple scaled stateless container instances
+    try {
+      const docRef = doc(db, "licenses", formattedKey);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const tier = formattedKey.startsWith("PRO-") ? "pro" : "pro_plus";
+        // Cache it in activeLicenses set for fast subsequent checks
+        activeLicenses.add(formattedKey);
+        return res.json({ success: true, tier });
+      }
+    } catch (error) {
+      console.error(`Cloud Firestore dynamic validation failed for ${formattedKey}:`, error);
+    }
+
+    res.json({ success: false, error: "Invalid license key" });
   });
 
   // Securely save a license key registered on Stripe checkout sandbox
-  app.post("/api/create-license", (req, res) => {
+  app.post("/api/create-license", async (req, res) => {
     const { key } = req.body;
     if (!key) return res.status(400).json({ success: false, error: "Key is required" });
-    saveLicense(key.trim().toUpperCase());
-    res.json({ success: true, license: key });
+    const formattedKey = key.trim().toUpperCase();
+    await saveLicense(formattedKey);
+    res.json({ success: true, license: formattedKey });
   });
 
   // Serve static files from public

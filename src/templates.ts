@@ -4,7 +4,7 @@ export const templates = {
   "name": "SyncRate: Currency & Crypto Converter",
   "version": "15.0",
   "description": "Мгновенная конвертация. Нацбанки и Крипта. Внимание: Реверс-инжиниринг и взлом PRO версии преследуется по закону (DMCA).",
-  "permissions":["storage"],
+  "permissions":["storage", "alarms"],
   "host_permissions":[
     "https://open.er-api.com/*",
     "https://min-api.cryptocompare.com/*",
@@ -674,6 +674,15 @@ chrome.runtime.onInstalled.addListener(() => {
             chrome.storage.local.set({ trialStart: Date.now() });
         }
     });
+    // Инициализируем системный будильник (срабатывает раз в час)
+    chrome.alarms.create("cleanupCache", { periodInMinutes: 60 });
+});
+
+// Добавляем слушатель будильника
+chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === "cleanupCache") {
+        cleanExpiredCache();
+    }
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -860,9 +869,6 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
         }
         
         if (finalRate) {
-            if (Math.random() < 0.05) {
-                await cleanExpiredCache();
-            }
             await chrome.storage.local.set({
                 [cacheKey]: { rate: finalRate, date: dateToReturn, timestamp: Date.now() }
             });
@@ -936,7 +942,7 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
     if(isSatVal)amount*=0.00000001;
     const finalCur=isSatVal?'BTC':isoCode;
     return{amount,currency:finalCur,isSat:isSatVal};
-}function createBase(x,y,callback){removeTooltip();const duplicate=document.getElementById('edge-currency-converter-tooltip');if(duplicate)duplicate.remove();const t=document.createElement('div');t.id='edge-currency-converter-tooltip';t.style.cssText='all: initial; position: absolute !important; left: '+(x+15)+'px !important; top: '+(y+35)+'px !important; padding: 12px 16px !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; z-index: 2147483647 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important; pointer-events: none !important; opacity: 0 !important; transform: translateY(5px) !important; transition: opacity 0.2s, transform 0.2s !important; display: flex !important; flex-direction: column !important; min-width: 140px !important; background-color: #161b22 !important; color: #f0f6fc !important; border: 1px solid #30363d !important;';chrome.storage.local.get({theme:'dark'},(res)=>{const isDark=res.theme==='dark';const bgColor=isDark?'#161b22':'#ffffff';const textColor=isDark?'#f0f6fc':'#1a1a1a';const borderColor=isDark?'#30363d':'#e0e0e0';t.style.setProperty('background',bgColor,'important');t.style.setProperty('background-color',bgColor,'important');t.style.setProperty('color',textColor,'important');t.style.setProperty('border','1px solid '+borderColor,'important');callback(t,textColor);requestAnimationFrame(()=>{t.style.setProperty('opacity','1','important');t.style.setProperty('transform','translateY(0)','important');});});document.body.appendChild(t);currentTooltip=t;hideTimeout=setTimeout(removeTooltip,7000);}function showTooltip(x,y,val,date,target,lang){
+}function createBase(x,y,callback){removeTooltip();const duplicate=document.getElementById('edge-currency-converter-tooltip');if(duplicate)duplicate.remove();const t=document.createElement('div');t.id='edge-currency-converter-tooltip';t.style.cssText='all: initial; position: absolute !important; left: '+(x+15)+'px !important; top: '+(y+35)+'px !important; padding: 12px 16px !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; z-index: 2147483647 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important; pointer-events: none !important; opacity: 0 !important; transform: translateY(5px) !important; transition: opacity 0.2s, transform 0.2s !important; display: flex !important; flex-direction: column !important; min-width: 140px !important; background-color: #161b22 !important; color: #f0f6fc !important; border: 1px solid #30363d !important;';chrome.storage.local.get({theme:'dark'},(res)=>{const isDark=res.theme==='dark';const bgColor=isDark?'#161b22':'#ffffff';const textColor=isDark?'#f0f6fc':'#1a1a1a';const borderColor=isDark?'#30363d':'#e0e0e0';t.style.setProperty('background',bgColor,'important');t.style.setProperty('background-color',bgColor,'important');t.style.setProperty('color',textColor,'important');t.style.setProperty('border','1px solid '+borderColor,'important');callback(t,textColor);requestAnimationFrame(()=>{const rect=t.getBoundingClientRect();const viewportWidth=window.innerWidth||document.documentElement.clientWidth;const viewportHeight=window.innerHeight||document.documentElement.clientHeight;const scrollX=window.scrollX||window.pageXOffset||0;const scrollY=window.scrollY||window.pageYOffset||0;let targetX=x+15;let targetY=y+35;const clientXVal=targetX-scrollX;const clientYVal=targetY-scrollY;if(clientXVal+rect.width>viewportWidth){targetX=Math.max(scrollX+10,scrollX+viewportWidth-rect.width-20);}if(targetX<scrollX){targetX=scrollX+10;}if(clientYVal+rect.height>viewportHeight){const aboveY=y-rect.height-15;if(aboveY-scrollY>10){targetY=aboveY;}else{targetY=Math.max(scrollY+10,scrollY+viewportHeight-rect.height-20);}}if(targetY<scrollY){targetY=scrollY+10;}t.style.setProperty('left',targetX+'px','important');t.style.setProperty('top',targetY+'px','important');t.style.setProperty('opacity','1','important');t.style.setProperty('transform','translateY(0)','important');});});document.body.appendChild(t);currentTooltip=t;hideTimeout=setTimeout(removeTooltip,7000);}function showTooltip(x,y,val,date,target,lang){
     const locales = {
         'uk': 'uk-UA',
         'ru': 'ru-RU',

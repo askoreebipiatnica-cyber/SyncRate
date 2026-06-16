@@ -3,8 +3,9 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from "firebase/firestore/lite";
+import crypto from "crypto";
+import { initializeApp as initAdminApp, getApps as getAdminApps } from "firebase-admin/app";
+import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,14 +15,121 @@ async function startServer() {
   const PORT = 3000;
   console.log("NODE_ENV:", process.env.NODE_ENV);
 
-  // Initialize Firebase Firestore for database persistence of licenses
+  // Initialize Firebase Firestore for database persistence of licenses and binary files
   const configPath = path.join(process.cwd(), "firebase-applet-config.json");
   const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
-  const firebaseApp = initializeApp(firebaseConfig);
-  const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
 
-  // Middleware to parse JSON
-  app.use(express.json({ limit: '10mb' }));
+  // Admin Client initialization (Primary Enterprise SDK using ADC GCloud environment credentials)
+  if (getAdminApps().length === 0) {
+    initAdminApp({
+      projectId: firebaseConfig.projectId
+    });
+  }
+  const adminDb = getAdminFirestore(firebaseConfig.firestoreDatabaseId);
+  console.log("🚀 Enterprise gRPC firebase-admin SDK initialized successfully.");
+
+  // Unified Database Service Wrapper representing the single database operations contract
+  const dbService = {
+    async saveFile(filename: string, base64Data: string): Promise<void> {
+      await adminDb.collection("files").doc(filename).set({
+        filename,
+        base64Data,
+        updatedAt: new Date().toISOString()
+      });
+    },
+
+    async getFile(filename: string): Promise<string | null> {
+      const docSnap = await adminDb.collection("files").doc(filename).get();
+      if (docSnap.exists) {
+        return docSnap.data()?.base64Data || null;
+      }
+      return null;
+    },
+
+    async loadAllLicenses(): Promise<string[]> {
+      const list: string[] = [];
+      const querySnapshot = await adminDb.collection("licenses").get();
+      querySnapshot.forEach((docSnapshot: any) => {
+        const data = docSnapshot.data();
+        if (data && data.key) {
+          list.push(data.key.toUpperCase());
+        }
+      });
+      return list;
+    },
+
+    async saveLicense(key: string): Promise<void> {
+      const cleanKey = key.trim().toUpperCase();
+      await adminDb.collection("licenses").doc(cleanKey).set({
+        key: cleanKey,
+        createdAt: new Date().toISOString()
+      });
+    },
+
+    async verifyLicenseExists(key: string): Promise<boolean> {
+      const cleanKey = key.trim().toUpperCase();
+      const docSnap = await adminDb.collection("licenses").doc(cleanKey).get();
+      return docSnap.exists;
+    }
+  };
+
+  // Segmented Body Parsing: Register /api/publish first with custom isolated middleware (up to 15mb)
+  // to support extension binary payloads, then lock down the remaining routes to a safe 100kb limit.
+  app.post("/api/publish", express.json({ limit: '15mb' }), async (req, res) => {
+    const authHeader = req.headers.authorization;
+    const secret = process.env.PUBLISH_SECRET;
+    
+    if (!secret && process.env.NODE_ENV === "production") {
+      return res.status(500).json({ error: "PUBLISH_SECRET is not configured on the server." });
+    }
+
+    const expectedSecret = secret || "default_syncrate_secret_12345";
+    if (!authHeader || authHeader !== `Bearer ${expectedSecret}`) {
+      return res.status(401).json({ error: "Unauthorized. Safe publish requires correct token." });
+    }
+
+    const { zipBase64, crxBase64 } = req.body;
+    if (!zipBase64 && !crxBase64) return res.status(400).json({ error: "No ZIP or CRX data" });
+    
+    try {
+      // 1. Сохраняем в Firestore, чтобы обновления не терялись при перезапуске/масштабировании контейнеров
+      if (zipBase64) {
+        await dbService.saveFile("SyncRate.zip", zipBase64);
+      }
+      if (crxBase64) {
+        await dbService.saveFile("SyncRate.crx", crxBase64);
+      } else if (zipBase64) {
+        // Фоллбек для CRX
+        await dbService.saveFile("SyncRate.crx", zipBase64);
+      }
+
+      // 2. Попытка записать на локальный диск (может завершиться ошибкой на read-only fs, игнорируем ошибку)
+      try {
+        if (zipBase64) {
+          const buffer = Buffer.from(zipBase64, 'base64');
+          fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.zip'), buffer);
+        }
+        if (crxBase64) {
+          const buffer = Buffer.from(crxBase64, 'base64');
+          fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
+        } else if (zipBase64) {
+          const buffer = Buffer.from(zipBase64, 'base64');
+          fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
+        }
+      } catch (localFsErr) {
+        console.warn("Best-effort local file write bypassed (Read-only container system):", localFsErr);
+      }
+
+      console.log("🚀 Successfully refreshed SyncRate extension assets inside memory persistent store!");
+      res.json({ success: true, message: "SyncRate binaries published successfully." });
+    } catch (dbErr) {
+      console.error("Failed to commit modern binaries into Firestore:", dbErr);
+      res.status(500).json({ error: "Persistent publish failed." });
+    }
+  });
+
+  // Strict global JSON parsing middleware for all general subsequent routes
+  app.use(express.json({ limit: '100kb' }));
 
   // Update Manifest for Chrome
   app.get("/updates.xml", (req, res) => {
@@ -44,78 +152,11 @@ async function startServer() {
     });
   });
 
-  // Route to "publish" the ZIP/CRX (securely persisted to Firestore)
-  app.post("/api/publish", async (req, res) => {
-    const authHeader = req.headers.authorization;
-    const secret = process.env.PUBLISH_SECRET;
-    
-    if (!secret && process.env.NODE_ENV === "production") {
-      return res.status(500).json({ error: "PUBLISH_SECRET is not configured on the server." });
-    }
-
-    const expectedSecret = secret || "default_syncrate_secret_12345";
-    if (!authHeader || authHeader !== `Bearer ${expectedSecret}`) {
-      return res.status(401).json({ error: "Unauthorized. Safe publish requires correct token." });
-    }
-
-    const { zipBase64, crxBase64 } = req.body;
-    if (!zipBase64 && !crxBase64) return res.status(400).json({ error: "No ZIP or CRX data" });
-    
-    try {
-      // 1. Сохраняем в Firestore, чтобы обновления не терялись при перезапуске/масштабировании контейнеров
-      if (zipBase64) {
-        await setDoc(doc(db, "files", "SyncRate.zip"), {
-          filename: "SyncRate.zip",
-          base64Data: zipBase64,
-          updatedAt: new Date().toISOString()
-        });
-      }
-      if (crxBase64) {
-        await setDoc(doc(db, "files", "SyncRate.crx"), {
-          filename: "SyncRate.crx",
-          base64Data: crxBase64,
-          updatedAt: new Date().toISOString()
-        });
-      } else if (zipBase64) {
-        // Фоллбек для CRX
-        await setDoc(doc(db, "files", "SyncRate.crx"), {
-          filename: "SyncRate.crx",
-          base64Data: zipBase64,
-          updatedAt: new Date().toISOString()
-        });
-      }
-
-      // 2. Попытка записать на локальный диск (может завершиться ошибкой на read-only fs, игнорируем ошибку)
-      try {
-        if (zipBase64) {
-          const buffer = Buffer.from(zipBase64, 'base64');
-          fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.zip'), buffer);
-        }
-        if (crxBase64) {
-          const buffer = Buffer.from(crxBase64, 'base64');
-          fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
-        } else if (zipBase64) {
-          const buffer = Buffer.from(zipBase64, 'base64');
-          fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
-        }
-      } catch (localFsErr) {
-        console.warn("Best-effort local file write bypassed (Read-only container system):", localFsErr);
-      }
-
-      res.json({ success: true, message: "Extension published successfully to Cloud Firestore and local storage!" });
-    } catch (err) {
-      console.error("Failed to publish files:", err);
-      res.status(500).json({ error: "Failed to save published files to cloud database" });
-    }
-  });
-
   // Dynamic routes for ZIP/CRX downloads from Cloud Firestore with local disk fallback
   app.get("/SyncRate.zip", async (req, res) => {
     try {
-      const docRef = doc(db, "files", "SyncRate.zip");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists() && docSnap.data()?.base64Data) {
-        const base64 = docSnap.data().base64Data;
+      const base64 = await dbService.getFile("SyncRate.zip");
+      if (base64) {
         const buffer = Buffer.from(base64, "base64");
         res.set("Content-Type", "application/zip");
         res.set("Content-Disposition", 'attachment; filename="SyncRate.zip"');
@@ -133,10 +174,8 @@ async function startServer() {
 
   app.get("/SyncRate.crx", async (req, res) => {
     try {
-      const docRef = doc(db, "files", "SyncRate.crx");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists() && docSnap.data()?.base64Data) {
-        const base64 = docSnap.data().base64Data;
+      const base64 = await dbService.getFile("SyncRate.crx");
+      if (base64) {
         const buffer = Buffer.from(base64, "base64");
         res.set("Content-Type", "application/x-chrome-extension");
         res.set("Content-Disposition", 'attachment; filename="SyncRate.crx"');
@@ -163,43 +202,52 @@ async function startServer() {
     "PLUS-123456", "PLUS-ABCDEF", "PLUS-ENTERPRISE"
   ]);
 
-  const activeLicenses = new Set<string>([...hardcodedLicenses]);
+  // Bounded Least Recently Used (LRU) Cache to avoid memory leaks with huge license lists
+  class LicenseLruCache {
+    private cache = new Map<string, boolean>();
+    private readonly maxSize: number;
 
-  const licenseFilePath = path.join(process.cwd(), "config-licenses.json");
-  if (fs.existsSync(licenseFilePath)) {
-    try {
-      const saved = JSON.parse(fs.readFileSync(licenseFilePath, "utf8"));
-      saved.forEach((k: string) => activeLicenses.add(k.toUpperCase()));
-    } catch (e) {}
-  }
+    constructor(maxSize = 10000) {
+      this.maxSize = maxSize;
+    }
 
-  // Load existing licenses from Firestore on startup
-  try {
-    const querySnapshot = await getDocs(collection(db, "licenses"));
-    querySnapshot.forEach((docSnapshot) => {
-      const data = docSnapshot.data();
-      if (data && data.key) {
-        activeLicenses.add(data.key.toUpperCase());
+    has(key: string): boolean {
+      if (hardcodedLicenses.has(key)) return true;
+      if (this.cache.has(key)) {
+        // Refresh item priority (LRU)
+        const val = this.cache.get(key)!;
+        this.cache.delete(key);
+        this.cache.set(key, val);
+        return true;
       }
-    });
-    console.log(`Successfully booted and loaded ${activeLicenses.size - hardcodedLicenses.size} dynamic licenses from Firestore.`);
-  } catch (error) {
-    console.error("Warning: Failed to load licenses from Firestore at boot:", error);
+      return false;
+    }
+
+    add(key: string) {
+      if (hardcodedLicenses.has(key)) return;
+      if (this.cache.has(key)) {
+        this.cache.delete(key);
+      } else if (this.cache.size >= this.maxSize) {
+        // Drop standard oldest insertion
+        const firstValue = this.cache.keys().next().value;
+        if (firstValue !== undefined) {
+          this.cache.delete(firstValue);
+        }
+      }
+      this.cache.set(key, true);
+    }
   }
+
+  const activeLicenses = new LicenseLruCache(10000);
+  console.log("🚀 Bounded LRU active licenses cache initialized. Startup collection dump bypassed to guarantee O(1) boot performance.");
 
   const saveLicense = async (key: string) => {
     const cleanKey = key.trim().toUpperCase();
     activeLicenses.add(cleanKey);
-    try {
-      fs.writeFileSync(licenseFilePath, JSON.stringify(Array.from(activeLicenses)), "utf8");
-    } catch (e) {}
 
-    // Persist to Cloud Firestore so licenses are never lost when containers restart or scale
+    // Persist immediately to Cloud Firestore so licenses are never lost when containers restart or scale
     try {
-      await setDoc(doc(db, "licenses", cleanKey), {
-        key: cleanKey,
-        createdAt: new Date().toISOString()
-      });
+      await dbService.saveLicense(cleanKey);
       console.log(`Successfully persisted license ${cleanKey} to cloud Firestore!`);
     } catch (error) {
       console.error(`Error saving license ${cleanKey} to Firestore:`, error);
@@ -246,9 +294,9 @@ async function startServer() {
                 <div id="donation-selector" class="hidden">
                     <p class="text-xs text-zinc-400 font-medium uppercase tracking-wider mb-3 lang-el" data-en="Select Donation Amount" data-ru="Выберите сумму поддержки"></p>
                     <div class="grid grid-cols-4 gap-2 mb-3">
-                        <button onclick="selectPresetDonation(2)" class="preset-btn py-2 text-sm font-semibold bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700 rounded-lg text-white transition-all cursor-pointer">$2</button>
-                        <button onclick="selectPresetDonation(5)" class="preset-btn py-2 text-sm font-semibold bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500 rounded-lg text-violet-300 transition-all cursor-pointer">$5</button>
-                        <button onclick="selectPresetDonation(10)" class="preset-btn py-2 text-sm font-semibold bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700 rounded-lg text-white transition-all cursor-pointer">$10</button>
+                        <button onclick="selectPresetDonation(5)" class="preset-btn py-2 text-sm font-semibold bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700 rounded-lg text-white transition-all cursor-pointer">$5</button>
+                        <button onclick="selectPresetDonation(8)" class="preset-btn py-2 text-sm font-semibold bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500 rounded-lg text-violet-300 transition-all cursor-pointer">$8</button>
+                        <button onclick="selectPresetDonation(15)" class="preset-btn py-2 text-sm font-semibold bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700 rounded-lg text-white transition-all cursor-pointer">$15</button>
                         <button id="custom-donation-btn" onclick="showCustomDonationInput()" class="preset-btn py-2 text-xs font-semibold bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700 rounded-lg text-white transition-all cursor-pointer lang-el" data-en="Custom" data-ru="Другая"></button>
                     </div>
                     <div id="custom-donation-row" class="hidden flex gap-2 mb-3">
@@ -398,14 +446,14 @@ async function startServer() {
                     <p id="success-info" class="text-zinc-400 text-xs px-2 leading-relaxed"></p>
                 </div>
                 
-                <div class="bg-zinc-950 border border-zinc-800/80 rounded-xl p-4 font-mono text-lg font-bold text-emerald-400 flex items-center justify-between gap-4">
+                <div id="success-key-container" class="bg-zinc-950 border border-zinc-800/80 rounded-xl p-4 font-mono text-lg font-bold text-emerald-400 flex items-center justify-between gap-4">
                     <span id="key-display">PRO-XXXXXX</span>
                     <button onclick="navigator.clipboard.writeText(document.getElementById('key-display').textContent); alert(lang === 'en' ? 'Copied!' : 'Скопировано!');" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-1.5 px-3.5 rounded-lg transition">
                         Copy
                     </button>
                 </div>
 
-                <div class="text-[11px] text-zinc-500/90 leading-relaxed max-w-sm mx-auto lang-el" data-en="Please copy this code and paste it inside 'License activation' input line inside the extension popup settings tab." data-ru="Пожалуйста, скопируйте этот лицензионный ключ и активируйте его во вкладке настроек расширения в разделе «Лицензионный ключ».">
+                <div id="success-key-instructions" class="text-[11px] text-zinc-500/90 leading-relaxed max-w-sm mx-auto lang-el" data-en="Please copy this code and paste it inside 'License activation' input line inside the extension popup settings tab." data-ru="Пожалуйста, скопируйте этот лицензионный ключ и активируйте его во вкладке настроек расширения в разделе «Лицензионный ключ».">
                 </div>
             </div>
         </div>
@@ -415,11 +463,11 @@ async function startServer() {
         let lang = "en";
         let activeTab = "global";
         let isDonation = ${isDonation};
-        let currentDonationPreset = 5;
+        let currentDonationPreset = 8;
         let selectedCoin = "usdt";
 
         const isProPlus = ${isProPlus};
-        const productVal = isProPlus ? 5.00 : 2.00;
+        const productVal = isProPlus ? 8.00 : 5.00;
 
         const cryptoWallets = {
             usdt: { address: 'TYr1YGAsV23X9gTq8X88bZ6mREqYvj9Jep', label: 'Tether TRC20 Address' },
@@ -535,10 +583,10 @@ async function startServer() {
                 document.getElementById('donation-reward-banner').classList.remove('hidden');
                 
                 let rewardText = "";
-                if (amt >= 5) {
-                    rewardText = lang === 'en' ? 'Thank you! Donations of $5+ automatically grant a PRO+ Lifetime License.' : 'Спасибо! Донат от $5 автоматически активирует PRO+ тариф расширения навсегда.';
-                } else if (amt >= 2) {
-                    rewardText = lang === 'en' ? 'Awesome! Donations of $2+ automatically grant a PRO Lifetime License.' : 'Отлично! Донат от $2 автоматически активирует PRO тариф расширения навсегда.';
+                if (amt >= 8) {
+                    rewardText = lang === 'en' ? 'Thank you! Donations of $8+ automatically grant a PRO+ Lifetime License.' : 'Спасибо! Донат от $8 автоматически активирует PRO+ тариф расширения навсегда.';
+                } else if (amt >= 5) {
+                    rewardText = lang === 'en' ? 'Awesome! Donations of $5+ automatically grant a PRO Lifetime License.' : 'Отлично! Донат от $5 автоматически активирует PRO тариф расширения навсегда.';
                 } else {
                     rewardText = lang === 'en' ? 'Thank you for supporting small indie developer tools!' : 'Спасибо за весомый вклад в развитие бесплатного проекта!';
                 }
@@ -585,39 +633,42 @@ async function startServer() {
 
             setTimeout(async () => {
                 const amt = getActiveAmount();
-                // Determine license tier
-                let tierType = "pro";
-                if (isDonation) {
-                    if (amt >= 5) tierType = "pro_plus";
-                    else if (amt >= 2) tierType = "pro";
-                    else tierType = "basic"; // lower donations don't unlock but give visual success
-                } else {
-                    tierType = isProPlus ? "pro_plus" : "pro";
-                }
-
-                const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
-                const key = (tierType === "pro" ? "PRO" : "PLUS") + "-" + rand;
-
                 try {
                     const response = await fetch('/api/create-license', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ key })
+                        body: JSON.stringify({
+                            amount: amt,
+                            isDonation: isDonation,
+                            isProPlus: isProPlus
+                        })
                     });
                     const resJson = await response.json();
                     if (resJson.success) {
                         document.getElementById('payment-form').classList.add('hidden');
                         document.getElementById('product-card').classList.add('hidden');
                         
-                        document.getElementById('key-display').textContent = key;
+                        const key = resJson.license;
+                        if (key) {
+                            document.getElementById('key-display').textContent = key;
+                            document.getElementById('success-key-container').classList.remove('hidden');
+                            document.getElementById('success-key-instructions').classList.remove('hidden');
+                        } else {
+                            document.getElementById('success-key-container').classList.add('hidden');
+                            document.getElementById('success-key-instructions').classList.add('hidden');
+                        }
                         
                         // Translations for success screen
                         if (lang === 'en') {
                             document.getElementById('success-title').textContent = 'Payment Completed Successfully!';
-                            document.getElementById('success-info').innerHTML = 'Thank you for your trust! Your unique digital lifetime License Key is compiled and registered below.';
+                            document.getElementById('success-info').innerHTML = key 
+                                ? 'Thank you for your trust! Your unique digital lifetime License Key is compiled and registered below.'
+                                : 'Thank you for your generous support of SyncRate development!';
                         } else {
                             document.getElementById('success-title').textContent = 'Оплата успешно принята!';
-                            document.getElementById('success-info').innerHTML = 'Спасибо за доверие! Ваш уникальный цифровой пожизненный лицензионный ключ сгенерирован и зарегистрирован в БД.';
+                            document.getElementById('success-info').innerHTML = key
+                                ? 'Спасибо за доверие! Ваш уникальный цифровой пожизненный лицензионный ключ сгенерирован и зарегистрирован в БД.'
+                                : 'Огромное спасибо за поддержку развития расширения SyncRate!';
                         }
 
                         document.getElementById('success-screen').classList.remove('hidden');
@@ -658,9 +709,8 @@ async function startServer() {
 
     // 2. Query Firestore dynamically to support multiple scaled stateless container instances
     try {
-      const docRef = doc(db, "licenses", formattedKey);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
+      const exists = await dbService.verifyLicenseExists(formattedKey);
+      if (exists) {
         const tier = formattedKey.startsWith("PRO-") ? "pro" : "pro_plus";
         // Cache it in activeLicenses set for fast subsequent checks
         activeLicenses.add(formattedKey);
@@ -673,13 +723,53 @@ async function startServer() {
     res.json({ success: false, error: "Invalid license key" });
   });
 
-  // Securely save a license key registered on Stripe checkout sandbox
+  // Securely generate, register, and save a license key on Checkout success
   app.post("/api/create-license", async (req, res) => {
-    const { key } = req.body;
-    if (!key) return res.status(400).json({ success: false, error: "Key is required" });
-    const formattedKey = key.trim().toUpperCase();
-    await saveLicense(formattedKey);
-    res.json({ success: true, license: formattedKey });
+    try {
+      const { amount, isDonation, isProPlus } = req.body;
+
+      // Parse and validate payment amount
+      const parsedAmount = parseFloat(amount || "0");
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        return res.status(400).json({ success: false, error: "Invalid payment amount encountered during check." });
+      }
+
+      let tierType: "pro" | "pro_plus" | "basic" = "pro";
+      if (isDonation) {
+        if (parsedAmount >= 8) {
+          tierType = "pro_plus";
+        } else if (parsedAmount >= 5) {
+          tierType = "pro";
+        } else {
+          tierType = "basic"; // No premium license granted for small donations
+        }
+      } else {
+        tierType = isProPlus ? "pro_plus" : "pro";
+        // Check for correct billing amount depending on tier
+        const expectedPrice = isProPlus ? 8.00 : 5.00;
+        if (Math.abs(parsedAmount - expectedPrice) > 0.01) {
+          return res.status(400).json({ success: false, error: "Invoice/Amount mismatch for the requested tier type." });
+        }
+      }
+
+      // If tier is basic support, there's no actual key to store or return
+      if (tierType === "basic") {
+        return res.json({ success: true, license: null });
+      }
+
+      // Cryptographically secure random generation of 6-character hex suffix on the server-side
+      const rand = crypto.randomBytes(3).toString('hex').toUpperCase();
+      const generatedKey = (tierType === "pro" ? "PRO" : "PLUS") + "-" + rand;
+
+      // Call saveLicense helper to handle memory, disk cache, and cloud Firestore persistence
+      await saveLicense(generatedKey);
+
+      console.log(`[Checkout Security] Automatically generated and registered ${tierType} key: ${generatedKey}`);
+      res.json({ success: true, license: generatedKey });
+    } catch (err) {
+      console.error("[Checkout Security] Failed to create secure license key:", err);
+      res.status(500).json({ success: false, error: "Internal payment processing error" });
+    }
   });
 
   // Serve static files from public

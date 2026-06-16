@@ -8,7 +8,8 @@
     "build": "vite build && npx tsx scripts/build-unpacked.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "tsx scripts/test-api.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
@@ -19,7 +20,7 @@
     "dotenv": "^17.2.3",
     "express": "^4.22.1",
     "file-saver": "^2.0.5",
-    "firebase": "^12.14.0",
+    "firebase-admin": "^14.0.0",
     "framer-motion": "^12.38.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.546.0",

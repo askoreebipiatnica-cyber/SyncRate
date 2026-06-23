@@ -266,7 +266,7 @@ async function startServer() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SyncRate Checkout | Global & Russian Payments</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com" crossorigin></script>
     <style>
         body { background: #09090b; color: #fafafa; font-family: system-ui, -apple-system, sans-serif; }
     </style>
@@ -294,9 +294,9 @@ async function startServer() {
                 <div id="donation-selector" class="hidden">
                     <p class="text-xs text-zinc-400 font-medium uppercase tracking-wider mb-3 lang-el" data-en="Select Donation Amount" data-ru="Выберите сумму поддержки"></p>
                     <div class="grid grid-cols-4 gap-2 mb-3">
-                        <button onclick="selectPresetDonation(5)" class="preset-btn py-2 text-sm font-semibold bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700 rounded-lg text-white transition-all cursor-pointer">$5</button>
-                        <button onclick="selectPresetDonation(8)" class="preset-btn py-2 text-sm font-semibold bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500 rounded-lg text-violet-300 transition-all cursor-pointer">$8</button>
-                        <button onclick="selectPresetDonation(15)" class="preset-btn py-2 text-sm font-semibold bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700 rounded-lg text-white transition-all cursor-pointer">$15</button>
+                        <button onclick="selectPresetDonation(5, this)" class="preset-btn py-2 text-sm font-semibold bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700 rounded-lg text-white transition-all cursor-pointer">$5</button>
+                        <button onclick="selectPresetDonation(8, this)" class="preset-btn py-2 text-sm font-semibold bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500 rounded-lg text-violet-300 transition-all cursor-pointer">$8</button>
+                        <button onclick="selectPresetDonation(15, this)" class="preset-btn py-2 text-sm font-semibold bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700 rounded-lg text-white transition-all cursor-pointer">$15</button>
                         <button id="custom-donation-btn" onclick="showCustomDonationInput()" class="preset-btn py-2 text-xs font-semibold bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700 rounded-lg text-white transition-all cursor-pointer lang-el" data-en="Custom" data-ru="Другая"></button>
                     </div>
                     <div id="custom-donation-row" class="hidden flex gap-2 mb-3">
@@ -509,7 +509,7 @@ async function startServer() {
             updateUI();
         }
 
-        function selectPresetDonation(amt) {
+        function selectPresetDonation(amt, btn) {
             currentDonationPreset = amt;
             document.querySelectorAll('.preset-btn').forEach(b => {
                 b.classList.remove('bg-violet-600/20', 'border-violet-500', 'text-violet-300');
@@ -517,8 +517,10 @@ async function startServer() {
             });
             
             // Highlight current button
-            event.currentTarget.classList.add('bg-violet-600/20', 'border-violet-500', 'text-violet-300');
-            event.currentTarget.classList.remove('bg-zinc-800/80', 'border-zinc-700', 'text-white');
+            if (btn) {
+                btn.classList.add('bg-violet-600/20', 'border-violet-500', 'text-violet-300');
+                btn.classList.remove('bg-zinc-800/80', 'border-zinc-700', 'text-white');
+            }
             
             document.getElementById('custom-donation-row').classList.add('hidden');
             updateUI();

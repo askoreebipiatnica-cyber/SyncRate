@@ -102,6 +102,13 @@
         <label class="plan" id="plan-pro"><input type="radio" name="tier" value="pro"><div class="plan-header"><div class="plan-title">PRO <span class="badge pro">PRO</span></div><div style="color:var(--primary); font-weight:800;">2 $ <span data-i18n="lifetime">навсегда</span></div></div><p class="plan-desc" data-i18n="desc_pro">Топ-8 фиатных валют мира.</p></label>
         <label class="plan" id="plan-pro_plus"><input type="radio" name="tier" value="pro_plus"><div class="plan-header"><div class="plan-title">PRO+ <span class="badge pro-plus">PRO+</span></div><div style="color:#e53935; font-weight:800;">5 $ <span data-i18n="lifetime">навсегда</span></div></div><p class="plan-desc" data-i18n="desc_pro_plus">Нацбанки СНГ, Все валюты, Топ-30 Крипты.</p></label>
         <button class="btn-save" id="btn-upgrade" style="display:none; background:#f39c12;" data-i18n="btn_pay">💳 Оплатить доступ</button>
+        <div style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <label style="display: block; font-size: 11px; color: var(--text); margin-bottom: 6px;" data-i18n="lbl_license">Активация лицензии</label>
+            <div style="display: flex; gap: 6px;">
+                <input type="text" id="input-license" placeholder="PRO-XXXXXX / PLUS-XXXXXX" style="flex: 1; padding: 6px 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-family: monospace; font-size: 11px;">
+                <button id="btn-activate" style="padding: 6px 12px; background: var(--primary); border: none; border-radius: 6px; color: white; font-weight: 600; font-size: 11px; cursor: pointer;" data-i18n="btn_activate">Активировать</button>
+            </div>
+        </div>
     </div>
     <div class="footer">
         v15.0 | SyncRate Enterprise

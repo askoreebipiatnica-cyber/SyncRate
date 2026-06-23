@@ -3,7 +3,7 @@
   "name": "SyncRate: Currency & Crypto Converter",
   "version": "15.0",
   "description": "Мгновенная конвертация. Нацбанки и Крипта. Внимание: Реверс-инжиниринг и взлом PRO версии преследуется по закону (DMCA).",
-  "permissions":["storage"],
+  "permissions":["storage", "alarms"],
   "host_permissions":[
     "https://open.er-api.com/*",
     "https://min-api.cryptocompare.com/*",

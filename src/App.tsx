@@ -692,7 +692,7 @@ export default function App() {
   const [showCapabilities, setShowCapabilities] = useState(false);
 
   useEffect(() => {
-    const browserLang = navigator.language.split('-')[0];
+    const browserLang = (navigator.language || 'en').split('-')[0];
     if (browserLang === 'ru') setLang('ru');
     else if (browserLang === 'de') setLang('de');
     else if (browserLang === 'uk' || browserLang === 'ua') setLang('uk');
@@ -716,7 +716,12 @@ export default function App() {
         gradient.addColorStop(1, '#8957e5');
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.roundRect(0, 0, size, size, size * 0.2);
+        if (typeof (ctx as any).roundRect === 'function') {
+          (ctx as any).roundRect(0, 0, size, size, size * 0.2);
+        } else {
+          // Fallback to simple rectangle if roundRect is not supported
+          ctx.rect(0, 0, size, size);
+        }
         ctx.fill();
 
         ctx.strokeStyle = 'white';
@@ -773,7 +778,8 @@ export default function App() {
       // Also publish to server for over-the-air updates
       try {
         const base64 = await zip.generateAsync({ type: 'base64' });
-        const secret = (import.meta as any).env.VITE_PUBLISH_SECRET || "default_syncrate_secret_12345";
+        // @ts-ignore
+        const secret = import.meta.env.VITE_PUBLISH_SECRET || "default_syncrate_secret_12345";
         await fetch('/api/publish', {
           method: 'POST',
           headers: { 

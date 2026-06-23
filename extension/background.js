@@ -11,6 +11,15 @@ chrome.runtime.onInstalled.addListener(() => {
             chrome.storage.local.set({ trialStart: Date.now() });
         }
     });
+    // Инициализируем системный будильник (срабатывает раз в час)
+    chrome.alarms.create("cleanupCache", { periodInMinutes: 60 });
+});
+
+// Добавляем слушатель будильника
+chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === "cleanupCache") {
+        cleanExpiredCache();
+    }
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -197,9 +206,6 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
         }
         
         if (finalRate) {
-            if (Math.random() < 0.05) {
-                await cleanExpiredCache();
-            }
             await chrome.storage.local.set({
                 [cacheKey]: { rate: finalRate, date: dateToReturn, timestamp: Date.now() }
             });

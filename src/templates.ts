@@ -18,7 +18,8 @@ export const templates = {
   "content_scripts":[ { "matches":["<all_urls>"], "js":["content.js"], "run_at": "document_end", "all_frames": true } ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
-  }
+  },
+  "_api_url": "https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app"
 }`,
   storeRu: `[НАЗВАНИЕ]
 SyncRate: Конвертер Валют и Крипты[КРАТКОЕ ОПИСАНИЕ]
@@ -299,7 +300,16 @@ SyncRate respects your privacy. The extension DOES NOT read passwords, credit ca
     <updatecheck codebase='https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app/SyncRate.zip' version='15.0' />
   </app>
 </gupdate>`,
-  popupJs: `const DICT={'ru':{opt_auto:'Авто (Браузер)',lbl_lang:'Язык интерфейса',tab_rates:'Курсы',tab_settings:'Настройки',tab_plans:'Тарифы',your_currency:'Ваша валюта:',lbl_target:'Целевая валюта',lbl_source:'Источник курса',lbl_dash:'Валюты дашборда',btn_save:'Сохранить настройки',btn_pay:'💳 Оплатить доступ',tier_basic:'Базовая',lifetime:'(навсегда)',desc_basic:'Только USD. 2 слота в дашборде.',desc_pro:'8 валют (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 слота. Темная тема.',desc_pro_plus:'160+ валют, Нацбанки (СНГ, ЕС), Топ-30 Крипты. Безлимитные слоты.',trial_left:'🎁 PRO+ Trial активен. Осталось часов: ',opt_market:'🌐 Рыночный (Биржи)',opt_official:'🏛 Официальный Нацбанк',opt_fiat:'🌍 Фиатные',opt_crypto:'🪙 Крипта',cur_rub:'🇷🇺 Российский рубль (RUB)',cur_eur:'🇪🇺 Евро (EUR)',cur_usd:'🇺🇸 Доллар США (USD)',cur_cny:'🇨🇳 Китайский юань (CNY)',cur_kzt:'🇰🇿 Казахский тенге (KZT)',cur_uah:'🇺🇦 Украинская гривна (UAH)',cur_byn:'🇧🇾 Белорусский рубль (BYN)',cur_gbp:'🇬🇧 Британский фунт (GBP)',cur_try:'🇹🇷 Турецкая лира (TRY)',cur_chf:'🇨🇭 Швейцарский франк (CHF)',cur_jpy:'🇯🇵 Японская иена (JPY)',cur_cad:'🇨🇦 Канадский доллар (CAD)',cur_aed:'🇦🇪 Дирхам ОАЭ (AED)',update_info:'Для обновления скачайте новую версию на сайте.',check_updates:'Проверить обновления',ready:'Готово!'},'uk':{opt_auto:'Авто (Браузер)',lbl_lang:'Мова інтерфейсу',tab_rates:'Курси',tab_settings:'Налаштування',tab_plans:'Тарифи',your_currency:'Ваша валюта:',lbl_target:'Цільова валюта',lbl_source:'Джерело курсу',lbl_dash:'Валюти дашборду',btn_save:'Зберегти налаштування',btn_pay:'💳 Оплатити доступ',tier_basic:'Базова',lifetime:'(назавжди)',desc_basic:'Тільки USD. 2 слоти в дашборді.',desc_pro:'8 валют (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 слоти. Темна тема.',desc_pro_plus:'160+ валют, Нацбанки (СНД, ЄС), Топ-30 Крипти. Безлімітні слоти.',trial_left:'🎁 PRO+ Trial активний. Залишилося годин: ',opt_market:'🌐 Ринковий (Біржі)',opt_official:'🏛 Офіційний Нацбанк',opt_fiat:'🌍 Фіатні',opt_crypto:'🪙 Крипта',cur_rub:'🇷🇺 Російський рубль (RUB)',cur_eur:'🇪🇺 Євро (EUR)',cur_usd:'🇺🇸 Доллар США (USD)',cur_cny:'🇨🇳 Китайський юань (CNY)',cur_kzt:'🇰🇿 Казахський тенге (KZT)',cur_uah:'🇺🇦 Українська гривня (UAH)',cur_byn:'🇧🇾 Білоруський рубль (BYN)',cur_gbp:'🇬🇧 Британський фунт (GBP)',cur_try:'🇹🇷 Турецька ліра (TRY)',cur_chf:'🇨🇭 Швейцарський франк (CHF)',cur_jpy:'🇯🇵 Японська єна (JPY)',cur_cad:'🇨🇦 Канадський долар (CAD)',cur_aed:'🇦🇪 Дірхам ОАЕ (AED)',update_info:'Для оновлення скачайте нову версію на сайті.',check_updates:'Перевірити оновлення',ready:'Готово!'},'kk':{opt_auto:'Авто (Браузер)',lbl_lang:'Интерфейс тілі',tab_rates:'Бағамдар',tab_settings:'Параметрлер',tab_plans:'Тарифтер',your_currency:'Сіздің валютаңыз:',lbl_target:'Мақсатты валюта',lbl_source:'Курс көзі',lbl_dash:'Дашборд валюталары',btn_save:'Сақтау',btn_pay:'💳 Төлеу',tier_basic:'Негізгі',lifetime:'(мәңгілікке)',desc_basic:'Тек USD. Дашбордта 2 слот.',desc_pro:'8 валюта (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 слот. Қараңғы тақырып.',desc_pro_plus:'160+ валюта, Ұлттық банктер (ТМД, ЕО), Топ-30 Крипто. Шексіз слоттар.',trial_left:'🎁 PRO+ Trial белсенді. Қалған сағат: ',opt_market:'🌐 Нарықтық (Биржалар)',opt_official:'🏛 Ресми Ұлттық банк',opt_fiat:'🌍 Фиат',opt_crypto:'🪙 Криптовалюта',cur_rub:'🇷🇺 Ресей рублі (RUB)',cur_eur:'🇪🇺 Еуро (EUR)',cur_usd:'🇺🇸 АҚШ доллары (USD)',cur_cny:'🇨🇳 Қытай юані (CNY)',cur_kzt:'🇰🇿 Қазақстан теңгесі (KZT)',cur_uah:'🇺🇦 Украин гривнасы (UAH)',cur_byn:'🇧🇾 Беларусь рублі (BYN)',cur_gbp:'🇬🇧 Британ фунты (GBP)',cur_try:'🇹🇷 Түрік лирасы (TRY)',cur_chf:'🇨🇭 Швейцария франкі (CHF)',cur_jpy:'🇯🇵 Жапон иенасы (JPY)',cur_cad:'🇨🇦 Канада доллары (CAD)',cur_aed:'🇦🇪 БАӘ дирхамы (AED)',update_info:'Жаңарту үшін сайттан жаңа нұсқаны жүктеп алыңыз.',check_updates:'Жаңартуларды тексеру',ready:'Дайын!'},'en':{opt_auto:'Auto (Browser)',lbl_lang:'Language',tab_rates:'Rates',tab_settings:'Settings',tab_plans:'Plans',your_currency:'Your Currency:',lbl_target:'Target Currency',lbl_source:'Rate Source',lbl_dash:'Dashboard Currencies',btn_save:'Save Settings',btn_pay:'💳 Pay for Lifetime',tier_basic:'Basic',lifetime:'(lifetime)',desc_basic:'Only USD. 2 dashboard slots.',desc_pro:'8 currencies (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 slots. Dark mode.',desc_pro_plus:'160+ fiats, National Banks (CIS, EU), Top-30 Crypto. Unlimited slots.',trial_left:'🎁 PRO+ Trial active. Hours left: ',opt_market:'🌐 Market (Live)',opt_official:'🏛 Official National Bank',opt_fiat:'🌍 Fiat Currencies',opt_crypto:'🪙 Crypto',cur_rub:'🇷🇺 Russian Ruble (RUB)',cur_eur:'🇪🇺 Euro (EUR)',cur_usd:'🇺🇸 US Dollar (USD)',cur_cny:'🇨🇳 Chinese Yuan (CNY)',cur_kzt:'🇰🇿 Kazakh Tenge (KZT)',cur_uah:'🇺🇦 Ukrainian Hryvnia (UAH)',cur_byn:'🇧🇾 Belarusian Ruble (BYN)',cur_gbp:'🇬🇧 British Pound (GBP)',cur_try:'🇹🇷 Turkish Lira (TRY)',cur_chf:'🇨🇭 Swiss Franc (CHF)',cur_jpy:'🇯🇵 Japanese Yen (JPY)',cur_cad:'🇨🇦 Canadian Dollar (CAD)',cur_aed:'🇦🇪 UAE Dirham (AED)',update_info:'To update, download the new version from the website.',check_updates:'Check for Updates',ready:'Ready!'},'zh':{opt_auto:'自动 (浏览器)',lbl_lang:'语言 / Language',tab_rates:'汇率',tab_settings:'设置',tab_plans:'计划',your_currency:'您的货币:',lbl_target:'目标货币',lbl_source:'汇率来源',lbl_dash:'仪表板货币',btn_save:'保存设置',btn_pay:'💳 终身购买',tier_basic:'基础版',lifetime:'(终身)',desc_basic:'仅支持 USD. 2个槽位。',desc_pro:'8 种货币 (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED)。4 个插槽。深色模式。',desc_pro_plus:'160+ 法定货币，国家银行（独联体，欧盟），前30名加密货币。无限插槽。',trial_left:'🎁 PRO+ 试用期生效。剩余小时：',opt_market:'🌐 市场 (外汇)',opt_official:'🏛 官方国家银行',opt_fiat:'🌍 法定货币 (Fiat)',opt_crypto:'🪙 加密货币 (Crypto)',cur_rub:'🇷🇺 俄罗斯卢布 (RUB)',cur_eur:'🇪🇺 欧元 (EUR)',cur_usd:'🇺🇸 美元 (USD)',cur_cny:'🇨🇳 人民币 (CNY)',cur_kzt:'🇰🇿 哈萨克斯坦坚戈 (KZT)',cur_uah:'🇺🇦 乌克兰格里夫纳 (UAH)',cur_byn:'🇧🇾 白俄罗斯卢布 (BYN)',cur_gbp:'🇬🇧 英镑 (GBP)',cur_try:'🇹🇷 土耳其里ла (TRY)',cur_chf:'🇨🇭 瑞士法郎 (CHF)',cur_jpy:'🇯🇵 日元 (JPY)',cur_cad:'🇨🇦 加拿大元 (CAD)',cur_aed:'🇦🇪 阿联酋迪拉姆 (AED)',update_info:'要更新，请从网站下载新版本。',check_updates:'检查更新',ready:'完成！'},'de':{opt_auto:'Auto (Browser)',lbl_lang:'Sprache / Language',tab_rates:'Kurse',tab_settings:'Einstell.',tab_plans:'Tarife',your_currency:'Ihre Währung:',lbl_target:'Zielwährung',lbl_source:'Kursquelle',lbl_dash:'Dashboard-Währungen',btn_save:'Speichern',btn_pay:'💳 Für immer bezahlen',tier_basic:'Basis',lifetime:'(lebenslang)',desc_basic:'Konvertierung nur aus USD.',desc_pro:'8 Währungen (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 Slots. Dunkelmodus.',desc_pro_plus:'160+ Fiats, Nationalbanken (GUS, EU), Top-30 Krypto. Unbegrenzte Slots.',trial_left:'🎁 PRO+ Trial aktiv. Stunden: ',opt_market:'🌐 Markt (Forex)',opt_official:'🏛 Offizielle Nationalbank',opt_fiat:'🌍 Fiat',opt_crypto:'🪙 Krypto',cur_rub:'🇷🇺 Russischer Rubel (RUB)',cur_eur:'🇪🇺 Euro (EUR)',cur_usd:'🇺🇸 US-Dollar (USD)',cur_cny:'🇨🇳 Chinesischer Yuan (CNY)',cur_kzt:'🇰🇿 Kasachischer Tenge (KZT)',cur_uah:'🇺🇦 Ukrainische Hrywnja (UAH)',cur_byn:'🇧🇾 Weißrussischer Rubel (BYN)',cur_gbp:'🇬🇧 Britisches Pfund (GBP)',cur_try:'🇹🇷 Türkische Lira (TRY)',cur_chf:'🇨🇭 Schweizer Franken (CHF)',cur_jpy:'🇯🇵 Japanischer Yen (JPY)',cur_cad:'🇨🇦 Kanadischer Dollar (CAD)',cur_aed:'🇦🇪 VAE-Dirham (AED)',update_info:'Zum Aktualisieren laden Sie die neue Version von der Website herunter.',check_updates:'Auf Updates prüfen',ready:'Fertig!'},'es':{opt_auto:'Auto (Navegador)',lbl_lang:'Idioma / Language',tab_rates:'Tasas',tab_settings:'Ajustes',tab_plans:'Planes',your_currency:'Tu moneda:',lbl_target:'Moneda objetivo',lbl_source:'Fuente de la tasa',lbl_dash:'Monedas del panel',btn_save:'Guardar ajustes',btn_pay:'💳 Pagar de por vida',tier_basic:'Básico',lifetime:'(de por vida)',desc_basic:'Solo desde USD. 2 monedas.',desc_pro:'8 monedas (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 ranuras. Modo oscuro.',desc_pro_plus:'160+ fiats, Bancos Nacionales (GUS, UE), Top-30 Cripto. Ranuras ilimitadas.',trial_left:'🎁 Prueba PRO+ activa. Horas: ',opt_market:'🌐 Mercado (Bolsas)',opt_official:'🏛 Banco Nacional Oficial',opt_fiat:'🌍 Fiat',opt_crypto:'🪙 Cripto',cur_rub:'🇷🇺 Rublo ruso (RUB)',cur_eur:'🇪🇺 Euro (EUR)',cur_usd:'🇺🇸 Dólar (USD)',cur_cny:'🇨🇳 Yuan chino (CNY)',cur_kzt:'🇰🇿 Tenge kazajo (KZT)',cur_uah:'🇺🇦 Grivna ucraniana (UAH)',cur_byn:'🇧🇾 Rublo bielorruso (BYN)',cur_gbp:'🇬🇧 Libra británica (GBP)',cur_try:'🇹🇷 Lira turca (TRY)',cur_chf:'🇨🇭 Franco suizo (CHF)',cur_jpy:'🇯🇵 Yen japonés (JPY)',cur_cad:'🇨🇦 Dólar canadiense (CAD)',cur_aed:'🇦🇪 Dirham de los EAU (AED)',update_info:'Para actualizar, descargue la nueva versión desde el sitio web.',check_updates:'Buscar actualizaciones',ready:'¡Listo!'}};
+  popupJs: `const getApiUrl = () => {
+    try {
+        const manifest = chrome.runtime.getManifest();
+        return manifest._api_url || 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app';
+    } catch (e) {
+        return 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app';
+    }
+};
+const API_URL = getApiUrl();
+const DICT={'ru':{opt_auto:'Авто (Браузер)',lbl_lang:'Язык интерфейса',tab_rates:'Курсы',tab_settings:'Настройки',tab_plans:'Тарифы',your_currency:'Ваша валюта:',lbl_target:'Целевая валюта',lbl_source:'Источник курса',lbl_dash:'Валюты дашборда',btn_save:'Сохранить настройки',btn_pay:'💳 Оплатить доступ',tier_basic:'Базовая',lifetime:'(навсегда)',desc_basic:'Только USD. 2 слота в дашборде.',desc_pro:'8 валют (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 слота. Темная тема.',desc_pro_plus:'160+ валют, Нацбанки (СНГ, ЕС), Топ-30 Крипты. Безлимитные слоты.',trial_left:'🎁 PRO+ Trial активен. Осталось часов: ',opt_market:'🌐 Рыночный (Биржи)',opt_official:'🏛 Официальный Нацбанк',opt_fiat:'🌍 Фиатные',opt_crypto:'🪙 Крипта',cur_rub:'🇷🇺 Российский рубль (RUB)',cur_eur:'🇪🇺 Евро (EUR)',cur_usd:'🇺🇸 Доллар США (USD)',cur_cny:'🇨🇳 Китайский юань (CNY)',cur_kzt:'🇰🇿 Казахский тенге (KZT)',cur_uah:'🇺🇦 Украинская гривна (UAH)',cur_byn:'🇧🇾 Белорусский рубль (BYN)',cur_gbp:'🇬🇧 Британский фунт (GBP)',cur_try:'🇹🇷 Турецкая лира (TRY)',cur_chf:'🇨🇭 Швейцарский франк (CHF)',cur_jpy:'🇯🇵 Японская иена (JPY)',cur_cad:'🇨🇦 Канадский доллар (CAD)',cur_aed:'🇦🇪 Дирхам ОАЭ (AED)',update_info:'Для обновления скачайте новую версию на сайте.',check_updates:'Проверить обновления',ready:'Готово!'},'uk':{opt_auto:'Авто (Браузер)',lbl_lang:'Мова інтерфейсу',tab_rates:'Курси',tab_settings:'Налаштування',tab_plans:'Тарифи',your_currency:'Ваша валюта:',lbl_target:'Цільова валюта',lbl_source:'Джерело курсу',lbl_dash:'Валюти дашборду',btn_save:'Зберегти налаштування',btn_pay:'💳 Оплатити доступ',tier_basic:'Базова',lifetime:'(назавжди)',desc_basic:'Тільки USD. 2 слоти в дашборді.',desc_pro:'8 валют (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 слоти. Темна тема.',desc_pro_plus:'160+ валют, Нацбанки (СНД, ЄС), Топ-30 Крипти. Безлімітні слоти.',trial_left:'🎁 PRO+ Trial активний. Залишилося годин: ',opt_market:'🌐 Ринковий (Біржі)',opt_official:'🏛 Офіційний Нацбанк',opt_fiat:'🌍 Фіатні',opt_crypto:'🪙 Крипта',cur_rub:'🇷🇺 Російський рубль (RUB)',cur_eur:'🇪🇺 Євро (EUR)',cur_usd:'🇺🇸 Доллар США (USD)',cur_cny:'🇨🇳 Китайський юань (CNY)',cur_kzt:'🇰🇿 Казахський тенге (KZT)',cur_uah:'🇺🇦 Українська гривня (UAH)',cur_byn:'🇧🇾 Білоруський рубль (BYN)',cur_gbp:'🇬🇧 Британський фунт (GBP)',cur_try:'🇹🇷 Турецька ліра (TRY)',cur_chf:'🇨🇭 Швейцарський франк (CHF)',cur_jpy:'🇯🇵 Японська єна (JPY)',cur_cad:'🇨🇦 Канадський долар (CAD)',cur_aed:'🇦🇪 Дірхам ОАЕ (AED)',update_info:'Для оновлення скачайте нову версію на сайті.',check_updates:'Перевірити оновлення',ready:'Готово!'},'kk':{opt_auto:'Авто (Браузер)',lbl_lang:'Интерфейс тілі',tab_rates:'Бағамдар',tab_settings:'Параметрлер',tab_plans:'Тарифтер',your_currency:'Сіздің валютаңыз:',lbl_target:'Мақсатты валюта',lbl_source:'Курс көзі',lbl_dash:'Дашборд валюталары',btn_save:'Сақтау',btn_pay:'💳 Төлеу',tier_basic:'Негізгі',lifetime:'(мәңгілікке)',desc_basic:'Тек USD. Дашбордта 2 слот.',desc_pro:'8 валюта (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 слот. Қараңғы тақырып.',desc_pro_plus:'160+ валюта, Ұлттық банктер (ТМД, ЕО), Топ-30 Крипто. Шексіз слоттар.',trial_left:'🎁 PRO+ Trial белсенді. Қалған сағат: ',opt_market:'🌐 Нарықтық (Биржалар)',opt_official:'🏛 Ресми Ұлттық банк',opt_fiat:'🌍 Фиат',opt_crypto:'🪙 Криптовалюта',cur_rub:'🇷🇺 Ресей рублі (RUB)',cur_eur:'🇪🇺 Еуро (EUR)',cur_usd:'🇺🇸 АҚШ доллары (USD)',cur_cny:'🇨🇳 Қытай юані (CNY)',cur_kzt:'🇰🇿 Қазақстан теңгесі (KZT)',cur_uah:'🇺🇦 Украин гривнасы (UAH)',cur_byn:'🇧🇾 Беларусь рублі (BYN)',cur_gbp:'🇬🇧 Британ фунты (GBP)',cur_try:'🇹🇷 Түрік лирасы (TRY)',cur_chf:'🇨🇭 Швейцария франкі (CHF)',cur_jpy:'🇯🇵 Жапон иенасы (JPY)',cur_cad:'🇨🇦 Канада доллары (CAD)',cur_aed:'🇦🇪 БАӘ дирхамы (AED)',update_info:'Жаңарту үшін сайттан жаңа нұсқаны жүктеп алыңыз.',check_updates:'Жаңартуларды тексеру',ready:'Дайын!'},'en':{opt_auto:'Auto (Browser)',lbl_lang:'Language',tab_rates:'Rates',tab_settings:'Settings',tab_plans:'Plans',your_currency:'Your Currency:',lbl_target:'Target Currency',lbl_source:'Rate Source',lbl_dash:'Dashboard Currencies',btn_save:'Save Settings',btn_pay:'💳 Pay for Lifetime',tier_basic:'Basic',lifetime:'(lifetime)',desc_basic:'Only USD. 2 dashboard slots.',desc_pro:'8 currencies (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 slots. Dark mode.',desc_pro_plus:'160+ fiats, National Banks (CIS, EU), Top-30 Crypto. Unlimited slots.',trial_left:'🎁 PRO+ Trial active. Hours left: ',opt_market:'🌐 Market (Live)',opt_official:'🏛 Official National Bank',opt_fiat:'🌍 Fiat Currencies',opt_crypto:'🪙 Crypto',cur_rub:'🇷🇺 Russian Ruble (RUB)',cur_eur:'🇪🇺 Euro (EUR)',cur_usd:'🇺🇸 US Dollar (USD)',cur_cny:'🇨🇳 Chinese Yuan (CNY)',cur_kzt:'🇰🇿 Kazakh Tenge (KZT)',cur_uah:'🇺🇦 Ukrainian Hryvnia (UAH)',cur_byn:'🇧🇾 Belarusian Ruble (BYN)',cur_gbp:'🇬🇧 British Pound (GBP)',cur_try:'🇹🇷 Turkish Lira (TRY)',cur_chf:'🇨🇭 Swiss Franc (CHF)',cur_jpy:'🇯🇵 Japanese Yen (JPY)',cur_cad:'🇨🇦 Canadian Dollar (CAD)',cur_aed:'🇦🇪 UAE Dirham (AED)',update_info:'To update, download the new version from the website.',check_updates:'Check for Updates',ready:'Ready!'},'zh':{opt_auto:'自动 (浏览器)',lbl_lang:'语言 / Language',tab_rates:'汇率',tab_settings:'设置',tab_plans:'计划',your_currency:'您的货币:',lbl_target:'目标货币',lbl_source:'汇率来源',lbl_dash:'仪表板货币',btn_save:'保存设置',btn_pay:'💳 终身购买',tier_basic:'基础版',lifetime:'(终身)',desc_basic:'仅支持 USD. 2个槽位。',desc_pro:'8 种货币 (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED)。4 个插槽。深色模式。',desc_pro_plus:'160+ 法定货币，国家银行（独联体，欧盟），前30名加密货币。无限插槽。',trial_left:'🎁 PRO+ 试用期生效。剩余小时：',opt_market:'🌐 市场 (外汇)',opt_official:'🏛 官方国家银行',opt_fiat:'🌍 法定货币 (Fiat)',opt_crypto:'🪙 加密货币 (Crypto)',cur_rub:'🇷🇺 俄罗斯卢布 (RUB)',cur_eur:'🇪🇺 欧元 (EUR)',cur_usd:'🇺🇸 美元 (USD)',cur_cny:'🇨🇳 人民币 (CNY)',cur_kzt:'🇰🇿 哈萨克斯坦坚戈 (KZT)',cur_uah:'🇺🇦 乌克兰格里夫纳 (UAH)',cur_byn:'🇧🇾 白俄罗斯卢布 (BYN)',cur_gbp:'🇬🇧 英镑 (GBP)',cur_try:'🇹🇷 土耳其里ла (TRY)',cur_chf:'🇨🇭 瑞士法郎 (CHF)',cur_jpy:'🇯🇵 日元 (JPY)',cur_cad:'🇨🇦 加拿大元 (CAD)',cur_aed:'🇦🇪 阿联酋迪拉姆 (AED)',update_info:'要更新，请从网站下载新版本。',check_updates:'检查更新',ready:'完成！'},'de':{opt_auto:'Auto (Browser)',lbl_lang:'Sprache / Language',tab_rates:'Kurse',tab_settings:'Einstell.',tab_plans:'Tarife',your_currency:'Ihre Währung:',lbl_target:'Zielwährung',lbl_source:'Kursquelle',lbl_dash:'Dashboard-Währungen',btn_save:'Speichern',btn_pay:'💳 Für immer bezahlen',tier_basic:'Basis',lifetime:'(lebenslang)',desc_basic:'Konvertierung nur aus USD.',desc_pro:'8 Währungen (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 Slots. Dunkelmodus.',desc_pro_plus:'160+ Fiats, Nationalbanken (GUS, EU), Top-30 Krypto. Unbegrenzte Slots.',trial_left:'🎁 PRO+ Trial aktiv. Stunden: ',opt_market:'🌐 Markt (Forex)',opt_official:'🏛 Offizielle Nationalbank',opt_fiat:'🌍 Fiat',opt_crypto:'🪙 Krypto',cur_rub:'🇷🇺 Russischer Rubel (RUB)',cur_eur:'🇪🇺 Euro (EUR)',cur_usd:'🇺🇸 US-Dollar (USD)',cur_cny:'🇨🇳 Chinesischer Yuan (CNY)',cur_kzt:'🇰🇿 Kasachischer Tenge (KZT)',cur_uah:'🇺🇦 Ukrainische Hrywnja (UAH)',cur_byn:'🇧🇾 Weißrussischer Rubel (BYN)',cur_gbp:'🇬🇧 Britisches Pfund (GBP)',cur_try:'🇹🇷 Türkische Lira (TRY)',cur_chf:'🇨🇭 Schweizer Franken (CHF)',cur_jpy:'🇯🇵 Japanischer Yen (JPY)',cur_cad:'🇨🇦 Kanadischer Dollar (CAD)',cur_aed:'🇦🇪 VAE-Dirham (AED)',update_info:'Zum Aktualisieren laden Sie die neue Version von der Website herunter.',check_updates:'Auf Updates prüfen',ready:'Fertig!'},'es':{opt_auto:'Auto (Navegador)',lbl_lang:'Idioma / Language',tab_rates:'Tasas',tab_settings:'Ajustes',tab_plans:'Planes',your_currency:'Tu moneda:',lbl_target:'Moneda objetivo',lbl_source:'Fuente de la tasa',lbl_dash:'Monedas del panel',btn_save:'Guardar ajustes',btn_pay:'💳 Pagar de por vida',tier_basic:'Básico',lifetime:'(de por vida)',desc_basic:'Solo desde USD. 2 monedas.',desc_pro:'8 monedas (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 ranuras. Modo oscuro.',desc_pro_plus:'160+ fiats, Bancos Nacionales (GUS, UE), Top-30 Cripto. Ranuras ilimitadas.',trial_left:'🎁 Prueba PRO+ activa. Horas: ',opt_market:'🌐 Mercado (Bolsas)',opt_official:'🏛 Banco Nacional Oficial',opt_fiat:'🌍 Fiat',opt_crypto:'🪙 Cripto',cur_rub:'🇷🇺 Rublo ruso (RUB)',cur_eur:'🇪🇺 Euro (EUR)',cur_usd:'🇺🇸 Dólar (USD)',cur_cny:'🇨🇳 Yuan chino (CNY)',cur_kzt:'🇰🇿 Tenge kazajo (KZT)',cur_uah:'🇺🇦 Grivna ucraniana (UAH)',cur_byn:'🇧🇾 Rublo bielorruso (BYN)',cur_gbp:'🇬🇧 Libra británica (GBP)',cur_try:'🇹🇷 Lira turca (TRY)',cur_chf:'🇨🇭 Franco suizo (CHF)',cur_jpy:'🇯🇵 Yen japonés (JPY)',cur_cad:'🇨🇦 Dólar canadiense (CAD)',cur_aed:'🇦🇪 Dirham de los EAU (AED)',update_info:'Para actualizar, descargue la nueva versión desde el sitio web.',check_updates:'Buscar actualizaciones',ready:'¡Listo!'}};
 const FIAT_CURRENCIES=['USD','EUR','GBP','CHF','JPY','CNY','CAD','AED','TRY','RUB','KZT','UAH','BYN'];
 const CRYPTO_CURRENCIES=['BTC','ETH','USDT','SOL','BNB','XRP','ADA','DOGE','DOT','MATIC','SHIB','LTC'];
 const BANK_NAMES={'RUB':'ЦБ РФ','UAH':'НБУ','BYN':'НБРБ','EUR':'ECB'};
@@ -554,7 +564,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const checked = document.querySelector('input[name="tier"]:checked');
         if (checked) {
             const selectedTier = checked.value;
-            chrome.tabs.create({ url: 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app/checkout?tier=' + selectedTier });
+            chrome.tabs.create({ url: API_URL + '/checkout?tier=' + selectedTier });
         }
     });
 
@@ -568,7 +578,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const originalText = activateBtn.textContent;
             activateBtn.textContent = '...';
             try {
-                const response = await fetch('https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app/api/verify-license', {
+                const response = await fetch(API_URL + '/api/verify-license', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ licenseKey })
@@ -623,7 +633,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     document.getElementById('donate-btn').addEventListener('click', () => {
-        chrome.tabs.create({ url: 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app/checkout?type=donation' });
+        chrome.tabs.create({ url: API_URL + '/checkout?type=donation' });
     });
 
     document.getElementById('feedback-btn').addEventListener('click', () => {
@@ -636,14 +646,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const originalText = link.textContent;
         link.textContent = '...';
         try {
-            const res = await fetch('https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app/version.json');
+            const res = await fetch(API_URL + '/version.json');
             if (res.ok) {
                 const data = await res.json();
                 if (data.version > 15.0) {
                     document.getElementById('new-version-badge').style.display = 'inline-block';
                     link.textContent = 'New version ' + data.version + ' available!';
                     setTimeout(() => {
-                        chrome.tabs.create({ url: 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app' });
+                        chrome.tabs.create({ url: API_URL });
                         link.textContent = originalText;
                     }, 1500);
                 } else {
@@ -651,11 +661,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     setTimeout(() => { link.textContent = originalText; }, 2000);
                 }
             } else {
-                chrome.tabs.create({ url: 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app' });
+                chrome.tabs.create({ url: API_URL });
                 link.textContent = originalText;
             }
         } catch (err) {
-            chrome.tabs.create({ url: 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app' });
+            chrome.tabs.create({ url: API_URL });
             link.textContent = originalText;
         }
     });
@@ -667,6 +677,23 @@ const CBRF_API = "https://www.cbr-xml-daily.ru/daily_json.js";
 const NBU_API = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";
 const NBRB_API = "https://api.nbrb.by/exrates/rates?periodicity=0";
 const CRYPTO_CODES = ['BTC','ETH','USDT','BNB','SOL','XRP','USDC','ADA','AVAX','DOGE','DOT','TRX','LINK','MATIC','TON','SHIB','LTC','BCH','ATOM','XLM','NEAR','UNI','XMR','ETC','ICP','FIL','APT','LDO','ARB','VET','MKR','SAT','WAVES'];
+
+async function fetchWithTimeout(resource, options = {}) {
+    const { timeout = 5000 } = options;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+        const response = await fetch(resource, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(id);
+        return response;
+    } catch (error) {
+        clearTimeout(id);
+        throw error;
+    }
+}
 
 chrome.runtime.onInstalled.addListener(() => {
     chrome.storage.local.get(['trialStart'], (res) => {
@@ -727,7 +754,7 @@ async function cleanExpiredCache() {
 
 async function getCryptoUsdPrice(coin) {
     try {
-        const res = await fetch(CRYPTO_API + coin + "&tsyms=USD");
+        const res = await fetchWithTimeout(CRYPTO_API + coin + "&tsyms=USD");
         const data = await res.json();
         if (data.USD) return parseFloat(data.USD);
         throw new Error();
@@ -765,7 +792,7 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                 let targetUsdRate = null;
                 let targetBankName = "";
                 if (targetCode === 'RUB') {
-                    const res = await fetch(CBRF_API);
+                    const res = await fetchWithTimeout(CBRF_API);
                     const data = await res.json();
                     if (data.Valute) {
                         targetBankName = "ЦБ РФ";
@@ -783,7 +810,7 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                         }
                     }
                 } else if (targetCode === 'UAH') {
-                    const res = await fetch(NBU_API);
+                    const res = await fetchWithTimeout(NBU_API);
                     const data = await res.json();
                     targetBankName = "НБУ";
                     const getRateInUAH = (code) => {
@@ -800,7 +827,7 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                         if (usd) targetUsdRate = parseFloat(usd.rate);
                     }
                 } else if (targetCode === 'BYN') {
-                    const res = await fetch(NBRB_API);
+                    const res = await fetchWithTimeout(NBRB_API);
                     const data = await res.json();
                     targetBankName = "НБРБ";
                     const getRateInBYN = (code) => {
@@ -817,7 +844,7 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                         if (usdObj) targetUsdRate = parseFloat(usdObj.Cur_OfficialRate) / parseFloat(usdObj.Cur_Scale || 1);
                     }
                 } else if (targetCode === 'EUR') {
-                    const res = await fetch(API_FIAT + "EUR");
+                    const res = await fetchWithTimeout(API_FIAT + "EUR");
                     const data = await res.json();
                     if (data.rates) {
                         targetBankName = "ECB";
@@ -855,13 +882,13 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                     finalRate = cryptoUsd;
                     dateToReturn = "Live";
                 } else {
-                    const res = await fetch(API_FIAT + "USD");
+                    const res = await fetchWithTimeout(API_FIAT + "USD");
                     const data = await res.json();
                     finalRate = cryptoUsd * data.rates[targetCode];
                     dateToReturn = "Live";
                 }
             } else {
-                const res = await fetch(API_FIAT + fromCode);
+                const res = await fetchWithTimeout(API_FIAT + fromCode);
                 const data = await res.json();
                 finalRate = data.rates[targetCode];
                 dateToReturn = "Live";
@@ -878,6 +905,10 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
     } catch (error) {
         return { success: false };
     }
+}
+
+if (typeof module !== 'undefined' && typeof exports !== 'undefined') {
+    module.exports = { getCrossRate };
 }
 `,
   content: `const CRYPTO_MAP={'BTC':'BTC','BITCOIN':'BTC','БИТКОИН':'BTC','БИТОК':'BTC','ETH':'ETH','ETHEREUM':'ETH','ЭФИРИУМ':'ETH','ЭФИР':'ETH','USDT':'USDT','TETHER':'USDT','ТЕЗЕР':'USDT','BNB':'BNB','BINANCECOIN':'BNB','SOL':'SOL','SOLANA':'SOL','СОЛАНА':'SOL','XRP':'XRP','RIPPLE':'XRP','РИПЛ':'XRP','USDC':'USDC','USDCOIN':'USDC','ADA':'ADA','CARDANO':'ADA','КАРДАНО':'ADA','AVAX':'AVAX','AVALANCHE':'AVAX','АВАКС':'AVAX','DOGE':'DOGE','DOGECOIN':'DOGE','ДОГИКОИН':'DOGE','ДОГИ':'DOGE','DOT':'DOT','POLKADOT':'DOT','ПОЛКАДОТ':'DOT','TRX':'TRX','TRON':'TRX','ТРОН':'TRX','LINK':'LINK','CHAINLINK':'LINK','ЛИНК':'LINK','MATIC':'MATIC','POLYGON':'MATIC','МАТИК':'MATIC','TON':'TON','TONCOIN':'TON','ТОН':'TON','SHIB':'SHIB','SHIBAINU':'SHIB','ШИБА':'SHIB','LTC':'LTC','LITECOIN':'LTC','ЛАЙТКОИН':'LTC','BCH':'BCH','BITCOINCASH':'BCH','БИТКОИНКЕШ':'BCH','SAT':'SAT','SATOSHI':'SAT','САТОШИ':'SAT','WAVES':'WAVES','ВЕЙВС':'WAVES'};const FIAT_MAP={'$':'USD','USD':'USD','€':'EUR','EUR':'EUR','£':'GBP','GBP':'GBP','¥':'CNY','CNY':'CNY','JPY':'JPY','₣':'CHF','FR.':'CHF','CHF':'CHF','A$':'AUD','AUD':'AUD','C$':'CAD','CAD':'CAD','₺':'TRY','TRY':'TRY','AED':'AED','₴':'UAH','UAH':'UAH','ГРН':'UAH','ГРИВНА':'UAH','ГРИВЕН':'UAH','₸':'KZT','KZT':'KZT','ТНГ':'KZT','ТЕНГЕ':'KZT','₼':'AZN','AZN':'AZN','BGN':'BGN','LEV':'BGN','BR':'BYN','BYN':'BYN','БР':'BYN','БЕЛРУБ':'BYN','BYR':'BYN','РБ':'BYN','₹':'INR','INR':'INR','KGS':'KGS','₩':'KRW','KRW':'KRW','L':'MDL','MDL':'MDL','SM':'TJS','TJS':'TJS','TMT':'TMT','UZS':'UZS','SUM':'UZS','₪':'ILS','ILS':'ILS','¢':'USD','₽':'RUB','Р':'RUB','РУБ':'RUB','РУБ.':'RUB','РУБЛЕЙ':'RUB','RUB':'RUB','ДОЛЛАР':'USD','ДОЛЛАРОВ':'USD','ЕВРО':'EUR','ЮАНЬ':'CNY','ИЕНА':'JPY','ТЕНГЕ':'KZT'};const CURRENCY_MAP={...FIAT_MAP,...CRYPTO_MAP};const CRYPTO_CODES=Object.values(CRYPTO_MAP);const PRO_CURRENCIES=['USD','EUR','GBP','CHF','JPY','CAD','CNY','AED'];let hideTimeout=null,currentTooltip=null;document.addEventListener('mouseup',handleSelection);document.addEventListener('mousedown',(e)=>{if(currentTooltip&&currentTooltip.contains(e.target))return;removeTooltip();});async function handleSelection(event){try{if(!chrome.runtime?.id)return;const selection=window.getSelection();let text=selection.toString();text=text.replace(/[\\u00A0\\u202F\\u200B-\\u200D\\uFEFF]/g,' ').trim();if(!text||text.length>50)return;function isSelectionInSensitiveField(){const sel=window.getSelection();if(!sel.rangeCount)return false;const node=sel.getRangeAt(0).commonAncestorContainer;const el=node.nodeType===1?node:node.parentElement;if(!el)return false;if(el.closest('[contenteditable="true"]'))return true;const closestInput=el.closest('input, textarea');if(!closestInput)return false;const type=(closestInput.type||'').toLowerCase();const name=(closestInput.name||'').toLowerCase();const id=(closestInput.id||'').toLowerCase();return type==='password'||type==='hidden'||name.includes('cc')||name.includes('card')||name.includes('cvv')||name.includes('password')||name.includes('secret')||id.includes('cc')||id.includes('card')||id.includes('cvv')||id.includes('password')||id.includes('secret');}if(isSelectionInSensitiveField())return;const parseResult=parseCurrencyString(text);if(!parseResult)return;const settings=await chrome.storage.local.get({appTier:'basic',targetCurrency:'RUB',rateSource:'market',trialStart:null,lang:'auto'});let currentLang=settings.lang==='auto'?(navigator.language.split('-')[0]||'en'):settings.lang;if(currentLang==='ua')currentLang='uk';const C_DICT={'uk':{lock:'Блокування',req:'Потрібен тариф'},'ru':{lock:'Блокировка',req:'Требуется тариф'},'en':{lock:'Locked',req:'Requires plan'},'de':{lock:'Gesperrt',req:'Erfordert Plan'},'es':{lock:'Bloqueado',req:'Requiere plan'},'zh':{lock:'已锁定',req:'需要方案'},'kk':{lock:'Блокталған',req:'Тариф қажет'}};const m=C_DICT[currentLang]||C_DICT['en'];if(parseResult.isSat){showTooltip(event.pageX,event.pageY,parseResult.amount,"Live","BTC",currentLang);return;}const targetCurrencyUpper = (settings.targetCurrency || "RUB").trim().toUpperCase();if(parseResult.currency===targetCurrencyUpper){showTooltip(event.pageX,event.pageY,parseResult.amount,"Live",targetCurrencyUpper,currentLang);return;}const isTrialActive=settings.trialStart&&((Date.now()-settings.trialStart)<48*60*60*1000);const activeTier=(settings.appTier==='pro_plus'||isTrialActive)?'pro_plus':settings.appTier;const isByDomain=window.location.hostname.endsWith('.by');const allowedBasic=['USD','EUR','RUB'];if(isByDomain)allowedBasic.push('BYN');if(activeTier==='basic'&&!allowedBasic.includes(parseResult.currency))return showUpsell(event.pageX,event.pageY,parseResult.currency,"PRO",m);if(activeTier==='pro'&&!PRO_CURRENCIES.includes(parseResult.currency))return showUpsell(event.pageX,event.pageY,parseResult.currency,"PRO+",m);const actualSource=activeTier==='pro_plus'?settings.rateSource:'market';const res=await chrome.runtime.sendMessage({action:"GET_RATE",from:parseResult.currency,to:targetCurrencyUpper,source:actualSource});if(res&&res.success&&res.rate)showTooltip(event.pageX,event.pageY,parseResult.amount*res.rate,res.date,targetCurrencyUpper,currentLang);}catch(e){}}function parseCurrencyString(text){    const suffixRegex=/^([0-9\\s.,]+)\\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\\.?|млн\\.?|млрд\\.?|трлн\\.?))?\\s*([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\\s]{1,25})$/i;
@@ -942,7 +973,7 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
     if(isSatVal)amount*=0.00000001;
     const finalCur=isSatVal?'BTC':isoCode;
     return{amount,currency:finalCur,isSat:isSatVal};
-}function createBase(x,y,callback){removeTooltip();const duplicate=document.getElementById('edge-currency-converter-tooltip');if(duplicate)duplicate.remove();const t=document.createElement('div');t.id='edge-currency-converter-tooltip';t.style.cssText='all: initial; position: absolute !important; left: '+(x+15)+'px !important; top: '+(y+35)+'px !important; padding: 12px 16px !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; z-index: 2147483647 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important; pointer-events: none !important; opacity: 0 !important; transform: translateY(5px) !important; transition: opacity 0.2s, transform 0.2s !important; display: flex !important; flex-direction: column !important; min-width: 140px !important; background-color: #161b22 !important; color: #f0f6fc !important; border: 1px solid #30363d !important;';chrome.storage.local.get({theme:'dark'},(res)=>{const isDark=res.theme==='dark';const bgColor=isDark?'#161b22':'#ffffff';const textColor=isDark?'#f0f6fc':'#1a1a1a';const borderColor=isDark?'#30363d':'#e0e0e0';t.style.setProperty('background',bgColor,'important');t.style.setProperty('background-color',bgColor,'important');t.style.setProperty('color',textColor,'important');t.style.setProperty('border','1px solid '+borderColor,'important');callback(t,textColor);requestAnimationFrame(()=>{const rect=t.getBoundingClientRect();const viewportWidth=window.innerWidth||document.documentElement.clientWidth;const viewportHeight=window.innerHeight||document.documentElement.clientHeight;const scrollX=window.scrollX||window.pageXOffset||0;const scrollY=window.scrollY||window.pageYOffset||0;let targetX=x+15;let targetY=y+35;const clientXVal=targetX-scrollX;const clientYVal=targetY-scrollY;if(clientXVal+rect.width>viewportWidth){targetX=Math.max(scrollX+10,scrollX+viewportWidth-rect.width-20);}if(targetX<scrollX){targetX=scrollX+10;}if(clientYVal+rect.height>viewportHeight){const aboveY=y-rect.height-15;if(aboveY-scrollY>10){targetY=aboveY;}else{targetY=Math.max(scrollY+10,scrollY+viewportHeight-rect.height-20);}}if(targetY<scrollY){targetY=scrollY+10;}t.style.setProperty('left',targetX+'px','important');t.style.setProperty('top',targetY+'px','important');t.style.setProperty('opacity','1','important');t.style.setProperty('transform','translateY(0)','important');});});document.body.appendChild(t);currentTooltip=t;hideTimeout=setTimeout(removeTooltip,7000);}function showTooltip(x,y,val,date,target,lang){
+}function createBase(x,y,callback){removeTooltip();const duplicate=document.getElementById('edge-currency-converter-tooltip');if(duplicate)duplicate.remove();const t=document.createElement('div');t.id='edge-currency-converter-tooltip';t.style.cssText='all: initial; position: absolute !important; left: 0px !important; top: 0px !important; visibility: hidden !important; padding: 12px 16px !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; z-index: 2147483647 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important; pointer-events: none !important; opacity: 0 !important; transform: translateY(5px) !important; transition: opacity 0.2s, transform 0.2s !important; display: flex !important; flex-direction: column !important; min-width: 140px !important; background-color: #161b22 !important; color: #f0f6fc !important; border: 1px solid #30363d !important;';chrome.storage.local.get({theme:'dark'},(res)=>{const isDark=res.theme==='dark';const bgColor=isDark?'#161b22':'#ffffff';const textColor=isDark?'#f0f6fc':'#1a1a1a';const borderColor=isDark?'#30363d':'#e0e0e0';t.style.setProperty('background',bgColor,'important');t.style.setProperty('background-color',bgColor,'important');t.style.setProperty('color',textColor,'important');t.style.setProperty('border','1px solid '+borderColor,'important');callback(t,textColor);requestAnimationFrame(()=>{const rect=t.getBoundingClientRect();const viewportWidth=window.innerWidth||document.documentElement.clientWidth;const viewportHeight=window.innerHeight||document.documentElement.clientHeight;const scrollX=window.scrollX||window.pageXOffset||0;const scrollY=window.scrollY||window.pageYOffset||0;let targetX=x+15;let targetY=y+35;const clientXVal=targetX-scrollX;const clientYVal=targetY-scrollY;if(clientXVal+rect.width>viewportWidth){targetX=Math.max(scrollX+10,scrollX+viewportWidth-rect.width-20);}if(targetX<scrollX){targetX=scrollX+10;}if(clientYVal+rect.height>viewportHeight){const aboveY=y-rect.height-15;if(aboveY-scrollY>10){targetY=aboveY;}else{targetY=Math.max(scrollY+10,scrollY+viewportHeight-rect.height-20);}}if(targetY<scrollY){targetY=scrollY+10;}t.style.setProperty('left',targetX+'px','important');t.style.setProperty('top',targetY+'px','important');t.style.setProperty('opacity','1','important');t.style.setProperty('transform','translateY(0)','important');t.style.setProperty('visibility','visible','important');});});document.body.appendChild(t);currentTooltip=t;hideTimeout=setTimeout(removeTooltip,7000);}function showTooltip(x,y,val,date,target,lang){
     const locales = {
         'uk': 'uk-UA',
         'ru': 'ru-RU',

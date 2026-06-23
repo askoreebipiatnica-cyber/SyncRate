@@ -11,7 +11,7 @@ import {
   AlertCircle, FileJson, FileCode, Layout, MousePointer2, 
   Coins, Landmark, ChevronRight, Languages, Star, Lock, DollarSign
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { templates } from './templates';
 
 type Language = 'ru' | 'en' | 'zh' | 'kk' | 'de' | 'uk' | 'es';

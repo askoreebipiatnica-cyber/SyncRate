@@ -5,6 +5,23 @@ const NBU_API = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?js
 const NBRB_API = "https://api.nbrb.by/exrates/rates?periodicity=0";
 const CRYPTO_CODES = ['BTC','ETH','USDT','BNB','SOL','XRP','USDC','ADA','AVAX','DOGE','DOT','TRX','LINK','MATIC','TON','SHIB','LTC','BCH','ATOM','XLM','NEAR','UNI','XMR','ETC','ICP','FIL','APT','LDO','ARB','VET','MKR','SAT','WAVES'];
 
+async function fetchWithTimeout(resource, options = {}) {
+    const { timeout = 5000 } = options;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+        const response = await fetch(resource, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(id);
+        return response;
+    } catch (error) {
+        clearTimeout(id);
+        throw error;
+    }
+}
+
 chrome.runtime.onInstalled.addListener(() => {
     chrome.storage.local.get(['trialStart'], (res) => {
         if (!res.trialStart) {
@@ -23,6 +40,15 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "RENDER_IN_TOP_FRAME") {
+        if (sender && sender.tab && sender.tab.id !== undefined) {
+            try {
+                chrome.tabs.sendMessage(sender.tab.id, request, { frameId: 0 })
+                    .catch(() => {});
+            } catch (e) {}
+        }
+        return;
+    }
     if (request.action === "GET_RATE") {
         getCrossRate(request.from, request.to, request.source)
             .then(res => sendResponse(res))
@@ -63,14 +89,42 @@ async function cleanExpiredCache() {
 }
 
 async function getCryptoUsdPrice(coin) {
+    const targetCoin = coin === 'SAT' ? 'BTC' : coin;
+    
+    // 1. Try Coinbase API
     try {
-        const res = await fetch(CRYPTO_API + coin + "&tsyms=USD");
+        const res = await fetchWithTimeout("https://api.coinbase.com/v2/prices/" + targetCoin + "-USD/spot");
         const data = await res.json();
-        if (data.USD) return parseFloat(data.USD);
-        throw new Error();
-    } catch (e) {
-        throw e;
-    }
+        if (data && data.data && data.data.amount) {
+            let price = parseFloat(data.data.amount);
+            if (coin === 'SAT') price /= 100000000;
+            return price;
+        }
+    } catch (e) {}
+
+    // 2. Try MEXC API as highly reliable fallback
+    try {
+        const res = await fetchWithTimeout("https://api.mexc.com/api/v3/ticker/price?symbol=" + targetCoin + "USDT");
+        const data = await res.json();
+        if (data && data.price) {
+            let price = parseFloat(data.price);
+            if (coin === 'SAT') price /= 100000000;
+            return price;
+        }
+    } catch (e) {}
+
+    // 3. Try legacy CryptoCompare API
+    try {
+        const res = await fetchWithTimeout("https://min-api.cryptocompare.com/data/price?fsym=" + targetCoin + "&tsyms=USD");
+        const data = await res.json();
+        if (data && data.USD) {
+            let price = parseFloat(data.USD);
+            if (coin === 'SAT') price /= 100000000;
+            return price;
+        }
+    } catch (e) {}
+
+    throw new Error("Failed to fetch crypto price for " + coin);
 }
 
 async function getCrossRate(fromCode, targetCode, sourceCode) {
@@ -102,7 +156,7 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                 let targetUsdRate = null;
                 let targetBankName = "";
                 if (targetCode === 'RUB') {
-                    const res = await fetch(CBRF_API);
+                    const res = await fetchWithTimeout(CBRF_API);
                     const data = await res.json();
                     if (data.Valute) {
                         targetBankName = "ЦБ РФ";
@@ -120,7 +174,7 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                         }
                     }
                 } else if (targetCode === 'UAH') {
-                    const res = await fetch(NBU_API);
+                    const res = await fetchWithTimeout(NBU_API);
                     const data = await res.json();
                     targetBankName = "НБУ";
                     const getRateInUAH = (code) => {
@@ -137,7 +191,7 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                         if (usd) targetUsdRate = parseFloat(usd.rate);
                     }
                 } else if (targetCode === 'BYN') {
-                    const res = await fetch(NBRB_API);
+                    const res = await fetchWithTimeout(NBRB_API);
                     const data = await res.json();
                     targetBankName = "НБРБ";
                     const getRateInBYN = (code) => {
@@ -154,7 +208,7 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                         if (usdObj) targetUsdRate = parseFloat(usdObj.Cur_OfficialRate) / parseFloat(usdObj.Cur_Scale || 1);
                     }
                 } else if (targetCode === 'EUR') {
-                    const res = await fetch(API_FIAT + "EUR");
+                    const res = await fetchWithTimeout(API_FIAT + "EUR");
                     const data = await res.json();
                     if (data.rates) {
                         targetBankName = "ECB";
@@ -192,13 +246,13 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                     finalRate = cryptoUsd;
                     dateToReturn = "Live";
                 } else {
-                    const res = await fetch(API_FIAT + "USD");
+                    const res = await fetchWithTimeout(API_FIAT + "USD");
                     const data = await res.json();
                     finalRate = cryptoUsd * data.rates[targetCode];
                     dateToReturn = "Live";
                 }
             } else {
-                const res = await fetch(API_FIAT + fromCode);
+                const res = await fetchWithTimeout(API_FIAT + fromCode);
                 const data = await res.json();
                 finalRate = data.rates[targetCode];
                 dateToReturn = "Live";
@@ -215,4 +269,8 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
     } catch (error) {
         return { success: false };
     }
+}
+
+if (typeof module !== 'undefined' && typeof exports !== 'undefined') {
+    module.exports = { getCrossRate };
 }

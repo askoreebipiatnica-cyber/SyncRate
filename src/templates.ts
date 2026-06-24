@@ -10,7 +10,9 @@ export const templates = {
     "https://min-api.cryptocompare.com/*",
     "https://www.cbr-xml-daily.ru/*",
     "https://bank.gov.ua/*",
-    "https://api.nbrb.by/*"
+    "https://api.nbrb.by/*",
+    "https://api.coinbase.com/*",
+    "https://api.mexc.com/*"
   ],
   "action": { "default_popup": "popup.html", "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" } },
   "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
@@ -757,14 +759,42 @@ async function cleanExpiredCache() {
 }
 
 async function getCryptoUsdPrice(coin) {
+    const targetCoin = coin === 'SAT' ? 'BTC' : coin;
+    
+    // 1. Try Coinbase API
     try {
-        const res = await fetchWithTimeout(CRYPTO_API + coin + "&tsyms=USD");
+        const res = await fetchWithTimeout("https://api.coinbase.com/v2/prices/" + targetCoin + "-USD/spot");
         const data = await res.json();
-        if (data.USD) return parseFloat(data.USD);
-        throw new Error();
-    } catch (e) {
-        throw e;
-    }
+        if (data && data.data && data.data.amount) {
+            let price = parseFloat(data.data.amount);
+            if (coin === 'SAT') price /= 100000000;
+            return price;
+        }
+    } catch (e) {}
+
+    // 2. Try MEXC API as highly reliable fallback
+    try {
+        const res = await fetchWithTimeout("https://api.mexc.com/api/v3/ticker/price?symbol=" + targetCoin + "USDT");
+        const data = await res.json();
+        if (data && data.price) {
+            let price = parseFloat(data.price);
+            if (coin === 'SAT') price /= 100000000;
+            return price;
+        }
+    } catch (e) {}
+
+    // 3. Try legacy CryptoCompare API
+    try {
+        const res = await fetchWithTimeout("https://min-api.cryptocompare.com/data/price?fsym=" + targetCoin + "&tsyms=USD");
+        const data = await res.json();
+        if (data && data.USD) {
+            let price = parseFloat(data.USD);
+            if (coin === 'SAT') price /= 100000000;
+            return price;
+        }
+    } catch (e) {}
+
+    throw new Error("Failed to fetch crypto price for " + coin);
 }
 
 async function getCrossRate(fromCode, targetCode, sourceCode) {

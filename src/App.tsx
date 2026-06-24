@@ -7,7 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Download, ShieldCheck, RefreshCw, Globe, Sparkles, CheckCircle2, 
   AlertCircle, FileJson, FileCode, Layout, MousePointer2, 
-  Coins, Landmark, ChevronRight, Languages, Star, Lock, DollarSign
+  Coins, Landmark, ChevronRight, Languages, Star, Lock, DollarSign,
+  Monitor, Laptop, Terminal, Chrome, Cpu, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -97,7 +98,14 @@ const translations = {
     free_test_desc: "Установите расширение сейчас и получите 48 часов полного доступа ко всем Enterprise-функциям автоматически.",
     btn_start_test: "Начать бесплатный тест",
     limited_offer: "Ограниченное предложение",
-    ready: 'Готово!'
+    ready: 'Готово!',
+    supported_os_title: 'Поддерживаемые ОС:',
+    supported_os_list: 'Windows, macOS, Linux',
+    sys_req_title: 'Системные требования',
+    browsers_title: 'Поддерживаемые браузеры',
+    browsers_desc: 'Google Chrome, Microsoft Edge, Brave, Opera (все браузеры на базе Chromium)',
+    os_desc: 'Windows 10/11, macOS (последние версии), современные дистрибутивы Linux',
+    browser_note: 'Для корректной работы убедитесь, что ваш браузер обновлен до последней версии.'
   },
   en: {
     title: 'SyncRate',
@@ -182,7 +190,14 @@ const translations = {
     free_test_desc: "Install the extension now and get 48 hours of full access to all Enterprise features automatically.",
     btn_start_test: "Start Free Test",
     limited_offer: "Limited Offer",
-    ready: 'Ready!'
+    ready: 'Ready!',
+    supported_os_title: 'Supported OS:',
+    supported_os_list: 'Windows, macOS, Linux',
+    sys_req_title: 'System Requirements',
+    browsers_title: 'Supported Browsers',
+    browsers_desc: 'Google Chrome, Microsoft Edge, Brave, Opera (all Chromium-based browsers)',
+    os_desc: 'Windows 10/11, macOS (latest versions), modern Linux distributions',
+    browser_note: 'For correct operation, please make sure your browser is updated to the latest version.'
   },
   zh: {
     title: 'SyncRate',
@@ -257,7 +272,14 @@ const translations = {
     free_test_desc: "立即安装扩展程序，即可自动获得 48 小时所有企业级功能的完整访问权限。",
     btn_start_test: "开始免费测试",
     limited_offer: "限时优惠",
-    ready: '完成！'
+    ready: '完成！',
+    supported_os_title: '支持的系统:',
+    supported_os_list: 'Windows, macOS, Linux',
+    sys_req_title: '系统要求',
+    browsers_title: '支持的浏览器',
+    browsers_desc: 'Google Chrome、Microsoft Edge、Brave、Opera（所有基于 Chromium 的浏览器）',
+    os_desc: 'Windows 10/11、macOS（最新版本）、现代 Linux 发行版',
+    browser_note: '为确保正常运行，请确保您的浏览器已更新至最新版本。'
   },
   kk: {
     title: 'SyncRate',
@@ -332,7 +354,14 @@ const translations = {
     free_test_desc: "Кеңейтімді қазір орнатыңыз және барлық Enterprise функцияларына 48 сағаттық толық қолжетімділікті автоматты түрде алыңыз.",
     btn_start_test: "Тегін тестті бастау",
     limited_offer: "Шектеулі ұсыныс",
-    ready: 'Дайын!'
+    ready: 'Дайын!',
+    supported_os_title: 'Қолдау көрсетілетін ОЖ:',
+    supported_os_list: 'Windows, macOS, Linux',
+    sys_req_title: 'Жүйелік талаптар',
+    browsers_title: 'Қолдау көрсетілетін браузерлер',
+    browsers_desc: 'Google Chrome, Microsoft Edge, Brave, Opera (барлығы Chromium негізінде)',
+    os_desc: 'Windows 10/11, macOS (соңғы нұсқалары), заманауи Linux дистрибутивтері',
+    browser_note: 'Дұрыс жұмыс істеуі үшін браузеріңіз соңғы нұсқаға дейін жаңартылғанына көз жеткізіңіз.'
   },
   de: {
     title: 'SyncRate',
@@ -407,7 +436,14 @@ const translations = {
     free_test_desc: "Installieren Sie die Erweiterung jetzt und erhalten Sie automatisch 48 Stunden vollen Zugriff auf alle Enterprise-Funktionen.",
     btn_start_test: "Kostenlosen Test starten",
     limited_offer: "Befristetes Angebot",
-    ready: 'Fertig!'
+    ready: 'Fertig!',
+    supported_os_title: 'Unterstützte OS:',
+    supported_os_list: 'Windows, macOS, Linux',
+    sys_req_title: 'Systemanforderungen',
+    browsers_title: 'Unterstützte Browser',
+    browsers_desc: 'Google Chrome, Microsoft Edge, Brave, Opera (alle Chromium-basierten Browser)',
+    os_desc: 'Windows 10/11, macOS (neueste Versionen), moderne Linux-Distributionen',
+    browser_note: 'Stellen Sie für einen ordnungsgemäßen Betrieb sicher, dass Ihr Browser auf die neueste Version aktualisiert ist.'
   },
   uk: {
     title: 'SyncRate',
@@ -491,7 +527,14 @@ const translations = {
     free_test_title: "Спробуйте PRO+ безкоштовно",
     free_test_desc: "Встановіть розширення зараз та отримайте 48 годин повного доступу до всіх Enterprise-функцій автоматично.",
     btn_start_test: "Почати безкоштовний тест",
-    limited_offer: "Обмежена пропозиція"
+    limited_offer: "Обмежена пропозиція",
+    supported_os_title: 'Підтримувані ОС:',
+    supported_os_list: 'Windows, macOS, Linux',
+    sys_req_title: 'Системні вимоги',
+    browsers_title: 'Підтримувані браузери',
+    browsers_desc: 'Google Chrome, Microsoft Edge, Brave, Opera (всі браузери на базі Chromium)',
+    os_desc: 'Windows 10/11, macOS (останні версії), сучасні дистрибутиви Linux',
+    browser_note: 'Для коректної роботи переконайтеся, що ваш браузер оновлено до останньої версії.'
   },
   es: {
     title: 'SyncRate',
@@ -576,7 +619,14 @@ const translations = {
     free_test_desc: "Instale la extensión ahora y obtenga automáticamente 48 horas de acceso completo a todas las funciones Enterprise.",
     btn_start_test: "Comenzar Prueba Gratis",
     limited_offer: "Oferta por tiempo limitado",
-    ready: '¡Listo!'
+    ready: '¡Listo!',
+    supported_os_title: 'Sistemas operativos compatibles:',
+    supported_os_list: 'Windows, macOS, Linux',
+    sys_req_title: 'Requisitos del sistema',
+    browsers_title: 'Navegadores compatibles',
+    browsers_desc: 'Google Chrome, Microsoft Edge, Brave, Opera (todos los navegadores basados en Chromium)',
+    os_desc: 'Windows 10/11, macOS (últimas versiones), distribuciones de Linux modernas',
+    browser_note: 'Para un correcto funcionamiento, asegúrese de que su navegador esté actualizado a la última versión.'
   }
 };
 
@@ -797,10 +847,35 @@ export default function App() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-xl md:text-2xl text-[#8b949e] max-w-3xl mx-auto leading-relaxed mb-12"
+          className="text-xl md:text-2xl text-[#8b949e] max-w-3xl mx-auto leading-relaxed mb-8"
         >
           {t.hero_desc}
         </motion.p>
+        
+        {/* Compact Supported OS badge-block */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="inline-flex flex-wrap items-center justify-center gap-2.5 px-4 py-2 rounded-2xl bg-[#161b22]/60 border border-[#30363d] text-sm text-[#8b949e] mb-12 hover:border-[#6e40c9]/40 transition-colors mx-auto"
+        >
+          <span className="font-semibold text-[#f0f6fc]/80">{t.supported_os_title}</span>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 bg-[#0d1117] px-2.5 py-1 rounded-xl border border-[#30363d] text-xs font-bold text-[#c9d1d9]">
+              <Monitor className="w-3.5 h-3.5 text-[#51a1fc]" />
+              Windows
+            </span>
+            <span className="flex items-center gap-1 bg-[#0d1117] px-2.5 py-1 rounded-xl border border-[#30363d] text-xs font-bold text-[#c9d1d9]">
+              <Laptop className="w-3.5 h-3.5 text-[#a371f7]" />
+              macOS
+            </span>
+            <span className="flex items-center gap-1 bg-[#0d1117] px-2.5 py-1 rounded-xl border border-[#30363d] text-xs font-bold text-[#c9d1d9]">
+              <Terminal className="w-3.5 h-3.5 text-[#3fb950]" />
+              Linux
+            </span>
+          </div>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1080,9 +1155,41 @@ export default function App() {
                     <p className="text-[#c9d1d9] leading-relaxed">{step}</p>
                   </div>
                 ))}
-                <div className="mt-8 p-6 rounded-2xl bg-[#6e40c9]/10 border border-[#6e40c9]/20 flex items-start gap-4">
-                  <Globe className="w-6 h-6 text-[#a371f7] flex-shrink-0" />
-                  <p className="text-sm text-[#8b949e] font-medium">{t.browsers_supported}</p>
+                {/* System Requirements Sub-section */}
+                <div className="mt-8 border-t border-[#30363d]/80 pt-8">
+                  <h4 className="text-xl font-bold mb-5 text-[#f0f6fc] flex items-center gap-2.5">
+                    <Cpu className="w-5 h-5 text-[#a371f7]" />
+                    {t.sys_req_title}
+                  </h4>
+                  <div className="space-y-4">
+                    {/* Browsers Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-5 rounded-2xl bg-[#0d1117] border border-[#30363d] items-start hover:border-[#6e40c9]/30 transition-colors">
+                      <div className="flex items-center gap-2 text-sm font-bold text-[#f0f6fc]/90">
+                        <Chrome className="w-4 h-4 text-[#51a1fc]" />
+                        {t.browsers_title}
+                      </div>
+                      <div className="sm:col-span-2 text-sm text-[#8b949e] leading-relaxed">
+                        {t.browsers_desc}
+                      </div>
+                    </div>
+                    {/* OS Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-5 rounded-2xl bg-[#0d1117] border border-[#30363d] items-start hover:border-[#6e40c9]/30 transition-colors">
+                      <div className="flex items-center gap-2 text-sm font-bold text-[#f0f6fc]/90">
+                        <Monitor className="w-4 h-4 text-[#a371f7]" />
+                        {t.supported_os_title.replace(':', '')}
+                      </div>
+                      <div className="sm:col-span-2 text-sm text-[#8b949e] leading-relaxed">
+                        {t.os_desc}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Important Note */}
+                  <div className="mt-5 p-4 rounded-xl bg-[#6e40c9]/5 border border-[#6e40c9]/15 flex items-start gap-3">
+                    <Info className="w-4 h-4 text-[#a371f7] flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-[#8b949e] font-medium leading-relaxed">
+                      {t.browser_note}
+                    </p>
+                  </div>
                 </div>
               </div>
             </motion.div>

@@ -4,15 +4,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
 import { 
   Download, ShieldCheck, RefreshCw, Globe, Sparkles, CheckCircle2, 
   AlertCircle, FileJson, FileCode, Layout, MousePointer2, 
   Coins, Landmark, ChevronRight, Languages, Star, Lock, DollarSign
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { templates } from './templates';
 
 type Language = 'ru' | 'en' | 'zh' | 'kk' | 'de' | 'uk' | 'es';
 
@@ -81,7 +78,11 @@ const translations = {
     feedback_desc: 'Есть идеи по улучшению или нашли ошибку? Мы всегда рады критике и похвале!',
     btn_feedback: 'Написать разработчику',
     update_title: 'Авто-обновления',
-    update_desc: 'SyncRate Enterprise теперь поддерживает автоматические обновления. Вам больше не нужно скачивать архивы вручную — расширение обновится само.',
+    update_desc: 'Обновления происходят автоматически через Chrome Web Store',
+    faq_title: 'Как активировать PRO?',
+    faq_step_1: 'Шаг 1: Установите расширение из официального магазина Chrome Web Store.',
+    faq_step_2: 'Шаг 2: Приобретите лицензионный ключ на этом сайте.',
+    faq_step_3: 'Шаг 3: Откройте настройки расширения, вставьте ключ в поле \'Активация\' и нажмите \'Активировать\'.',
     download: "Скачать расширение",
     browsers_supported: "Поддерживаемые браузеры",
     capability_1: "Конвертация 160+ валют",
@@ -162,7 +163,11 @@ const translations = {
     feedback_desc: 'Have ideas for improvement or found a bug? We always welcome criticism and praise!',
     btn_feedback: 'Contact Developer',
     update_title: 'Auto-Updates',
-    update_desc: 'SyncRate Enterprise now supports over-the-air automatic updates. No more manual ZIP downloads — the extension updates itself.',
+    update_desc: 'Updates happen automatically through the Chrome Web Store.',
+    faq_title: 'How to activate PRO?',
+    faq_step_1: 'Step 1: Install the extension from the official Chrome Web Store.',
+    faq_step_2: 'Step 2: Purchase a license key on this website.',
+    faq_step_3: 'Step 3: Open the extension settings, paste the key into the \'Activation\' field, and click \'Activate\'.',
     download: "Download Extension",
     browsers_supported: "Supported Browsers",
     capability_1: "160+ Currencies Conversion",
@@ -243,7 +248,11 @@ const translations = {
     feedback_desc: '有改进建议或发现错误？我们随时欢迎您的批评和表扬！',
     btn_feedback: '联系开发人员',
     update_title: '自动更新',
-    update_desc: 'SyncRate Enterprise 现在支持空中下载自动更新。不再需要手动下载 ZIP — 扩展程序会自动更新。',
+    update_desc: '更新通过 Chrome Web Store 自动进行。',
+    faq_title: '如何激活 PRO？',
+    faq_step_1: '步骤 1：从官方 Chrome Web Store 安装扩展程序。',
+    faq_step_2: '步骤 2：在此网站上购买授权密钥。',
+    faq_step_3: '步骤 3：打开扩展程序设置，将密钥粘贴到“激活”字段中，然后单击“激活”。',
     free_test_title: "免费试用 PRO+",
     free_test_desc: "立即安装扩展程序，即可自动获得 48 小时所有企业级功能的完整访问权限。",
     btn_start_test: "开始免费测试",
@@ -260,7 +269,7 @@ const translations = {
     features_title: 'Неліктен SyncRate?',
     product_desc_title: 'SyncRate дегеніміз не?',
     product_desc_text: 'SyncRate — бағаларды көшіру және калькуляторды ашу қажеттілігін жоятын қуатты браузер кеңейтімі. Кез келген сайттағы кез келген соманы белгілеңіз, сонда кеңейтім курсордың жанында өз валютаңыздағы баламаны лезде көрсетеді. Онлайн-шопинг, криптомен жұмыс және шетелдік нарықтарды талдау үшін өте қолайлы.',
-    enterprise_grade_title: 'Корпоративтік деңгей',
+    enterprise_grade_title: 'Corporate Level',
     enterprise_grade_desc: 'Қаржылық деректерді дәл талдау және айырбастау үшін мыңдаған мамандар бізге сенеді.',
     feature_usd_conv: 'USD конвертациясы',
     feature_dashboard_slots: 'дашбордтағы слот',
@@ -314,7 +323,11 @@ const translations = {
     feedback_desc: 'Жақсарту бойынша идеяларыңыз бар ма немесе қате таптыңыз ба? Біз әрқашан сын мен мақтауға қуаныштымыз!',
     btn_feedback: 'Әзірлеушіге жазу',
     update_title: 'Авто-жаңартулар',
-    update_desc: 'SyncRate Enterprise енді әуе арқылы автоматты жаңартуларды қолдайды. ZIP файлдарын қолмен жүктеудің қажеті жоқ — кеңейтім өзі жаңартылады.',
+    update_desc: 'Жаңартулар Chrome Web Store арқылы автоматты түрде орындалады.',
+    faq_title: 'PRO-ды қалай белсендіруге болады?',
+    faq_step_1: '1-қадам: Кеңейтімді ресми Chrome Web Store дүкенінен орнатыңыз.',
+    faq_step_2: '2-қадам: Осы сайттан лицензиялық кілтті сатып алыңыз.',
+    faq_step_3: '3-қадам: Кеңейтім параметрлерін ашып, кілтті "Белсендіру" өрісіне қойып, "Белсендіру" батырмасын басыңыз.',
     free_test_title: "PRO+ нұсқасын тегін қолданып көріңіз",
     free_test_desc: "Кеңейтімді қазір орнатыңыз және барлық Enterprise функцияларына 48 сағаттық толық қолжетімділікті автоматты түрде алыңыз.",
     btn_start_test: "Тегін тестті бастау",
@@ -385,7 +398,11 @@ const translations = {
     feedback_desc: 'Haben Sie Verbesserungsvorschläge oder einen Fehler gefunden? Wir freuen uns immer über Kritik und Lob!',
     btn_feedback: 'Entwickler kontaktieren',
     update_title: 'Auto-Updates',
-    update_desc: 'SyncRate Enterprise unterstützt jetzt automatische Over-the-Air-Updates. Keine manuellen ZIP-Downloads mehr – die Erweiterung aktualisiert sich von selbst.',
+    update_desc: 'Updates erfolgen automatisch über den Chrome Web Store.',
+    faq_title: 'Wie aktiviere ich PRO?',
+    faq_step_1: 'Schritt 1: Installieren Sie die Erweiterung aus dem offiziellen Chrome Web Store.',
+    faq_step_2: 'Schritt 2: Erwerben Sie einen Lizenzschlüssel auf dieser Website.',
+    faq_step_3: 'Schritt 3: Öffnen Sie die Einstellungen der Erweiterung, fügen Sie den Schlüssel in das Feld \'Aktivierung\' ein und klicken Sie auf \'Aktivieren\'.',
     free_test_title: "PRO+ kostenlos testen",
     free_test_desc: "Installieren Sie die Erweiterung jetzt und erhalten Sie automatisch 48 Stunden vollen Zugriff auf alle Enterprise-Funktionen.",
     btn_start_test: "Kostenlosen Test starten",
@@ -456,7 +473,11 @@ const translations = {
     feedback_desc: 'Маєте ідеї щодо покращення або знайшли помилку? Ми завжди раді критиці та похвалі!',
     btn_feedback: 'Написати розробнику',
     update_title: 'Авто-оновлення',
-    update_desc: 'SyncRate Enterprise тепер підтримує автоматичні оновлення по повітрю. Вам більше не потрібно завантажувати архіви вручную — розширення оновиться саме.',
+    update_desc: 'Оновлення відбуваються автоматично через Chrome Web Store.',
+    faq_title: 'Як активувати PRO?',
+    faq_step_1: 'Крок 1: Встановіть розширення з офіційного магазину Chrome Web Store.',
+    faq_step_2: 'Крок 2: Придбайте ліцензійний ключ на цьому сайті.',
+    faq_step_3: 'Крок 3: Відкрийте налаштування розширення, вставте ключ у поле \'Активація\' та натисніть \'Активувати\'.',
     ready: 'Готово!',
     browsers_supported: 'Підтримувані браузери: Chrome, Edge, Brave, Opera, Vivaldi (всі на базі Chromium).',
     capability_1: 'Миттєва конвертація при виділенні суми на сторінці.',
@@ -536,7 +557,11 @@ const translations = {
     feedback_desc: '¿Tiene ideas para mejorar o encontró un error? ¡Siempre agradecemos las críticas y elogios!',
     btn_feedback: 'Contactar al desarrollador',
     update_title: 'Auto-actualizaciones',
-    update_desc: 'SyncRate Enterprise ahora admite actualizaciones automáticas por aire. No más descargas manuales de ZIP: la extensión se actualiza sola.',
+    update_desc: 'Las actualizaciones se realizan automáticamente a través de Chrome Web Store.',
+    faq_title: '¿Cómo activar PRO?',
+    faq_step_1: 'Paso 1: Instale la extensión desde la Chrome Web Store oficial.',
+    faq_step_2: 'Paso 2: Compre una clave de licencia en este sitio web.',
+    faq_step_3: 'Paso 3: Abra la configuración de la extensión, pegue la clave en el campo \'Activación\' y haga clic en \'Activar\'.',
     download: "Descargar Extensión",
     browsers_supported: "Navegadores compatibles: Chrome, Edge, Brave, Opera, Vivaldi (todos basados en Chromium).",
     capability_1: 'Conversión instantánea al seleccionar el importe.',
@@ -685,9 +710,6 @@ const ConversionAnimation = ({ price, result }: { price: string, result: string 
 
 export default function App() {
   const [lang, setLang] = useState<Language>('ru');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
   const [showCapabilities, setShowCapabilities] = useState(false);
 
@@ -704,103 +726,8 @@ export default function App() {
 
   const t = translations[lang];
 
-  const generateIcon = (size: number): Promise<Blob> => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        const gradient = ctx.createLinearGradient(0, 0, size, size);
-        gradient.addColorStop(0, '#6e40c9');
-        gradient.addColorStop(1, '#8957e5');
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        if (typeof (ctx as any).roundRect === 'function') {
-          (ctx as any).roundRect(0, 0, size, size, size * 0.2);
-        } else {
-          // Fallback to simple rectangle if roundRect is not supported
-          ctx.rect(0, 0, size, size);
-        }
-        ctx.fill();
-
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = size * 0.1;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.beginPath();
-        ctx.moveTo(size * 0.5, size * 0.2);
-        ctx.lineTo(size * 0.3, size * 0.6);
-        ctx.lineTo(size * 0.5, size * 0.6);
-        ctx.lineTo(size * 0.4, size * 0.9);
-        ctx.lineTo(size * 0.7, size * 0.4);
-        ctx.lineTo(size * 0.5, size * 0.4);
-        ctx.lineTo(size * 0.6, size * 0.1);
-        ctx.closePath();
-        ctx.stroke();
-        ctx.fillStyle = 'white';
-        ctx.fill();
-      }
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-      }, 'image/png');
-    });
-  };
-
-  const handleDownload = async () => {
-    setIsGenerating(true);
-    setError(null);
-    setIsSuccess(false);
-
-    try {
-      const zip = new JSZip();
-      zip.file('manifest.json', templates.manifest);
-      zip.file('popup.html', templates.popupHtml);
-      zip.file('popup.js', templates.popupJs);
-      zip.file('background.js', templates.background);
-      zip.file('content.js', templates.content);
-      zip.file('store_ru.txt', templates.storeRu);
-      zip.file('store_en.txt', templates.storeEn);
-
-      const iconFolder = zip.folder('icons');
-      if (iconFolder) {
-        const icon16 = await generateIcon(16);
-        const icon48 = await generateIcon(48);
-        const icon128 = await generateIcon(128);
-        iconFolder.file('icon16.png', icon16);
-        iconFolder.file('icon48.png', icon48);
-        iconFolder.file('icon128.png', icon128);
-      }
-
-      const content = await zip.generateAsync({ type: 'blob' });
-      saveAs(content, 'SyncRate.zip');
-
-      // Also publish to server for over-the-air updates
-      try {
-        const base64 = await zip.generateAsync({ type: 'base64' });
-        // @ts-ignore
-        const secret = import.meta.env.VITE_PUBLISH_SECRET || "default_syncrate_secret_12345";
-        await fetch('/api/publish', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${secret}`
-          },
-          body: JSON.stringify({ zipBase64: base64 })
-        });
-        console.log("Extension published to server for OTA updates.");
-      } catch (err) {
-        console.error("Failed to publish extension for OTA updates:", err);
-      }
-
-      setIsSuccess(true);
-      setTimeout(() => setIsSuccess(false), 5000);
-    } catch (err) {
-      console.error('Generation failed:', err);
-      setError('Failed to generate extension package.');
-    } finally {
-      setIsGenerating(false);
-    }
+  const handleDownload = () => {
+    window.open('https://chromewebstore.google.com/detail/syncrate', '_blank');
   };
 
   return (
@@ -954,6 +881,36 @@ export default function App() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section className="relative z-10 max-w-4xl mx-auto px-6 py-12">
+        <div className="bg-[#161b22] border border-[#30363d] rounded-[2.5rem] p-10 md:p-12 shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Sparkles className="w-32 h-32 text-[#6e40c9]" />
+          </div>
+          <h2 className="text-3xl md:text-4xl font-black mb-8 tracking-tight text-center md:text-left">{t.faq_title}</h2>
+          <div className="space-y-6">
+            <div className="flex gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#6e40c9] flex items-center justify-center font-black text-sm text-white">
+                1
+              </div>
+              <p className="text-[#c9d1d9] leading-relaxed text-base">{t.faq_step_1}</p>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#6e40c9] flex items-center justify-center font-black text-sm text-white">
+                2
+              </div>
+              <p className="text-[#c9d1d9] leading-relaxed text-base">{t.faq_step_2}</p>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#6e40c9] flex items-center justify-center font-black text-sm text-white">
+                3
+              </div>
+              <p className="text-[#c9d1d9] leading-relaxed text-base">{t.faq_step_3}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section id="pricing" className="relative z-10 max-w-7xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
@@ -1051,58 +1008,16 @@ export default function App() {
               <div className="absolute -inset-1 bg-gradient-to-r from-[#6e40c9] to-[#a371f7] rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
               <button
                 onClick={handleDownload}
-                disabled={isGenerating}
-                className={`relative flex items-center justify-center min-w-[280px] px-10 py-6 rounded-3xl border-4 transition-all duration-500 ${
-                  isGenerating 
-                    ? 'bg-[#161b22] border-[#30363d] cursor-wait' 
-                    : 'bg-[#0d1117] border-[#6e40c9] hover:border-[#a371f7] hover:scale-105 active:scale-95'
-                }`}
+                className="relative flex items-center justify-center min-w-[280px] px-10 py-6 rounded-3xl border-4 transition-all duration-500 bg-[#0d1117] border-[#6e40c9] hover:border-[#a371f7] hover:scale-105 active:scale-95"
               >
-                <AnimatePresence mode="wait">
-                  {isGenerating ? (
-                    <motion.div
-                      key="loading"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex flex-col items-center"
-                    >
-                      <div className="w-12 h-12 border-4 border-[#6e40c9] border-t-transparent rounded-full animate-spin mb-4"></div>
-                      <span className="text-xs font-bold uppercase tracking-widest text-[#8b949e]">{t.bundling}</span>
-                    </motion.div>
-                  ) : isSuccess ? (
-                    <motion.div
-                      key="success"
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="flex flex-col items-center"
-                    >
-                      <CheckCircle2 className="w-16 h-16 text-green-500 mb-2" />
-                      <span className="text-xs font-bold uppercase tracking-widest text-green-500">{t.ready}</span>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="idle"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex items-center gap-4"
-                    >
-                      <Download className="w-10 h-10 text-[#a371f7]" />
-                      <span className="text-lg font-black text-center leading-tight">
-                        {t.download}
-                      </span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <div className="flex items-center gap-4">
+                  <Download className="w-10 h-10 text-[#a371f7]" />
+                  <span className="text-lg font-black text-center leading-tight">
+                    {t.download}
+                  </span>
+                </div>
               </button>
             </div>
-
-            {error && (
-              <div className="flex items-center gap-2 text-red-400 text-sm font-medium">
-                <AlertCircle className="w-4 h-4" />
-                {error}
-              </div>
-            )}
           </div>
 
           <div className="mt-12 flex flex-wrap justify-center gap-4">
@@ -1227,18 +1142,9 @@ export default function App() {
             <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-tight">
               {t.free_test_title}
             </h2>
-            <p className="text-xl text-[#8b949e] leading-relaxed mb-12 max-w-2xl mx-auto">
+            <p className="text-xl text-[#8b949e] leading-relaxed max-w-2xl mx-auto">
               {t.free_test_desc}
             </p>
-            <button 
-              onClick={() => {
-                const el = document.getElementById('download');
-                el?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="bg-[#6e40c9] text-white px-12 py-6 rounded-2xl font-black text-2xl hover:bg-[#8957e5] transition-all shadow-xl shadow-[#6e40c9]/20 active:scale-95"
-            >
-              {t.btn_start_test}
-            </button>
           </motion.div>
         </div>
       </section>

@@ -771,7 +771,7 @@ async function startServer() {
 
 
   // Endpoint for verifying license key
-  app.post("/api/verify-license", verifyLicenseRateLimiter, async (req, res) => {
+  app.post(["/api/verify-license", "/api/verify"], verifyLicenseRateLimiter, async (req, res) => {
     const { licenseKey } = req.body;
     if (!licenseKey) return res.status(400).json({ success: false, error: "License key is required" });
     const formattedKey = licenseKey.trim().toUpperCase();

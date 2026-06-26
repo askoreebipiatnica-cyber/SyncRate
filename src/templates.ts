@@ -569,64 +569,83 @@ document.addEventListener('DOMContentLoaded', async () => {
     // License Activation via Server API
     const activateBtn = document.getElementById('btn-activate');
     const licenseInput = document.getElementById('input-license');
+
+    // Функция активации лицензии с проверкой сети и сохранением в локальное хранилище
+    async function verifyAndActivateLicense(licenseKey) {
+        if (!licenseKey) {
+            alert('Пожалуйста, введите лицензионный ключ');
+            return;
+        }
+
+        const originalText = activateBtn.textContent;
+        activateBtn.textContent = '...';
+        activateBtn.disabled = true;
+
+        try {
+            // Запрос на сервер /api/verify (адрес берется из API_URL / constants.ts)
+            const response = await fetch(API_URL + '/api/verify', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ licenseKey })
+            });
+
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error('Слишком много запросов. Пожалуйста, подождите немного перед повторной попыткой.');
+                }
+                throw new Error('Ошибка сервера (Код ' + response.status + '). Пожалуйста, попробуйте позже.');
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.tier) {
+                // Сохраняем статус лицензии в chrome.storage.local
+                chrome.storage.local.set({ appTier: data.tier }, () => {
+                    const successMsg = '✅ Лицензия успешно активирована! Ваш тариф: ' + data.tier.toUpperCase();
+                    alert(successMsg);
+                    
+                    // Обновляем локальное состояние расширения
+                    state.appTier = data.tier;
+                    planRadios.forEach(radio => {
+                        if (radio.value === state.appTier) {
+                            radio.checked = true;
+                            document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
+                            radio.closest('.plan').classList.add('active');
+                            upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
+                        }
+                    });
+                    if (state.appTier !== 'basic') {
+                        trialBanner.style.display = 'none';
+                    }
+                    activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
+                    updateDashboardSels(activeTier);
+                    loadDashboard();
+                });
+            } else {
+                const errorMessage = data.error || 'Неверный или истекший лицензионный ключ';
+                alert('❌ ' + errorMessage);
+            }
+        } catch (err) {
+            console.error('Ошибка при верификации лицензии:', err);
+            // Обработка сетевых ошибок
+            if (err.message && (err.message.includes('Ошибка сервера') || err.message.includes('Слишком много'))) {
+                alert('❌ ' + err.message);
+            } else {
+                alert('❌ Ошибка сети. Не удалось подключиться к серверу верификации. Проверьте соединение с интернетом.');
+            }
+        } finally {
+            activateBtn.textContent = originalText;
+            activateBtn.disabled = false;
+        }
+    }
+
     if (activateBtn && licenseInput) {
         activateBtn.addEventListener('click', async () => {
             const licenseKey = licenseInput.value.trim();
-            if (!licenseKey) return;
-            const originalText = activateBtn.textContent;
-            activateBtn.textContent = '...';
-            try {
-                const response = await fetch(API_URL + '/api/verify-license', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ licenseKey })
-                });
-                const data = await response.json();
-                if (data.success && data.tier) {
-                    chrome.storage.local.set({ appTier: data.tier }, () => {
-                        const successMsgs = {
-                            ru: '✅ Лицензия успешно активирована! Ваш тариф: ' + data.tier.toUpperCase(),
-                            uk: '✅ Ліцензію успішно активовано! Ваш тариф: ' + data.tier.toUpperCase(),
-                            kk: '✅ Лицензия сәтті белсендірілді! Сіздің тарифіңіз: ' + data.tier.toUpperCase(),
-                            en: '✅ License activated successfully! Your plan: ' + data.tier.toUpperCase(),
-                            de: '✅ Lizenz erfolgreich aktiviert! Ihr Plan: ' + data.tier.toUpperCase(),
-                            es: '✅ ¡Licencia activada con éxito! Su plan: ' + data.tier.toUpperCase(),
-                            zh: '✅ 授权成功激活！您的方案：' + data.tier.toUpperCase()
-                        };
-                        alert(successMsgs[currentLang] || successMsgs['en']);
-                        state.appTier = data.tier;
-                        planRadios.forEach(radio => {
-                            if (radio.value === state.appTier) {
-                                radio.checked = true;
-                                document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
-                                radio.closest('.plan').classList.add('active');
-                                upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
-                            }
-                        });
-                        if (state.appTier !== 'basic') {
-                            trialBanner.style.display = 'none';
-                        }
-                        activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
-                        updateDashboardSels(activeTier);
-                        loadDashboard();
-                    });
-                } else {
-                    const failMsgs = {
-                        ru: '❌ Неверный или истекший лицензионный ключ',
-                        uk: '❌ Невірний або прострочений ліцензійний ключ',
-                        kk: '❌ Қате немесе мерзімі өткен лицензиялық кілт',
-                        en: '❌ Invalid or expired license key',
-                        de: '❌ Ungültiger oder abgelaufener Lizenzschlüssel',
-                        es: '❌ Clave de licencia no válida o caducada',
-                        zh: '❌ 授权密钥无效或已过期'
-                    };
-                    alert(failMsgs[currentLang] || failMsgs['en']);
-                }
-            } catch (err) {
-                alert('Connection error');
-            } finally {
-                activateBtn.textContent = originalText;
-            }
+            await verifyAndActivateLicense(licenseKey);
         });
     }
 

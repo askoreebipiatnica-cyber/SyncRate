@@ -766,35 +766,32 @@ async function getCryptoUsdPrice(coin) {
         return btcPrice * 0.00000001;
     }
 
-    // 2. Основной источник: Coinbase (Работает с чистым USD: "BTC-USD")
+    // 2. Основной источник: Coinbase ("BTC-USD")
     try {
         const res = await fetchWithTimeout("https://api.coinbase.com/v2/prices/" + coin + "-USD/spot", { timeout: 2500 });
-        if (res.ok) {
-            const data = await res.json();
-            return parseFloat(data.data.amount);
-        }
+        if (!res.ok) throw new Error("Coinbase не нашел монету " + coin);
+        const data = await res.json();
+        return parseFloat(data.data.amount);
     } catch (e) {
-        console.warn("Coinbase timeout/error for " + coin + ", falling back...");
+        console.warn("Coinbase timeout/error for " + coin + ", falling back to Binance...");
     }
 
-    // 3. Первый резерв: Binance (Самый надежный, работает с USDT: "BTCUSDT")
+    // 3. Первый резерв: Binance ("BTCUSDT")
     try {
         const res = await fetchWithTimeout("https://api.binance.com/api/v3/ticker/price?symbol=" + coin + "USDT", { timeout: 2500 });
-        if (res.ok) {
-            const data = await res.json();
-            return parseFloat(data.price);
-        }
+        if (!res.ok) throw new Error("Binance не нашел монету " + coin);
+        const data = await res.json();
+        return parseFloat(data.price);
     } catch (e) {
         console.warn("Binance timeout/error for " + coin + ", falling back to MEXC...");
     }
 
-    // 4. Второй резерв: MEXC (Отлично подходит для мелких альткоинов, работает с USDT: "BTCUSDT")
+    // 4. Второй резерв: MEXC ("BTCUSDT")
     try {
         const res = await fetchWithTimeout("https://api.mexc.com/api/v3/ticker/price?symbol=" + coin + "USDT", { timeout: 2500 });
-        if (res.ok) {
-            const data = await res.json();
-            return parseFloat(data.price);
-        }
+        if (!res.ok) throw new Error("MEXC не нашел монету " + coin);
+        const data = await res.json();
+        return parseFloat(data.price);
     } catch (e) {
         throw new Error("All crypto API fallbacks failed for " + coin);
     }

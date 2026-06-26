@@ -28,6 +28,73 @@ async function startServer() {
   const adminDb = getAdminFirestore(firebaseConfig.firestoreDatabaseId);
   console.log("🚀 Enterprise gRPC firebase-admin SDK initialized successfully.");
 
+  // Вспомогательные криптографические функции для защиты ключей в БД (соленый PBKDF2 хеш)
+  function hashLicenseKey(key: string): string {
+    const salt = crypto.randomBytes(16).toString("hex");
+    const hash = crypto.pbkdf2Sync(key, salt, 1000, 64, "sha256").toString("hex");
+    return `${salt}:${hash}`;
+  }
+
+  function verifyLicenseKey(key: string, storedHash: string): boolean {
+    try {
+      const [salt, hash] = storedHash.split(":");
+      if (!salt || !hash) return false;
+      const verifyHash = crypto.pbkdf2Sync(key, salt, 1000, 64, "sha256").toString("hex");
+      return crypto.timingSafeEqual(Buffer.from(hash, "hex"), Buffer.from(verifyHash, "hex"));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Функция для вычисления SHA-256 хэша ключа в качестве безопасного ID документа в БД (гарантирует O(1) поиск без раскрытия ключа)
+  function getLicenseDocId(key: string): string {
+    return crypto.createHash("sha256").update(key).digest("hex");
+  }
+
+  // Встроенный Rate Limiter для защиты эндпоинта верификации от брутфорс атак
+  interface RateLimitData {
+    count: number;
+    resetTime: number;
+  }
+  const rateLimits = new Map<string, RateLimitData>();
+
+  // Периодическая очистка устаревших лимитов во избежание утечки памяти
+  setInterval(() => {
+    const now = Date.now();
+    for (const [ip, data] of rateLimits.entries()) {
+      if (now > data.resetTime) {
+        rateLimits.delete(ip);
+      }
+    }
+  }, 60000);
+
+  const verifyLicenseRateLimiter = (req: any, res: any, next: any) => {
+    const forwarded = req.headers["x-forwarded-for"];
+    const ip = (typeof forwarded === "string" ? forwarded.split(",")[0] : req.ip || req.socket.remoteAddress || "unknown").trim();
+    const now = Date.now();
+    const limitWindowMs = 60000; // 1 минута
+    const maxRequests = 5;
+
+    const data = rateLimits.get(ip);
+    if (!data || now > data.resetTime) {
+      rateLimits.set(ip, {
+        count: 1,
+        resetTime: now + limitWindowMs
+      });
+      return next();
+    }
+
+    if (data.count >= maxRequests) {
+      return res.status(429).json({
+        success: false,
+        error: "Превышен лимит запросов. Пожалуйста, попробуйте снова через минуту."
+      });
+    }
+
+    data.count += 1;
+    next();
+  };
+
   // Unified Database Service Wrapper representing the single database operations contract
   const dbService = {
     async saveFile(filename: string, base64Data: string): Promise<void> {
@@ -60,16 +127,22 @@ async function startServer() {
 
     async saveLicense(key: string): Promise<void> {
       const cleanKey = key.trim().toUpperCase();
-      await adminDb.collection("licenses").doc(cleanKey).set({
-        key: cleanKey,
+      const docId = getLicenseDocId(cleanKey);
+      const hashValue = hashLicenseKey(cleanKey);
+      await adminDb.collection("licenses").doc(docId).set({
+        hash: hashValue,
         createdAt: new Date().toISOString()
       });
     },
 
     async verifyLicenseExists(key: string): Promise<boolean> {
       const cleanKey = key.trim().toUpperCase();
-      const docSnap = await adminDb.collection("licenses").doc(cleanKey).get();
-      return docSnap.exists;
+      const docId = getLicenseDocId(cleanKey);
+      const docSnap = await adminDb.collection("licenses").doc(docId).get();
+      if (!docSnap.exists) return false;
+      const data = docSnap.data();
+      if (!data || !data.hash) return false;
+      return verifyLicenseKey(cleanKey, data.hash);
     }
   };
 
@@ -698,17 +771,24 @@ async function startServer() {
 
 
   // Endpoint for verifying license key
-  app.post("/api/verify-license", async (req, res) => {
+  app.post("/api/verify-license", verifyLicenseRateLimiter, async (req, res) => {
     const { licenseKey } = req.body;
     if (!licenseKey) return res.status(400).json({ success: false, error: "License key is required" });
     const formattedKey = licenseKey.trim().toUpperCase();
+    
+    // Валидация входных данных: допускаются только ключи формата PRO-XXXXXX или PLUS-XXXXXX
+    // где X - от 6 до 12 символов (цифры или латинские буквы). Это предотвращает любые инъекции и XSS.
+    const keyRegex = /^(PRO|PLUS)-[A-Z0-9]{6,12}$/;
+    if (!keyRegex.test(formattedKey)) {
+      return res.status(400).json({ success: false, error: "Invalid license key format. Expected PRO-XXXXXX or PLUS-XXXXXX" });
+    }
     
     // 1. Check local/memory licenses first for fast response and hardcoded local keys
     if (activeLicenses.has(formattedKey)) {
       const tier = formattedKey.startsWith("PRO-") ? "pro" : "pro_plus";
       return res.json({ success: true, tier });
     }
-
+ 
     // 2. Query Firestore dynamically to support multiple scaled stateless container instances
     try {
       const exists = await dbService.verifyLicenseExists(formattedKey);
@@ -721,7 +801,7 @@ async function startServer() {
     } catch (error) {
       console.error(`Cloud Firestore dynamic validation failed for ${formattedKey}:`, error);
     }
-
+ 
     res.json({ success: false, error: "Invalid license key" });
   });
 

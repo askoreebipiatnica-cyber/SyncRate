@@ -659,35 +659,6 @@ const ConversionAnimation = ({ price, result }: { price: string, result: string 
             );
           })}
           
-          {/* Tooltip with smooth float */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85, y: 15 }}
-            animate={{ 
-              opacity: [0, 0, 1, 1, 0],
-              scale: [0.85, 0.85, 1, 1, 0.85],
-              y: [15, 15, 0, 0, 15]
-            }}
-            transition={{ duration: 4, repeat: Infinity, times: [0, 0.38, 0.46, 0.82, 1], ease: "easeInOut" }}
-            className="absolute left-[140px] top-[45px] z-20 min-w-[120px]"
-          >
-            <motion.div
-              animate={{ 
-                y: [0, -4, 0] 
-              }}
-              transition={{
-                duration: 2.5,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="bg-[#161b22] border border-[#30363d] p-3 rounded-xl shadow-2xl"
-            >
-              <div className="text-sm font-bold text-[#f0f6fc] mb-1">{result}</div>
-              <div className="text-[10px] text-[#8b949e] flex items-center gap-1">
-                <span>⚡</span> Live Market
-              </div>
-            </motion.div>
-          </motion.div>
-          
           {/* Cursor with smooth float */}
           <motion.div
             initial={{ x: -30, y: 25, opacity: 0 }}
@@ -714,7 +685,7 @@ const ConversionAnimation = ({ price, result }: { price: string, result: string 
             </motion.div>
           </motion.div>
 
-          {/* Secondary Tooltip (Floating status-badge) */}
+          {/* Real Extension Tooltip with smooth float */}
           <motion.div
             initial={{ opacity: 0, scale: 0.85, y: 15 }}
             animate={{ 
@@ -722,29 +693,24 @@ const ConversionAnimation = ({ price, result }: { price: string, result: string 
               scale: [0.85, 0.85, 1, 1, 0.85],
               y: [15, 15, 0, 0, 15]
             }}
-            transition={{ duration: 4, repeat: Infinity, times: [0, 0.38, 0.46, 0.82, 0.92], ease: "easeInOut" }}
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-4 z-30"
+            transition={{ duration: 4, repeat: Infinity, times: [0, 0.38, 0.46, 0.82, 1], ease: "easeInOut" }}
+            className="absolute left-[140px] top-[45px] z-20 min-w-[120px]"
           >
             <motion.div
               animate={{ 
-                y: [0, -5, 0],
-                boxShadow: [
-                  "0 0 15px rgba(110,64,201,0.25)",
-                  "0 0 25px rgba(110,64,201,0.45)",
-                  "0 0 15px rgba(110,64,201,0.25)"
-                ]
+                y: [0, -4, 0] 
               }}
               transition={{
-                duration: 2.2,
+                duration: 2.5,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
-              className="bg-[#161b22] border border-[#6e40c9] rounded-xl px-4 py-2 flex items-center gap-2 whitespace-nowrap"
+              className="bg-[#161b22] border border-[#30363d] p-3 rounded-xl shadow-2xl"
             >
-              <div className="w-6 h-6 bg-[#6e40c9] rounded flex items-center justify-center">
-                <RefreshCw className="w-3 h-3 text-white animate-spin-slow" />
+              <div className="text-sm font-bold text-[#f0f6fc] mb-1">{result}</div>
+              <div className="text-[10px] text-[#8b949e] flex items-center gap-1">
+                <span>⚡</span> Live Market
               </div>
-              <span className="text-sm font-bold text-white">{result}</span>
             </motion.div>
           </motion.div>
         </div>

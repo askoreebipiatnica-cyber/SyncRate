@@ -1,9 +1,44 @@
+const API_URL = "https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app";
 const API_FIAT = "https://open.er-api.com/v6/latest/";
 const CRYPTO_API = "https://min-api.cryptocompare.com/data/price?fsym=";
 const CBRF_API = "https://www.cbr-xml-daily.ru/daily_json.js";
 const NBU_API = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";
 const NBRB_API = "https://api.nbrb.by/exrates/rates?periodicity=0";
 const CRYPTO_CODES = ['BTC','ETH','USDT','BNB','SOL','XRP','USDC','ADA','AVAX','DOGE','DOT','TRX','LINK','MATIC','TON','SHIB','LTC','BCH','ATOM','XLM','NEAR','UNI','XMR','ETC','ICP','FIL','APT','LDO','ARB','VET','MKR','SAT','WAVES'];
+
+async function refreshSession() {
+    let { sessionToken, installId } = await chrome.storage.local.get(['sessionToken', 'installId']);
+    if (!installId) {
+        installId = 'inst-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        await chrome.storage.local.set({ installId });
+    }
+    if (!sessionToken) return;
+
+    try {
+        const res = await fetch(API_URL + '/api/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: sessionToken, installId })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.token) {
+                await chrome.storage.local.set({ sessionToken: data.token });
+            } else {
+                await chrome.storage.local.set({ sessionToken: '' });
+            }
+        } else {
+            // Сервер отклонил токен (отзыв, истечение) → даунгрейд
+            await chrome.storage.local.set({ sessionToken: '' });
+        }
+    } catch (err) {
+        console.warn("Offline or network error during refreshSession:", err);
+    }
+}
+
+chrome.runtime.onStartup.addListener(refreshSession);
+chrome.runtime.onInstalled.addListener(refreshSession);
 
 async function fetchWithTimeout(resource, options = {}) {
     const { timeout = 5000 } = options;

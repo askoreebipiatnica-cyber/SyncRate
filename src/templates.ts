@@ -319,8 +319,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         dashboardBases: ['USD', 'EUR', 'RUB', 'GBP'],
         theme: 'dark',
         appTier: 'basic',
-        trialStart: null
+        trialStart: null,
+        licenseKey: '',
+        sessionToken: '',
+        installId: ''
     });
+
+    if (!state.installId) {
+        state.installId = 'inst-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        await chrome.storage.local.set({ installId: state.installId });
+    }
+
+    function getTierFromToken(token) {
+        const VALID_TIERS = ['basic', 'pro', 'pro_plus'];
+        if (!token) return 'basic';
+        try {
+            const [header, payload, sig] = token.split('.');
+            if (!header || !payload || !sig) return 'basic';
+            const data = JSON.parse(atob(payload));
+            if (data.exp < Date.now() / 1000) return 'basic'; // истёк
+            if (!VALID_TIERS.includes(data.tier)) return 'basic'; // невалидное значение
+            return data.tier;
+        } catch { return 'basic'; }
+    }
+
+    // Декодируем тариф из токена или используем обратную совместимость
+    let initialTier = 'basic';
+    if (state.sessionToken) {
+        initialTier = getTierFromToken(state.sessionToken);
+    } else if (state.appTier && state.appTier !== 'basic') {
+        initialTier = state.appTier;
+    }
+    state.appTier = initialTier;
 
     let currentLang = state.lang === 'auto' ? (navigator.language.split('-')[0] || 'en') : state.lang;
     if (currentLang === 'ua') currentLang = 'uk';
@@ -557,6 +587,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    // Функция обновления тарифа во всем интерфейсе
+    const applyTierChange = (newTier) => {
+        state.appTier = newTier;
+        planRadios.forEach(radio => {
+            if (radio.value === state.appTier) {
+                radio.checked = true;
+                document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
+                radio.closest('.plan').classList.add('active');
+                upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
+            }
+        });
+        if (state.appTier !== 'basic') {
+            trialBanner.style.display = 'none';
+        } else if (isTrialActive) {
+            trialBanner.style.display = 'block';
+        }
+        activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
+        updateDashboardSels(activeTier);
+        loadDashboard();
+    };
+
     // Handle Buy / Real Redirect to Stripe Checkout or Billing portal
     upgradeBtn.addEventListener('click', () => {
         const checked = document.querySelector('input[name="tier"]:checked');
@@ -569,6 +620,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     // License Activation via Server API
     const activateBtn = document.getElementById('btn-activate');
     const licenseInput = document.getElementById('input-license');
+
+    // Предзаполняем поле, если ключ уже сохранен
+    if (licenseInput && state.licenseKey) {
+        licenseInput.value = state.licenseKey;
+    }
+
+    // Фоновая тихая валидация токена сессии или ключа на сервере при каждом открытии попапа
+    if (state.sessionToken || state.licenseKey) {
+        const bodyObj = { installId: state.installId };
+        let endpoint = '/api/verify';
+        if (state.sessionToken) {
+            bodyObj.token = state.sessionToken;
+            endpoint = '/api/session';
+        } else {
+            bodyObj.licenseKey = state.licenseKey;
+        }
+
+        fetch(API_URL + endpoint, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(bodyObj)
+        })
+        .then(res => {
+            if (res.ok) return res.json();
+            throw new Error('Network or server error');
+        })
+        .then(data => {
+            if (data.success && data.tier && data.token) {
+                chrome.storage.local.remove(['appTier']);
+                chrome.storage.local.set({ sessionToken: data.token }, () => {
+                    applyTierChange(data.tier);
+                });
+            } else {
+                // Сервер отклонил токен или ключ -> сброс в basic
+                chrome.storage.local.remove(['appTier']);
+                chrome.storage.local.set({ sessionToken: '', licenseKey: '' }, () => {
+                    applyTierChange('basic');
+                    if (licenseInput) {
+                        licenseInput.value = '';
+                    }
+                });
+            }
+        })
+        .catch(err => {
+            console.warn('Silent session validation failed (offline or server error):', err);
+            // При ошибке сети/офлайн-режиме мягко доверяем локальному кэшу (продолжаем работать в офлайне)
+        });
+    }
 
     // Функция активации лицензии с проверкой сети и сохранением в локальное хранилище
     async function verifyAndActivateLicense(licenseKey) {
@@ -589,7 +691,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ licenseKey })
+                body: JSON.stringify({ licenseKey, installId: state.installId })
             });
 
             if (!response.ok) {
@@ -601,28 +703,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const data = await response.json();
 
-            if (data.success && data.tier) {
-                // Сохраняем статус лицензии в chrome.storage.local
-                chrome.storage.local.set({ appTier: data.tier }, () => {
+            if (data.success && data.tier && data.token) {
+                // Сохраняем статус лицензии и сам ключ в chrome.storage.local
+                chrome.storage.local.remove(['appTier']); // Очищаем старое незащищенное поле
+                chrome.storage.local.set({ sessionToken: data.token, licenseKey: licenseKey }, () => {
                     const successMsg = '✅ Лицензия успешно активирована! Ваш тариф: ' + data.tier.toUpperCase();
                     alert(successMsg);
                     
-                    // Обновляем локальное состояние расширения
-                    state.appTier = data.tier;
-                    planRadios.forEach(radio => {
-                        if (radio.value === state.appTier) {
-                            radio.checked = true;
-                            document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
-                            radio.closest('.plan').classList.add('active');
-                            upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
-                        }
-                    });
-                    if (state.appTier !== 'basic') {
-                        trialBanner.style.display = 'none';
-                    }
-                    activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
-                    updateDashboardSels(activeTier);
-                    loadDashboard();
+                    // Обновляем локальное состояние расширения и интерфейс
+                    applyTierChange(data.tier);
                 });
             } else {
                 const errorMessage = data.error || 'Неверный или истекший лицензионный ключ';
@@ -688,12 +777,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 `,
-  background: `const API_FIAT = "https://open.er-api.com/v6/latest/";
+  background: `const API_URL = "https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app";
+const API_FIAT = "https://open.er-api.com/v6/latest/";
 const CRYPTO_API = "https://min-api.cryptocompare.com/data/price?fsym=";
 const CBRF_API = "https://www.cbr-xml-daily.ru/daily_json.js";
 const NBU_API = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";
 const NBRB_API = "https://api.nbrb.by/exrates/rates?periodicity=0";
 const CRYPTO_CODES = ['BTC','ETH','USDT','BNB','SOL','XRP','USDC','ADA','AVAX','DOGE','DOT','TRX','LINK','MATIC','TON','SHIB','LTC','BCH','ATOM','XLM','NEAR','UNI','XMR','ETC','ICP','FIL','APT','LDO','ARB','VET','MKR','SAT','WAVES'];
+
+async function refreshSession() {
+    let { sessionToken, installId } = await chrome.storage.local.get(['sessionToken', 'installId']);
+    if (!installId) {
+        installId = 'inst-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        await chrome.storage.local.set({ installId });
+    }
+    if (!sessionToken) return;
+
+    try {
+        const res = await fetch(API_URL + '/api/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: sessionToken, installId })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.token) {
+                await chrome.storage.local.set({ sessionToken: data.token });
+            } else {
+                await chrome.storage.local.set({ sessionToken: '' });
+            }
+        } else {
+            // Сервер отклонил токен (отзыв, истечение) → даунгрейд
+            await chrome.storage.local.set({ sessionToken: '' });
+        }
+    } catch (err) {
+        console.warn("Offline or network error during refreshSession:", err);
+    }
+}
+
+chrome.runtime.onStartup.addListener(refreshSession);
+chrome.runtime.onInstalled.addListener(refreshSession);
 
 async function fetchWithTimeout(resource, options = {}) {
     const { timeout = 5000 } = options;
@@ -964,5 +1088,5 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined') {
     module.exports = { getCrossRate };
 }
 `,
-  content: `const CRYPTO_MAP={'BTC':'BTC','BITCOIN':'BTC','БИТКОИН':'BTC','БИТОК':'BTC','ETH':'ETH','ETHEREUM':'ETH','ЭФИРИУМ':'ETH','ЭФИР':'ETH','USDT':'USDT','TETHER':'USDT','ТЕЗЕР':'USDT','BNB':'BNB','BINANCECOIN':'BNB','SOL':'SOL','SOLANA':'SOL','СОЛАНА':'SOL','XRP':'XRP','RIPPLE':'XRP','РИПЛ':'XRP','USDC':'USDC','USDCOIN':'USDC','ADA':'ADA','CARDANO':'ADA','КАРДАНО':'ADA','AVAX':'AVAX','AVALANCHE':'AVAX','АВАКС':'AVAX','DOGE':'DOGE','DOGECOIN':'DOGE','ДОГИКОИН':'DOGE','ДОГИ':'DOGE','DOT':'DOT','POLKADOT':'DOT','ПОЛКАДОТ':'DOT','TRX':'TRX','TRON':'TRX','ТРОН':'TRX','LINK':'LINK','CHAINLINK':'LINK','ЛИНК':'LINK','MATIC':'MATIC','POLYGON':'MATIC','МАТИК':'MATIC','TON':'TON','TONCOIN':'TON','ТОН':'TON','SHIB':'SHIB','SHIBAINU':'SHIB','ШИБА':'SHIB','LTC':'LTC','LITECOIN':'LTC','ЛАЙТКОИН':'LTC','BCH':'BCH','BITCOINCASH':'BCH','БИТКОИНКЕШ':'BCH','SAT':'SAT','SATOSHI':'SAT','САТОШИ':'SAT','WAVES':'WAVES','ВЕЙВС':'WAVES'};const FIAT_MAP={'$':'USD','USD':'USD','€':'EUR','EUR':'EUR','£':'GBP','GBP':'GBP','¥':'CNY','CNY':'CNY','JPY':'JPY','₣':'CHF','FR.':'CHF','CHF':'CHF','A$':'AUD','AUD':'AUD','C$':'CAD','CAD':'CAD','₺':'TRY','TRY':'TRY','AED':'AED','₴':'UAH','UAH':'UAH','ГРН':'UAH','ГРИВНА':'UAH','ГРИВЕН':'UAH','₸':'KZT','KZT':'KZT','ТНГ':'KZT','ТЕНГЕ':'KZT','₼':'AZN','AZN':'AZN','BGN':'BGN','LEV':'BGN','BR':'BYN','BYN':'BYN','БР':'BYN','БЕЛРУБ':'BYN','BYR':'BYN','РБ':'BYN','₹':'INR','INR':'INR','KGS':'KGS','₩':'KRW','KRW':'KRW','L':'MDL','MDL':'MDL','SM':'TJS','TJS':'TJS','TMT':'TMT','UZS':'UZS','SUM':'UZS','₪':'ILS','ILS':'ILS','¢':'USD','₽':'RUB','Р':'RUB','РУБ':'RUB','РУБ.':'RUB','РУБЛЕЙ':'RUB','RUB':'RUB','ДОЛЛАР':'USD','ДОЛЛАРОВ':'USD','ЕВРО':'EUR','ЮАНЬ':'CNY','ИЕНА':'JPY','ТЕНГЕ':'KZT'};const CURRENCY_MAP={...FIAT_MAP,...CRYPTO_MAP};const CRYPTO_CODES=Object.values(CRYPTO_MAP);const PRO_CURRENCIES=['USD','EUR','GBP','CHF','JPY','CAD','CNY','AED'];let hideTimeout=null,currentTooltip=null;document.addEventListener('mouseup',handleSelection);document.addEventListener('mousedown',(e)=>{if(currentTooltip&&currentTooltip.contains(e.target))return;removeTooltip();});chrome.runtime.onMessage.addListener((message,sender,sendResponse)=>{if(message&&message.action==="RENDER_IN_TOP_FRAME"){const isIframe=window!==window.top;if(!isIframe){processSelectionText(message.text,0,0,true);}}});async function handleSelection(event){try{if(!chrome.runtime?.id)return;const selection=window.getSelection();let text=selection.toString();text=text.replace(/[\\u00A0\\u202F\\u200B-\\u200D\\uFEFF]/g,' ').trim();if(!text||text.length>50)return;function isSelectionInSensitiveField(){const sel=window.getSelection();if(!sel.rangeCount)return false;const node=sel.getRangeAt(0).commonAncestorContainer;const el=node.nodeType===1?node:node.parentElement;if(!el)return false;if(el.closest('[contenteditable="true"]'))return true;const closestInput=el.closest('input, textarea');if(!closestInput)return false;const type=(closestInput.type||'').toLowerCase();const name=(closestInput.name||'').toLowerCase();const id=(closestInput.id||'').toLowerCase();return type==='password'||type==='hidden'||name.includes('cc')||name.includes('card')||name.includes('cvv')||name.includes('password')||name.includes('secret')||id.includes('cc')||id.includes('card')||id.includes('cvv')||id.includes('password')||id.includes('secret');}if(isSelectionInSensitiveField())return;const parseResult=parseCurrencyString(text);if(!parseResult)return;const isIframe=window!==window.top;if(isIframe){chrome.runtime.sendMessage({action:"RENDER_IN_TOP_FRAME",text:text,clientX:event.clientX,clientY:event.clientY}).catch(()=>{});return;}await processSelectionText(text,event.pageX,event.pageY,false);}catch(e){}}async function processSelectionText(text,x,y,fromIframe=false){try{const parseResult=parseCurrencyString(text);if(!parseResult)return;const settings=await chrome.storage.local.get({appTier:'basic',targetCurrency:'RUB',rateSource:'market',trialStart:null,lang:'auto'});let currentLang=settings.lang==='auto'?(navigator.language.split('-')[0]||'en'):settings.lang;if(currentLang==='ua')currentLang='uk';const C_DICT={'uk':{lock:'Блокування',req:'Потрібен тариф'},'ru':{lock:'Блокировка',req:'Требуется тариф'},'en':{lock:'Locked',req:'Requires plan'},'de':{lock:'Gesperrt',req:'Erfordert Plan'},'es':{lock:'Bloqueado',req:'Requiere plan'},'zh':{lock:'已锁定',req:'需要方案'},'kk':{lock:'Блокталған',req:'Тариф қажет'}};const m=C_DICT[currentLang]||C_DICT['en'];if(parseResult.isSat){showTooltip(x,y,parseResult.amount,"Live","BTC",currentLang,fromIframe);return;}const targetCurrencyUpper=(settings.targetCurrency||"RUB").trim().toUpperCase();if(parseResult.currency===targetCurrencyUpper){showTooltip(x,y,parseResult.amount,"Live",targetCurrencyUpper,currentLang,fromIframe);return;}const isTrialActive=settings.trialStart&&((Date.now()-settings.trialStart)<48*60*60*1000);const activeTier=(settings.appTier==='pro_plus'||isTrialActive)?'pro_plus':settings.appTier;const isByDomain=window.location.hostname.endsWith('.by');const allowedBasic=['USD','EUR','RUB'];if(isByDomain)allowedBasic.push('BYN');if(activeTier==='basic'&&!allowedBasic.includes(parseResult.currency))return showUpsell(x,y,parseResult.currency,"PRO",m,fromIframe);if(activeTier==='pro'&&!PRO_CURRENCIES.includes(parseResult.currency))return showUpsell(x,y,parseResult.currency,"PRO+",m,fromIframe);const actualSource=activeTier==='pro_plus'?settings.rateSource:'market';const res=await chrome.runtime.sendMessage({action:"GET_RATE",from:parseResult.currency,to:targetCurrencyUpper,source:actualSource});if(res&&res.success&&res.rate)showTooltip(x,y,parseResult.amount*res.rate,res.date,targetCurrencyUpper,currentLang,fromIframe);}catch(e){}}function parseCurrencyString(text){const suffixRegex=/^([0-9\\s.,]+)\\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\\.?|млн\\.?|млрд\\.?|трлн\\.?))?\\s*([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\\s]{1,25})$/i;const prefixRegex=/^([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\\s]{1,25})\\s*([0-9\\s.,]+)\\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\\.?|млн\\.?|млрд\\.?|трлн\\.?))?$/i;let match=text.match(suffixRegex);let isSuffix=true;if(!match){match=text.match(prefixRegex);isSuffix=false;}if(!match)return null;const originalMatchedCur=isSuffix?match[3]:match[1];let numStr,curStr,multStr;if(isSuffix){numStr=match[1];multStr=match[2]||"";curStr=match[3];}else{curStr=match[1];numStr=match[2];multStr=match[3]||"";}numStr=numStr.trim();curStr=curStr.trim().toUpperCase();multStr=multStr.trim().toLowerCase();if(curStr.endsWith('.')&&curStr!=='FR.')curStr=curStr.slice(0,-1);const cleanCurStr=curStr.replace(/[^A-ZА-ЯЁ$€£¥₽₺₴₸₼₹₩₪¢]/g,'');let isoCode=CURRENCY_MAP[cleanCurStr]||(Object.values(CURRENCY_MAP).includes(cleanCurStr)?cleanCurStr:null);if(!isoCode)return null;if(isoCode==='RUB'&&(cleanCurStr==='Р'||cleanCurStr==='P')){if(!isSuffix)return null;const rawCur=originalMatchedCur.trim();if(rawCur==='P'||rawCur==='p')return null;const charBefore=text.charAt(text.length-originalMatchedCur.length-1);if(!/[\\s.,]/.test(charBefore))return null;}if(window.location.hostname.endsWith('.by')&&isoCode==='RUB'&&curStr!=='RUB')isoCode='BYN';let cleanNum=numStr.replace(/\\s/g,'');let separators=cleanNum.match(/[.,]/g);let amount=0;if(!separators){amount=parseFloat(cleanNum);}else if(separators.length===1){let sep=separators[0];let parts=cleanNum.split(sep);if(parts[1].length===3&&parts[0]!=='0'&&parts[0]!=='-0'&&!CRYPTO_CODES.includes(isoCode))amount=parseFloat(cleanNum.replace(sep,''));else amount=parseFloat(cleanNum.replace(sep,'.'));}else{let lastSepIdx=Math.max(cleanNum.lastIndexOf('.'),cleanNum.lastIndexOf(','));amount=parseFloat(cleanNum.substring(0,lastSepIdx).replace(/[.,]/g,'')+'.'+cleanNum.substring(lastSepIdx+1));}if(isNaN(amount))return null;multStr=multStr.replace('.','');if(multStr==='k'||multStr==='тыс'||multStr==='к'||multStr==='т')amount*=1000;else if(multStr==='m'||multStr==='млн'||multStr==='м')amount*=1000000;else if(multStr==='b'||multStr==='млрд'||multStr==='б')amount*=1000000000;else if(multStr==='t'||multStr==='трлн')amount*=1000000000000;if(!CRYPTO_CODES.includes(isoCode)){if(cleanCurStr==='¢')amount*=0.01;}const isSatVal=isoCode==='SAT';if(isSatVal)amount*=0.00000001;const finalCur=isSatVal?'BTC':isoCode;return{amount,currency:finalCur,isSat:isSatVal};}function createBase(x,y,callback,fromIframe=false){removeTooltip();const duplicate=document.getElementById('edge-currency-converter-tooltip');if(duplicate)duplicate.remove();const t=document.createElement('div');t.id='edge-currency-converter-tooltip';if(fromIframe){t.style.cssText='all: initial; position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translate(-50%, 5px) !important; visibility: hidden !important; padding: 12px 16px !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; z-index: 2147483647 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important; pointer-events: none !important; opacity: 0 !important; transition: opacity 0.2s, transform 0.2s !important; display: flex !important; flex-direction: column !important; min-width: 140px !important; background-color: #161b22 !important; color: #f0f6fc !important; border: 1px solid #30363d !important;';}else{t.style.cssText='all: initial; position: absolute !important; left: 0px !important; top: 0px !important; visibility: hidden !important; padding: 12px 16px !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; z-index: 2147483647 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important; pointer-events: none !important; opacity: 0 !important; transition: opacity 0.2s, transform 0.2s !important; display: flex !important; flex-direction: column !important; min-width: 140px !important; background-color: #161b22 !important; color: #f0f6fc !important; border: 1px solid #30363d !important;';}chrome.storage.local.get({theme:'dark'},(res)=>{const isDark=res.theme==='dark';const bgColor=isDark?'#161b22':'#ffffff';const textColor=isDark?'#f0f6fc':'#1a1a1a';const borderColor=isDark?'#30363d':'#e0e0e0';t.style.setProperty('background',bgColor,'important');t.style.setProperty('background-color',bgColor,'important');t.style.setProperty('color',textColor,'important');t.style.setProperty('border','1px solid '+borderColor,'important');callback(t,textColor);requestAnimationFrame(()=>{if(fromIframe){t.style.setProperty('opacity','1','important');t.style.setProperty('transform','translate(-50%, 0)','important');t.style.setProperty('visibility','visible','important');}else{const rect=t.getBoundingClientRect();const viewportWidth=window.innerWidth||document.documentElement.clientWidth;const viewportHeight=window.innerHeight||document.documentElement.clientHeight;const scrollX=window.scrollX||window.pageXOffset||0;const scrollY=window.scrollY||window.pageYOffset||0;let targetX=x+15;let targetY=y+35;const clientXVal=targetX-scrollX;const clientYVal=targetY-scrollY;if(clientXVal+rect.width>viewportWidth){targetX=Math.max(scrollX+10,scrollX+viewportWidth-rect.width-20);}if(targetX<scrollX){targetX=scrollX+10;}if(clientYVal+rect.height>viewportHeight){const aboveY=y-rect.height-15;if(aboveY-scrollY>10){targetY=aboveY;}else{targetY=Math.max(scrollY+10,scrollY+viewportHeight-rect.height-20);}}if(targetY<scrollY){targetY=scrollY+10;}t.style.setProperty('left',targetX+'px','important');t.style.setProperty('top',targetY+'px','important');t.style.setProperty('opacity','1','important');t.style.setProperty('transform','translateY(0)','important');t.style.setProperty('visibility','visible','important');}});});document.body.appendChild(t);currentTooltip=t;hideTimeout=setTimeout(removeTooltip,7000);}function showTooltip(x,y,val,date,target,lang,fromIframe=false){const locales={'uk':'uk-UA','ru':'ru-RU','de':'de-DE','es':'es-ES','zh':'zh-CN','kk':'kk-KZ'};const locale=locales[lang]||'en-US';createBase(x,y,(t,textColor)=>{const formatted=new Intl.NumberFormat(locale,{style:'decimal',minimumFractionDigits:val<0.01?2:2,maximumFractionDigits:val<0.01?8:2}).format(val);const icon=date==='Live'?'⚡':'🏛';const mainSpan=document.createElement('span');mainSpan.style.cssText='color: '+textColor+' !important; font-family: inherit !important; font-size: 16px!important; font-weight: 800!important; margin-bottom: 4px!important; display: block !important;';mainSpan.textContent=formatted+' '+target;const subSpan=document.createElement('span');subSpan.style.cssText='font-family: inherit !important; font-size: 11px!important; color:#8b949e!important; display: block !important;';subSpan.textContent=icon+' '+date;t.appendChild(mainSpan);t.appendChild(subSpan);},fromIframe);}function showUpsell(x,y,cur,tier,m,fromIframe=false){createBase(x,y,(t,textColor)=>{const mainSpan=document.createElement('span');mainSpan.style.cssText='color: '+textColor+' !important; font-family: inherit !important; font-size:13px!important; font-weight:700!important; margin-bottom:4px!important; display: block !important;';mainSpan.textContent='🔒 '+m.lock+' '+cur;const subSpan=document.createElement('span');subSpan.style.cssText='font-family: inherit !important; font-size:12px!important; color:#8b949e!important; display: block !important;';subSpan.textContent=m.req+' ';const b=document.createElement('b');b.style.cssText='color:#8957e5!important';b.textContent=tier;subSpan.appendChild(b);t.appendChild(mainSpan);t.appendChild(subSpan);},fromIframe);}function removeTooltip(){if(hideTimeout)clearTimeout(hideTimeout);const existing=document.getElementById('edge-currency-converter-tooltip');if(existing)existing.remove();if(currentTooltip&&currentTooltip.parentNode){try{currentTooltip.remove()}catch(err){}}currentTooltip=null;}`
+  content: `const CRYPTO_MAP={'BTC':'BTC','BITCOIN':'BTC','БИТКОИН':'BTC','БИТОК':'BTC','ETH':'ETH','ETHEREUM':'ETH','ЭФИРИУМ':'ETH','ЭФИР':'ETH','USDT':'USDT','TETHER':'USDT','ТЕЗЕР':'USDT','BNB':'BNB','BINANCECOIN':'BNB','SOL':'SOL','SOLANA':'SOL','СОЛАНА':'SOL','XRP':'XRP','RIPPLE':'XRP','РИПЛ':'XRP','USDC':'USDC','USDCOIN':'USDC','ADA':'ADA','CARDANO':'ADA','КАРДАНО':'ADA','AVAX':'AVAX','AVALANCHE':'AVAX','АВАКС':'AVAX','DOGE':'DOGE','DOGECOIN':'DOGE','ДОГИКОИН':'DOGE','ДОГИ':'DOGE','DOT':'DOT','POLKADOT':'DOT','ПОЛКАДОТ':'DOT','TRX':'TRX','TRON':'TRX','ТРОН':'TRX','LINK':'LINK','CHAINLINK':'LINK','ЛИНК':'LINK','MATIC':'MATIC','POLYGON':'MATIC','МАТИК':'MATIC','TON':'TON','TONCOIN':'TON','ТОН':'TON','SHIB':'SHIB','SHIBAINU':'SHIB','ШИБА':'SHIB','LTC':'LTC','LITECOIN':'LTC','ЛАЙТКОИН':'LTC','BCH':'BCH','BITCOINCASH':'BCH','БИТКОИНКЕШ':'BCH','SAT':'SAT','SATOSHI':'SAT','САТОШИ':'SAT','WAVES':'WAVES','ВЕЙВС':'WAVES'};const FIAT_MAP={'$':'USD','USD':'USD','€':'EUR','EUR':'EUR','£':'GBP','GBP':'GBP','¥':'CNY','CNY':'CNY','JPY':'JPY','₣':'CHF','FR.':'CHF','CHF':'CHF','A$':'AUD','AUD':'AUD','C$':'CAD','CAD':'CAD','₺':'TRY','TRY':'TRY','AED':'AED','₴':'UAH','UAH':'UAH','ГРН':'UAH','ГРИВНА':'UAH','ГРИВЕН':'UAH','₸':'KZT','KZT':'KZT','ТНГ':'KZT','ТЕНГЕ':'KZT','₼':'AZN','AZN':'AZN','BGN':'BGN','LEV':'BGN','BR':'BYN','BYN':'BYN','БР':'BYN','БЕЛРУБ':'BYN','BYR':'BYN','РБ':'BYN','₹':'INR','INR':'INR','KGS':'KGS','₩':'KRW','KRW':'KRW','L':'MDL','MDL':'MDL','SM':'TJS','TJS':'TJS','TMT':'TMT','UZS':'UZS','SUM':'UZS','₪':'ILS','ILS':'ILS','¢':'USD','₽':'RUB','Р':'RUB','РУБ':'RUB','РУБ.':'RUB','РУБЛЕЙ':'RUB','RUB':'RUB','ДОЛЛАР':'USD','ДОЛЛАРОВ':'USD','ЕВРО':'EUR','ЮАНЬ':'CNY','ИЕНА':'JPY','ТЕНГЕ':'KZT'};const CURRENCY_MAP={...FIAT_MAP,...CRYPTO_MAP};const CRYPTO_CODES=Object.values(CRYPTO_MAP);const PRO_CURRENCIES=['USD','EUR','GBP','CHF','JPY','CAD','CNY','AED'];let hideTimeout=null,currentTooltip=null;document.addEventListener('mouseup',handleSelection);document.addEventListener('mousedown',(e)=>{if(currentTooltip&&currentTooltip.contains(e.target))return;removeTooltip();});chrome.runtime.onMessage.addListener((message,sender,sendResponse)=>{if(message&&message.action==="RENDER_IN_TOP_FRAME"){const isIframe=window!==window.top;if(!isIframe){processSelectionText(message.text,0,0,true);}}});async function handleSelection(event){try{if(!chrome.runtime?.id)return;const selection=window.getSelection();let text=selection.toString();text=text.replace(/[\\u00A0\\u202F\\u200B-\\u200D\\uFEFF]/g,' ').trim();if(!text||text.length>50)return;function isSelectionInSensitiveField(){const sel=window.getSelection();if(!sel.rangeCount)return false;const node=sel.getRangeAt(0).commonAncestorContainer;const el=node.nodeType===1?node:node.parentElement;if(!el)return false;if(el.closest('[contenteditable="true"]'))return true;const closestInput=el.closest('input, textarea');if(!closestInput)return false;const type=(closestInput.type||'').toLowerCase();const name=(closestInput.name||'').toLowerCase();const id=(closestInput.id||'').toLowerCase();return type==='password'||type==='hidden'||name.includes('cc')||name.includes('card')||name.includes('cvv')||name.includes('password')||name.includes('secret')||id.includes('cc')||id.includes('card')||id.includes('cvv')||id.includes('password')||id.includes('secret');}if(isSelectionInSensitiveField())return;const parseResult=parseCurrencyString(text);if(!parseResult)return;const isIframe=window!==window.top;if(isIframe){chrome.runtime.sendMessage({action:"RENDER_IN_TOP_FRAME",text:text,clientX:event.clientX,clientY:event.clientY}).catch(()=>{});return;}await processSelectionText(text,event.pageX,event.pageY,false);}catch(e){}}async function processSelectionText(text,x,y,fromIframe=false){try{const parseResult=parseCurrencyString(text);if(!parseResult)return;const settings=await chrome.storage.local.get({sessionToken:'',targetCurrency:'RUB',rateSource:'market',trialStart:null,lang:'auto',appTier:'basic'});function getTierFromToken(token){const VALID_TIERS=['basic','pro','pro_plus'];if(!token)return'basic';try{const[header,payload,sig]=token.split('.');if(!header||!payload||!sig)return'basic';const data=JSON.parse(atob(payload));if(data.exp<Date.now()/1000)return'basic';if(!VALID_TIERS.includes(data.tier))return'basic';return data.tier;}catch{return'basic';}}let initialTier='basic';if(settings.sessionToken){initialTier=getTierFromToken(settings.sessionToken);}else if(settings.appTier&&settings.appTier!=='basic'){initialTier=settings.appTier;}const computedAppTier=initialTier;let currentLang=settings.lang==='auto'?(navigator.language.split('-')[0]||'en'):settings.lang;if(currentLang==='ua')currentLang='uk';const C_DICT={'uk':{lock:'Блокування',req:'Потрібен тариф'},'ru':{lock:'Блокировка',req:'Требуется тариф'},'en':{lock:'Locked',req:'Requires plan'},'de':{lock:'Gesperrt',req:'Erfordert Plan'},'es':{lock:'Bloqueado',req:'Requiere plan'},'zh':{lock:'已锁定',req:'需要方案'},'kk':{lock:'Блокталған',req:'Тариф қажет'}};const m=C_DICT[currentLang]||C_DICT['en'];if(parseResult.isSat){showTooltip(x,y,parseResult.amount,"Live","BTC",currentLang,fromIframe);return;}const targetCurrencyUpper=(settings.targetCurrency||"RUB").trim().toUpperCase();if(parseResult.currency===targetCurrencyUpper){showTooltip(x,y,parseResult.amount,"Live",targetCurrencyUpper,currentLang,fromIframe);return;}const isTrialActive=settings.trialStart&&((Date.now()-settings.trialStart)<48*60*60*1000);const activeTier=(computedAppTier==='pro_plus'||isTrialActive)?'pro_plus':computedAppTier;const isByDomain=window.location.hostname.endsWith('.by');const allowedBasic=['USD','EUR','RUB'];if(isByDomain)allowedBasic.push('BYN');if(activeTier==='basic'&&!allowedBasic.includes(parseResult.currency))return showUpsell(x,y,parseResult.currency,"PRO",m,fromIframe);if(activeTier==='pro'&&!PRO_CURRENCIES.includes(parseResult.currency))return showUpsell(x,y,parseResult.currency,"PRO+",m,fromIframe);const actualSource=activeTier==='pro_plus'?settings.rateSource:'market';const res=await chrome.runtime.sendMessage({action:"GET_RATE",from:parseResult.currency,to:targetCurrencyUpper,source:actualSource});if(res&&res.success&&res.rate)showTooltip(x,y,parseResult.amount*res.rate,res.date,targetCurrencyUpper,currentLang,fromIframe);}catch(e){}}function parseCurrencyString(text){const suffixRegex=/^([0-9\\s.,]+)\\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\\.?|млн\\.?|млрд\\.?|трлн\\.?))?\\s*([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\\s]{1,25})$/i;const prefixRegex=/^([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\\s]{1,25})\\s*([0-9\\s.,]+)\\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\\.?|млн\\.?|млрд\\.?|трлн\\.?))?$/i;let match=text.match(suffixRegex);let isSuffix=true;if(!match){match=text.match(prefixRegex);isSuffix=false;}if(!match)return null;const originalMatchedCur=isSuffix?match[3]:match[1];let numStr,curStr,multStr;if(isSuffix){numStr=match[1];multStr=match[2]||"";curStr=match[3];}else{curStr=match[1];numStr=match[2];multStr=match[3]||"";}numStr=numStr.trim();curStr=curStr.trim().toUpperCase();multStr=multStr.trim().toLowerCase();if(curStr.endsWith('.')&&curStr!=='FR.')curStr=curStr.slice(0,-1);const cleanCurStr=curStr.replace(/[^A-ZА-ЯЁ$€£¥₽₺₴₸₼₹₩₪¢]/g,'');let isoCode=CURRENCY_MAP[cleanCurStr]||(Object.values(CURRENCY_MAP).includes(cleanCurStr)?cleanCurStr:null);if(!isoCode)return null;if(isoCode==='RUB'&&(cleanCurStr==='Р'||cleanCurStr==='P')){if(!isSuffix)return null;const rawCur=originalMatchedCur.trim();if(rawCur==='P'||rawCur==='p')return null;const charBefore=text.charAt(text.length-originalMatchedCur.length-1);if(!/[\\s.,]/.test(charBefore))return null;}if(window.location.hostname.endsWith('.by')&&isoCode==='RUB'&&curStr!=='RUB')isoCode='BYN';let cleanNum=numStr.replace(/\\s/g,'');let separators=cleanNum.match(/[.,]/g);let amount=0;if(!separators){amount=parseFloat(cleanNum);}else if(separators.length===1){let sep=separators[0];let parts=cleanNum.split(sep);if(parts[1].length===3&&parts[0]!=='0'&&parts[0]!=='-0'&&!CRYPTO_CODES.includes(isoCode))amount=parseFloat(cleanNum.replace(sep,''));else amount=parseFloat(cleanNum.replace(sep,'.'));}else{let lastSepIdx=Math.max(cleanNum.lastIndexOf('.'),cleanNum.lastIndexOf(','));amount=parseFloat(cleanNum.substring(0,lastSepIdx).replace(/[.,]/g,'')+'.'+cleanNum.substring(lastSepIdx+1));}if(isNaN(amount))return null;multStr=multStr.replace('.','');if(multStr==='k'||multStr==='тыс'||multStr==='к'||multStr==='т')amount*=1000;else if(multStr==='m'||multStr==='млн'||multStr==='м')amount*=1000000;else if(multStr==='b'||multStr==='млрд'||multStr==='б')amount*=1000000000;else if(multStr==='t'||multStr==='трлн')amount*=1000000000000;if(!CRYPTO_CODES.includes(isoCode)){if(cleanCurStr==='¢')amount*=0.01;}const isSatVal=isoCode==='SAT';if(isSatVal)amount*=0.00000001;const finalCur=isSatVal?'BTC':isoCode;return{amount,currency:finalCur,isSat:isSatVal};}function createBase(x,y,callback,fromIframe=false){removeTooltip();const duplicate=document.getElementById('edge-currency-converter-tooltip');if(duplicate)duplicate.remove();const t=document.createElement('div');t.id='edge-currency-converter-tooltip';if(fromIframe){t.style.cssText='all: initial; position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translate(-50%, 5px) !important; visibility: hidden !important; padding: 12px 16px !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; z-index: 2147483647 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important; pointer-events: none !important; opacity: 0 !important; transition: opacity 0.2s, transform 0.2s !important; display: flex !important; flex-direction: column !important; min-width: 140px !important; background-color: #161b22 !important; color: #f0f6fc !important; border: 1px solid #30363d !important;';}else{t.style.cssText='all: initial; position: absolute !important; left: 0px !important; top: 0px !important; visibility: hidden !important; padding: 12px 16px !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; z-index: 2147483647 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important; pointer-events: none !important; opacity: 0 !important; transition: opacity 0.2s, transform 0.2s !important; display: flex !important; flex-direction: column !important; min-width: 140px !important; background-color: #161b22 !important; color: #f0f6fc !important; border: 1px solid #30363d !important;';}chrome.storage.local.get({theme:'dark'},(res)=>{const isDark=res.theme==='dark';const bgColor=isDark?'#161b22':'#ffffff';const textColor=isDark?'#f0f6fc':'#1a1a1a';const borderColor=isDark?'#30363d':'#e0e0e0';t.style.setProperty('background',bgColor,'important');t.style.setProperty('background-color',bgColor,'important');t.style.setProperty('color',textColor,'important');t.style.setProperty('border','1px solid '+borderColor,'important');callback(t,textColor);requestAnimationFrame(()=>{if(fromIframe){t.style.setProperty('opacity','1','important');t.style.setProperty('transform','translate(-50%, 0)','important');t.style.setProperty('visibility','visible','important');}else{const rect=t.getBoundingClientRect();const viewportWidth=window.innerWidth||document.documentElement.clientWidth;const viewportHeight=window.innerHeight||document.documentElement.clientHeight;const scrollX=window.scrollX||window.pageXOffset||0;const scrollY=window.scrollY||window.pageYOffset||0;let targetX=x+15;let targetY=y+35;const clientXVal=targetX-scrollX;const clientYVal=targetY-scrollY;if(clientXVal+rect.width>viewportWidth){targetX=Math.max(scrollX+10,scrollX+viewportWidth-rect.width-20);}if(targetX<scrollX){targetX=scrollX+10;}if(clientYVal+rect.height>viewportHeight){const aboveY=y-rect.height-15;if(aboveY-scrollY>10){targetY=aboveY;}else{targetY=Math.max(scrollY+10,scrollY+viewportHeight-rect.height-20);}}if(targetY<scrollY){targetY=scrollY+10;}t.style.setProperty('left',targetX+'px','important');t.style.setProperty('top',targetY+'px','important');t.style.setProperty('opacity','1','important');t.style.setProperty('transform','translateY(0)','important');t.style.setProperty('visibility','visible','important');}});});document.body.appendChild(t);currentTooltip=t;hideTimeout=setTimeout(removeTooltip,7000);}function showTooltip(x,y,val,date,target,lang,fromIframe=false){const locales={'uk':'uk-UA','ru':'ru-RU','de':'de-DE','es':'es-ES','zh':'zh-CN','kk':'kk-KZ'};const locale=locales[lang]||'en-US';createBase(x,y,(t,textColor)=>{const formatted=new Intl.NumberFormat(locale,{style:'decimal',minimumFractionDigits:val<0.01?2:2,maximumFractionDigits:val<0.01?8:2}).format(val);const icon=date==='Live'?'⚡':'🏛';const mainSpan=document.createElement('span');mainSpan.style.cssText='color: '+textColor+' !important; font-family: inherit !important; font-size: 16px!important; font-weight: 800!important; margin-bottom: 4px!important; display: block !important;';mainSpan.textContent=formatted+' '+target;const subSpan=document.createElement('span');subSpan.style.cssText='font-family: inherit !important; font-size: 11px!important; color:#8b949e!important; display: block !important;';subSpan.textContent=icon+' '+date;t.appendChild(mainSpan);t.appendChild(subSpan);},fromIframe);}function showUpsell(x,y,cur,tier,m,fromIframe=false){createBase(x,y,(t,textColor)=>{const mainSpan=document.createElement('span');mainSpan.style.cssText='color: '+textColor+' !important; font-family: inherit !important; font-size:13px!important; font-weight:700!important; margin-bottom:4px!important; display: block !important;';mainSpan.textContent='🔒 '+m.lock+' '+cur;const subSpan=document.createElement('span');subSpan.style.cssText='font-family: inherit !important; font-size:12px!important; color:#8b949e!important; display: block !important;';subSpan.textContent=m.req+' ';const b=document.createElement('b');b.style.cssText='color:#8957e5!important';b.textContent=tier;subSpan.appendChild(b);t.appendChild(mainSpan);t.appendChild(subSpan);},fromIframe);}function removeTooltip(){if(hideTimeout)clearTimeout(hideTimeout);const existing=document.getElementById('edge-currency-converter-tooltip');if(existing)existing.remove();if(currentTooltip&&currentTooltip.parentNode){try{currentTooltip.remove()}catch(err){}}currentTooltip=null;}`
 };

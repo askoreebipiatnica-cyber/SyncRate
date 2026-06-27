@@ -51,6 +51,58 @@ async function startServer() {
     return crypto.createHash("sha256").update(key).digest("hex");
   }
 
+  // Простая, безопасная и самодостаточная генерация JWT на чистом Node.js (без внешних зависимостей типа jsonwebtoken)
+  const JWT_SECRET = process.env.JWT_SECRET || "syncrate-fallback-secret-99887766";
+
+  function signJwt(payload: object): string {
+    const header = { alg: "HS256", typ: "JWT" };
+    const base64Header = Buffer.from(JSON.stringify(header)).toString("base64")
+      .replace(/=/g, "")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+    
+    const base64Payload = Buffer.from(JSON.stringify(payload)).toString("base64")
+      .replace(/=/g, "")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+    
+    const signature = crypto
+      .createHmac("sha256", JWT_SECRET)
+      .update(`${base64Header}.${base64Payload}`)
+      .digest("base64")
+      .replace(/=/g, "")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+      
+    return `${base64Header}.${base64Payload}.${signature}`;
+  }
+
+  function verifyJwt(token: string): any {
+    try {
+      const [header, payload, signature] = token.split(".");
+      if (!header || !payload || !signature) return null;
+      const expectedSignature = crypto
+        .createHmac("sha256", JWT_SECRET)
+        .update(`${header}.${payload}`)
+        .digest("base64")
+        .replace(/=/g, "")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_");
+      
+      if (signature !== expectedSignature) {
+        return null;
+      }
+      
+      const decodedPayload = JSON.parse(Buffer.from(payload, "base64").toString("utf8"));
+      if (decodedPayload.exp && decodedPayload.exp < Date.now() / 1000) {
+        return null; // Expired
+      }
+      return decodedPayload;
+    } catch (err) {
+      return null;
+    }
+  }
+
   // Встроенный Rate Limiter для защиты эндпоинта верификации от брутфорс атак
   interface RateLimitData {
     count: number;
@@ -770,39 +822,106 @@ async function startServer() {
   });
 
 
-  // Endpoint for verifying license key
-  app.post(["/api/verify-license", "/api/verify"], verifyLicenseRateLimiter, async (req, res) => {
-    const { licenseKey } = req.body;
-    if (!licenseKey) return res.status(400).json({ success: false, error: "License key is required" });
+  // Endpoint for verifying license key or session token
+  app.post(["/api/verify-license", "/api/verify", "/api/session"], verifyLicenseRateLimiter, async (req, res) => {
+    const { licenseKey, token, installId } = req.body;
+
+    if (!installId) {
+      return res.status(400).json({ success: false, error: "Missing installId" });
+    }
+
+    if (token) {
+      const decoded = verifyJwt(token);
+      if (decoded && decoded.tier) {
+        // Проверка соответствия installId в токене
+        if (decoded.installId && decoded.installId !== installId) {
+          return res.status(401).json({ success: false, error: "Token belongs to another device" });
+        }
+        // Продлеваем токен на новые 48 часов при успешной валидации
+        const freshToken = signJwt({
+          tier: decoded.tier,
+          installId: installId || decoded.installId,
+          exp: Math.floor(Date.now() / 1000) + 48 * 60 * 60
+        });
+        return res.json({ success: true, tier: decoded.tier, token: freshToken, newToken: freshToken });
+      }
+      return res.status(401).json({ success: false, error: "Invalid or expired session token" });
+    }
+
+    if (!licenseKey) return res.status(400).json({ success: false, error: "License key or session token is required" });
     const formattedKey = licenseKey.trim().toUpperCase();
     
-    // Валидация входных данных: допускаются только ключи формата PRO-XXXXXX или PLUS-XXXXXX
-    // где X - от 6 до 12 символов (цифры или латинские буквы). Это предотвращает любые инъекции и XSS.
-    const keyRegex = /^(PRO|PLUS)-[A-Z0-9]{6,12}$/;
-    if (!keyRegex.test(formattedKey)) {
-      return res.status(400).json({ success: false, error: "Invalid license key format. Expected PRO-XXXXXX or PLUS-XXXXXX" });
+    // Валидация формата ключа
+    if (!/^(PRO|PLUS)-[A-Z0-9]{6}$/.test(formattedKey)) {
+      return res.status(400).json({ success: false, error: "Invalid key format" });
     }
     
-    // 1. Check local/memory licenses first for fast response and hardcoded local keys
-    if (activeLicenses.has(formattedKey)) {
-      const tier = formattedKey.startsWith("PRO-") ? "pro" : "pro_plus";
-      return res.json({ success: true, tier });
-    }
- 
-    // 2. Query Firestore dynamically to support multiple scaled stateless container instances
+    let tier: "pro" | "pro_plus" | "basic" = "pro";
+
+    // 1. Проверяем отзыв ключа
     try {
-      const exists = await dbService.verifyLicenseExists(formattedKey);
-      if (exists) {
-        const tier = formattedKey.startsWith("PRO-") ? "pro" : "pro_plus";
-        // Cache it in activeLicenses set for fast subsequent checks
-        activeLicenses.add(formattedKey);
-        return res.json({ success: true, tier });
+      const docId = getLicenseDocId(formattedKey);
+      const docSnap = await adminDb.collection("licenses").doc(docId).get();
+      if (docSnap.exists) {
+        const licenseData = docSnap.data();
+        if (licenseData && licenseData.revoked) {
+          return res.json({ success: false, error: "Key revoked" });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to check license status:", e);
+    }
+
+    // 2. Валидируем существование ключа
+    if (activeLicenses.has(formattedKey)) {
+      tier = formattedKey.startsWith("PRO-") ? "pro" : "pro_plus";
+    } else {
+      try {
+        const exists = await dbService.verifyLicenseExists(formattedKey);
+        if (exists) {
+          tier = formattedKey.startsWith("PRO-") ? "pro" : "pro_plus";
+          activeLicenses.add(formattedKey);
+        } else {
+          return res.json({ success: false, error: "Key not found" });
+        }
+      } catch (error) {
+        console.error(`Cloud Firestore dynamic validation failed for ${formattedKey}:`, error);
+        return res.status(500).json({ success: false, error: "Internal server error" });
+      }
+    }
+
+    // 3. Привязка к устройству (макс. 2 установки на ключ)
+    try {
+      const querySnapshot = await adminDb.collection("installs").where("licenseKey", "==", formattedKey).get();
+      const installs: any[] = [];
+      querySnapshot.forEach((doc: any) => {
+        installs.push(doc.data());
+      });
+
+      const alreadyBound = installs.find((i: any) => i.installId === installId);
+      if (!alreadyBound && installs.length >= 2) {
+        return res.json({ success: false, error: "Max devices reached" });
+      }
+      if (!alreadyBound) {
+        await adminDb.collection("installs").add({
+          licenseKey: formattedKey,
+          installId,
+          createdAt: new Date().toISOString()
+        });
       }
     } catch (error) {
-      console.error(`Cloud Firestore dynamic validation failed for ${formattedKey}:`, error);
+      console.error("Failed to process device binding:", error);
+      return res.status(500).json({ success: false, error: "Failed to process device binding" });
     }
- 
-    res.json({ success: false, error: "Invalid license key" });
+
+    // Генерируем подписанный сессионный токен на 48 часов, включая в него installId
+    const signedToken = signJwt({
+      tier,
+      installId,
+      exp: Math.floor(Date.now() / 1000) + 48 * 60 * 60
+    });
+
+    return res.json({ success: true, tier, token: signedToken, newToken: signedToken });
   });
 
   // Securely generate, register, and save a license key on Checkout success

@@ -15,8 +15,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         dashboardBases: ['USD', 'EUR', 'RUB', 'GBP'],
         theme: 'dark',
         appTier: 'basic',
-        trialStart: null
+        trialStart: null,
+        licenseKey: '',
+        sessionToken: '',
+        installId: ''
     });
+
+    if (!state.installId) {
+        state.installId = 'inst-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        await chrome.storage.local.set({ installId: state.installId });
+    }
+
+    function getTierFromToken(token) {
+        const VALID_TIERS = ['basic', 'pro', 'pro_plus'];
+        if (!token) return 'basic';
+        try {
+            const [header, payload, sig] = token.split('.');
+            if (!header || !payload || !sig) return 'basic';
+            const data = JSON.parse(atob(payload));
+            if (data.exp < Date.now() / 1000) return 'basic'; // истёк
+            if (!VALID_TIERS.includes(data.tier)) return 'basic'; // невалидное значение
+            return data.tier;
+        } catch { return 'basic'; }
+    }
+
+    // Декодируем тариф из токена или используем обратную совместимость
+    let initialTier = 'basic';
+    if (state.sessionToken) {
+        initialTier = getTierFromToken(state.sessionToken);
+    } else if (state.appTier && state.appTier !== 'basic') {
+        initialTier = state.appTier;
+    }
+    state.appTier = initialTier;
 
     let currentLang = state.lang === 'auto' ? (navigator.language.split('-')[0] || 'en') : state.lang;
     if (currentLang === 'ua') currentLang = 'uk';
@@ -253,6 +283,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    // Функция обновления тарифа во всем интерфейсе
+    const applyTierChange = (newTier) => {
+        state.appTier = newTier;
+        planRadios.forEach(radio => {
+            if (radio.value === state.appTier) {
+                radio.checked = true;
+                document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
+                radio.closest('.plan').classList.add('active');
+                upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
+            }
+        });
+        if (state.appTier !== 'basic') {
+            trialBanner.style.display = 'none';
+        } else if (isTrialActive) {
+            trialBanner.style.display = 'block';
+        }
+        activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
+        updateDashboardSels(activeTier);
+        loadDashboard();
+    };
+
     // Handle Buy / Real Redirect to Stripe Checkout or Billing portal
     upgradeBtn.addEventListener('click', () => {
         const checked = document.querySelector('input[name="tier"]:checked');
@@ -265,6 +316,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     // License Activation via Server API
     const activateBtn = document.getElementById('btn-activate');
     const licenseInput = document.getElementById('input-license');
+
+    // Предзаполняем поле, если ключ уже сохранен
+    if (licenseInput && state.licenseKey) {
+        licenseInput.value = state.licenseKey;
+    }
+
+    // Фоновая тихая валидация токена сессии или ключа на сервере при каждом открытии попапа
+    if (state.sessionToken || state.licenseKey) {
+        const bodyObj = { installId: state.installId };
+        let endpoint = '/api/verify';
+        if (state.sessionToken) {
+            bodyObj.token = state.sessionToken;
+            endpoint = '/api/session';
+        } else {
+            bodyObj.licenseKey = state.licenseKey;
+        }
+
+        fetch(API_URL + endpoint, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(bodyObj)
+        })
+        .then(res => {
+            if (res.ok) return res.json();
+            throw new Error('Network or server error');
+        })
+        .then(data => {
+            if (data.success && data.tier && data.token) {
+                chrome.storage.local.remove(['appTier']);
+                chrome.storage.local.set({ sessionToken: data.token }, () => {
+                    applyTierChange(data.tier);
+                });
+            } else {
+                // Сервер отклонил токен или ключ -> сброс в basic
+                chrome.storage.local.remove(['appTier']);
+                chrome.storage.local.set({ sessionToken: '', licenseKey: '' }, () => {
+                    applyTierChange('basic');
+                    if (licenseInput) {
+                        licenseInput.value = '';
+                    }
+                });
+            }
+        })
+        .catch(err => {
+            console.warn('Silent session validation failed (offline or server error):', err);
+            // При ошибке сети/офлайн-режиме мягко доверяем локальному кэшу (продолжаем работать в офлайне)
+        });
+    }
 
     // Функция активации лицензии с проверкой сети и сохранением в локальное хранилище
     async function verifyAndActivateLicense(licenseKey) {
@@ -285,7 +387,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ licenseKey })
+                body: JSON.stringify({ licenseKey, installId: state.installId })
             });
 
             if (!response.ok) {
@@ -297,28 +399,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const data = await response.json();
 
-            if (data.success && data.tier) {
-                // Сохраняем статус лицензии в chrome.storage.local
-                chrome.storage.local.set({ appTier: data.tier }, () => {
+            if (data.success && data.tier && data.token) {
+                // Сохраняем статус лицензии и сам ключ в chrome.storage.local
+                chrome.storage.local.remove(['appTier']); // Очищаем старое незащищенное поле
+                chrome.storage.local.set({ sessionToken: data.token, licenseKey: licenseKey }, () => {
                     const successMsg = '✅ Лицензия успешно активирована! Ваш тариф: ' + data.tier.toUpperCase();
                     alert(successMsg);
                     
-                    // Обновляем локальное состояние расширения
-                    state.appTier = data.tier;
-                    planRadios.forEach(radio => {
-                        if (radio.value === state.appTier) {
-                            radio.checked = true;
-                            document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
-                            radio.closest('.plan').classList.add('active');
-                            upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
-                        }
-                    });
-                    if (state.appTier !== 'basic') {
-                        trialBanner.style.display = 'none';
-                    }
-                    activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
-                    updateDashboardSels(activeTier);
-                    loadDashboard();
+                    // Обновляем локальное состояние расширения и интерфейс
+                    applyTierChange(data.tier);
                 });
             } else {
                 const errorMessage = data.error || 'Неверный или истекший лицензионный ключ';

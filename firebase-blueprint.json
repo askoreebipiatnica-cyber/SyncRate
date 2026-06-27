@@ -37,6 +37,60 @@
         }
       },
       "required": ["filename", "base64Data", "updatedAt"]
+    },
+    "Trial": {
+      "title": "Trial",
+      "description": "Server-side trial activation records keyed by installId",
+      "type": "object",
+      "properties": {
+        "installId": {
+          "type": "string",
+          "description": "Unique browser installation ID"
+        },
+        "activatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of trial activation"
+        }
+      },
+      "required": ["installId", "activatedAt"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "User feedback submission from the browser extension",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Contact email of the user (optional)"
+        },
+        "message": {
+          "type": "string",
+          "description": "Feedback or report message content"
+        },
+        "version": {
+          "type": "string",
+          "description": "Extension version"
+        },
+        "tier": {
+          "type": "string",
+          "description": "Active license tier"
+        },
+        "browser": {
+          "type": "string",
+          "description": "Browser details"
+        },
+        "installId": {
+          "type": "string",
+          "description": "Browser installation ID"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Submission timestamp"
+        }
+      },
+      "required": ["message", "version", "tier", "browser", "installId", "createdAt"]
     }
   },
   "firestore": {
@@ -47,6 +101,14 @@
     "files/{fileId}": {
       "schema": "File",
       "description": "Collection of uploaded update files"
+    },
+    "trials/{installId}": {
+      "schema": "Trial",
+      "description": "Collection of activated trial installations"
+    },
+    "feedbacks/{feedbackId}": {
+      "schema": "Feedback",
+      "description": "Collection of user feedback submissions"
     }
   }
 }

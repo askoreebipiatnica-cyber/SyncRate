@@ -109,6 +109,7 @@ async function startServer() {
     resetTime: number;
   }
   const rateLimits = new Map<string, RateLimitData>();
+  const feedbackRateLimits = new Map<string, RateLimitData>();
 
   // Периодическая очистка устаревших лимитов во избежание утечки памяти
   setInterval(() => {
@@ -118,7 +119,39 @@ async function startServer() {
         rateLimits.delete(ip);
       }
     }
+    for (const [ip, data] of feedbackRateLimits.entries()) {
+      if (now > data.resetTime) {
+        feedbackRateLimits.delete(ip);
+      }
+    }
   }, 60000);
+
+  const feedbackRateLimiter = (req: any, res: any, next: any) => {
+    const forwarded = req.headers["x-forwarded-for"];
+    const ip = (typeof forwarded === "string" ? forwarded.split(",")[0] : req.ip || req.socket.remoteAddress || "unknown").trim();
+    const now = Date.now();
+    const limitWindowMs = 60000; // 1 минута
+    const maxRequests = 3;
+
+    const data = feedbackRateLimits.get(ip);
+    if (!data || now > data.resetTime) {
+      feedbackRateLimits.set(ip, {
+        count: 1,
+        resetTime: now + limitWindowMs
+      });
+      return next();
+    }
+
+    if (data.count >= maxRequests) {
+      return res.status(429).json({
+        success: false,
+        error: "Превышен лимит отправки обратной связи. Пожалуйста, попробуйте снова через минуту."
+      });
+    }
+
+    data.count += 1;
+    next();
+  };
 
   const verifyLicenseRateLimiter = (req: any, res: any, next: any) => {
     const forwarded = req.headers["x-forwarded-for"];
@@ -822,6 +855,290 @@ async function startServer() {
   });
 
 
+  // Feedback Form Route
+  app.get("/feedback", (req, res) => {
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncRate | Share Feedback</title>
+    <script src="https://cdn.tailwindcss.com" crossorigin></script>
+    <style>
+        body { background: #09090b; color: #fafafa; font-family: system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6 md:p-8">
+    <div class="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden relative">
+        <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-violet-500 via-indigo-500 to-amber-500"></div>
+        
+        <!-- Header Controls & Lang Selector -->
+        <div class="px-6 pt-6 pb-4 border-b border-zinc-800/80 flex justify-between items-center bg-zinc-950/20">
+            <div>
+                <h1 class="text-zinc-500 text-[10px] font-black tracking-widest uppercase mb-0.5">SyncRate Support</h1>
+                <h2 id="page-title" class="text-lg font-bold text-white">Share Feedback</h2>
+            </div>
+            <button onclick="toggleLang()" class="px-2.5 py-1 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer">
+                🌐 <span id="current-lang-lbl">EN</span>
+            </button>
+        </div>
+
+        <!-- Main Workspace -->
+        <form id="feedback-form" class="p-6">
+            <!-- Alert Container -->
+            <div id="alert-box" class="hidden mb-4 p-3.5 rounded-lg text-sm font-semibold border"></div>
+
+            <!-- Auto-Detected Diagnostics Section -->
+            <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-4 mb-6">
+                <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-2.5" id="diag-title">Diagnostics Data (Auto-Attached)</p>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="flex items-center justify-between bg-zinc-900/60 px-3 py-2 rounded-lg border border-zinc-800/40">
+                        <span class="text-zinc-400" id="lbl-version">Version</span>
+                        <span class="font-mono text-violet-400 font-semibold" id="val-version">N/A</span>
+                    </div>
+                    <div class="flex items-center justify-between bg-zinc-900/60 px-3 py-2 rounded-lg border border-zinc-800/40">
+                        <span class="text-zinc-400" id="lbl-tier">Tier</span>
+                        <span class="font-mono text-indigo-400 font-semibold uppercase" id="val-tier">basic</span>
+                    </div>
+                    <div class="flex items-center justify-between bg-zinc-900/60 px-3 py-2 rounded-lg border border-zinc-800/40 col-span-2">
+                        <span class="text-zinc-400" id="lbl-browser">Browser</span>
+                        <span class="text-amber-400 font-semibold" id="val-browser">Unknown</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Area -->
+            <div class="mb-4">
+                <label for="feedback-msg" class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2" id="lbl-msg">Your message / Bug report</label>
+                <textarea id="feedback-msg" required rows="5" maxlength="2000" placeholder="Please describe what is working well, what can be improved, or details about any bugs you encountered..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 px-4 text-sm font-medium focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 text-white placeholder-zinc-500 transition-all resize-none"></textarea>
+            </div>
+
+            <!-- Contact Email (Optional) -->
+            <div class="mb-6">
+                <label for="contact-email" class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2" id="lbl-email">Your Email (optional, for response)</label>
+                <input type="email" id="contact-email" maxlength="100" placeholder="e.g. you@example.com" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 px-4 text-sm font-medium focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 text-white placeholder-zinc-500 transition-all">
+            </div>
+
+            <button type="submit" id="submit-btn" class="w-full bg-violet-600 hover:bg-violet-500 text-white border-none py-3.5 px-6 rounded-xl font-bold text-sm cursor-pointer transition-all flex items-center justify-center gap-2 select-none shadow-lg shadow-violet-600/15 active:scale-[0.98]">
+                <span id="btn-text">Submit Feedback</span>
+            </button>
+        </form>
+
+        <!-- Success Screen -->
+        <div id="success-screen" class="hidden p-8 text-center flex flex-col items-center justify-center min-h-[300px]">
+            <div class="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center text-3xl mb-4 animate-bounce">✓</div>
+            <h2 class="text-xl font-extrabold text-white mb-2" id="success-title">Thank You!</h2>
+            <p class="text-sm text-zinc-400 max-w-sm mb-6" id="success-desc">Your feedback has been registered and received. Our development team appreciates your input to make SyncRate even better!</p>
+            <button onclick="window.close()" class="px-6 py-2.5 text-xs font-bold bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-colors text-white cursor-pointer" id="btn-close">Close Tab</button>
+        </div>
+    </div>
+
+    <script>
+        const DICT = {
+            en: {
+                pageTitle: "Share Feedback",
+                diagTitle: "Diagnostics Data (Auto-Attached)",
+                lblVersion: "Version",
+                lblTier: "Tier",
+                lblBrowser: "Browser",
+                lblMsg: "Your message / Bug report",
+                placeholderMsg: "Please describe what is working well, what can be improved, or details about any bugs you encountered...",
+                lblEmail: "Your Email (optional, for response)",
+                placeholderEmail: "e.g. you@example.com",
+                btnSubmit: "Submit Feedback",
+                btnSubmitting: "Submitting...",
+                successTitle: "Feedback Received!",
+                successDesc: "Thank you for helping us improve SyncRate! Your report has been saved directly into our cloud database.",
+                btnClose: "Close Tab",
+                errEmpty: "Please enter your message.",
+                errFailed: "Failed to send feedback. Please try again."
+            },
+            ru: {
+                pageTitle: "Обратная связь",
+                diagTitle: "Диагностические данные (прикреплено)",
+                lblVersion: "Версия",
+                lblTier: "Тариф",
+                lblBrowser: "Браузер",
+                lblMsg: "Ваше сообщение / Отчет об ошибке",
+                placeholderMsg: "Опишите, пожалуйста, что работает хорошо, что можно улучшить, или детали замеченной ошибки...",
+                lblEmail: "Ваш Email (необязательно, для ответа)",
+                placeholderEmail: "например, you@example.com",
+                btnSubmit: "Отправить сообщение",
+                btnSubmitting: "Отправка...",
+                successTitle: "Спасибо за отзыв!",
+                successDesc: "Ваше обращение успешно зарегистрировано в облачной базе данных. Команда разработчиков обязательно его рассмотрит!",
+                btnClose: "Закрыть вкладку",
+                errEmpty: "Пожалуйста, введите ваше сообщение.",
+                errFailed: "Не удалось отправить отзыв. Пожалуйста, попробуйте еще раз."
+            }
+        };
+
+        let lang = "en";
+
+        // Query params
+        const urlParams = new URLSearchParams(window.location.search);
+        const extVersion = urlParams.get('v') || '15.0';
+        const rawTier = urlParams.get('tier') || 'basic';
+        const installId = urlParams.get('installId') || 'unknown';
+
+        // Detect browser
+        function getBrowserName() {
+            const userAgent = navigator.userAgent;
+            if (userAgent.includes("Chrome") && !userAgent.includes("Edg") && !userAgent.includes("OPR")) return "Google Chrome";
+            if (userAgent.includes("Edg")) return "Microsoft Edge";
+            if (userAgent.includes("Firefox")) return "Mozilla Firefox";
+            if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) return "Apple Safari";
+            if (userAgent.includes("OPR") || userAgent.includes("Opera")) return "Opera";
+            return "Chromium-based Browser";
+        }
+        const detectedBrowser = getBrowserName();
+
+        // Autodetect language
+        function detectLang() {
+            const userLang = navigator.language || navigator.userLanguage;
+            if (userLang && (userLang.startsWith("ru") || userLang.startsWith("be") || userLang.startsWith("kk") || userLang.startsWith("uk"))) {
+                lang = "ru";
+            } else {
+                lang = "en";
+            }
+            updateTranslations();
+        }
+
+        function toggleLang() {
+            lang = lang === "en" ? "ru" : "en";
+            updateTranslations();
+        }
+
+        function updateTranslations() {
+            document.getElementById('current-lang-lbl').textContent = lang.toUpperCase();
+            const d = DICT[lang];
+            
+            document.getElementById('page-title').textContent = d.pageTitle;
+            document.getElementById('diag-title').textContent = d.diagTitle;
+            document.getElementById('lbl-version').textContent = d.lblVersion;
+            document.getElementById('lbl-tier').textContent = d.lblTier;
+            document.getElementById('lbl-browser').textContent = d.lblBrowser;
+            document.getElementById('lbl-msg').textContent = d.lblMsg;
+            document.getElementById('feedback-msg').placeholder = d.placeholderMsg;
+            document.getElementById('lbl-email').textContent = d.lblEmail;
+            document.getElementById('contact-email').placeholder = d.placeholderEmail;
+            
+            const submitBtn = document.getElementById('submit-btn');
+            if (!submitBtn.disabled) {
+                document.getElementById('btn-text').textContent = d.btnSubmit;
+            } else {
+                document.getElementById('btn-text').textContent = d.btnSubmitting;
+            }
+            
+            document.getElementById('success-title').textContent = d.successTitle;
+            document.getElementById('success-desc').textContent = d.successDesc;
+            document.getElementById('btn-close').textContent = d.btnClose;
+        }
+
+        // Initialize view data
+        document.getElementById('val-version').textContent = extVersion;
+        document.getElementById('val-tier').textContent = rawTier;
+        document.getElementById('val-browser').textContent = detectedBrowser;
+
+        detectLang();
+
+        // Submit form
+        document.getElementById('feedback-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const alertBox = document.getElementById('alert-box');
+            alertBox.classList.add('hidden');
+
+            const message = document.getElementById('feedback-msg').value.trim();
+            const email = document.getElementById('contact-email').value.trim();
+
+            if (!message) {
+                alertBox.textContent = DICT[lang].errEmpty;
+                alertBox.className = "mb-4 p-3.5 rounded-lg text-sm font-semibold border bg-red-500/10 border-red-500/20 text-red-400";
+                alertBox.classList.remove('hidden');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-70');
+            document.getElementById('btn-text').textContent = DICT[lang].btnSubmitting;
+
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        message,
+                        version: extVersion,
+                        tier: rawTier,
+                        browser: detectedBrowser,
+                        installId
+                    })
+                });
+
+                const resJson = await response.json();
+                if (resJson.success) {
+                    document.getElementById('feedback-form').classList.add('hidden');
+                    document.getElementById('success-screen').classList.remove('hidden');
+                } else {
+                    const errMsg = resJson.error || DICT[lang].errFailed;
+                    alertBox.textContent = errMsg;
+                    alertBox.className = "mb-4 p-3.5 rounded-lg text-sm font-semibold border bg-red-500/10 border-red-500/20 text-red-400";
+                    alertBox.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-70');
+                    document.getElementById('btn-text').textContent = DICT[lang].btnSubmit;
+                }
+            } catch (err) {
+                alertBox.textContent = DICT[lang].errFailed;
+                alertBox.className = "mb-4 p-3.5 rounded-lg text-sm font-semibold border bg-red-500/10 border-red-500/20 text-red-400";
+                alertBox.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-70');
+                document.getElementById('btn-text').textContent = DICT[lang].btnSubmit;
+            }
+        });
+    </script>
+</body>
+</html>`);
+  });
+
+  // Submit Feedback API endpoint
+  app.post("/api/feedback", feedbackRateLimiter, async (req, res) => {
+    try {
+      const { email, message, version, tier, browser, installId } = req.body;
+      
+      if (!message || typeof message !== "string" || message.trim().length === 0) {
+        return res.status(400).json({ success: false, error: "Сообщение не может быть пустым / Message cannot be empty" });
+      }
+      if (message.length > 2000) {
+        return res.status(400).json({ success: false, error: "Сообщение слишком длинное / Message is too long" });
+      }
+      
+      const cleanEmail = email && typeof email === "string" ? email.trim() : "";
+      if (cleanEmail && cleanEmail.length > 100) {
+        return res.status(400).json({ success: false, error: "Email слишком длинный / Email is too long" });
+      }
+
+      await adminDb.collection("feedbacks").add({
+        email: cleanEmail || null,
+        message: message.trim(),
+        version: typeof version === "string" ? version.trim().substring(0, 10) : "unknown",
+        tier: typeof tier === "string" ? tier.trim().substring(0, 20) : "unknown",
+        browser: typeof browser === "string" ? browser.trim().substring(0, 200) : "unknown",
+        installId: typeof installId === "string" ? installId.trim().substring(0, 50) : "unknown",
+        createdAt: new Date().toISOString()
+      });
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Error saving feedback:", err);
+      res.status(500).json({ success: false, error: "Внутренняя ошибка сервера / Internal server error" });
+    }
+  });
+
+
   // Endpoint for verifying license key or session token
   app.post(["/api/verify-license", "/api/verify", "/api/session"], verifyLicenseRateLimiter, async (req, res) => {
     const { licenseKey, token, installId } = req.body;
@@ -922,6 +1239,42 @@ async function startServer() {
     });
 
     return res.json({ success: true, tier, token: signedToken, newToken: signedToken });
+  });
+
+  // Эндпоинт для серверной активации триал-версии
+  app.post("/api/trial", async (req, res) => {
+    try {
+      const { installId } = req.body;
+      if (!installId) {
+        return res.status(400).json({ success: false, error: "installId is required" });
+      }
+
+      // 1. Проверяем, получал ли уже этот installId триал
+      const docRef = adminDb.collection("trials").doc(installId);
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
+        return res.json({ success: false, error: "Trial already activated for this device" });
+      }
+
+      // 2. Сохраняем запись в БД
+      await docRef.set({
+        installId,
+        activatedAt: new Date().toISOString()
+      });
+
+      // 3. Возвращаем JWT с полем tier: "pro_plus" и exp = now + 48 часа
+      const exp = Math.floor(Date.now() / 1000) + 48 * 60 * 60;
+      const token = signJwt({
+        tier: "pro_plus",
+        installId,
+        exp
+      });
+
+      return res.json({ success: true, token });
+    } catch (error) {
+      console.error("Trial activation failed on server:", error);
+      return res.status(500).json({ success: false, error: "Internal server error" });
+    }
   });
 
   // Securely generate, register, and save a license key on Checkout success

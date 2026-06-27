@@ -57,14 +57,30 @@ async function fetchWithTimeout(resource, options = {}) {
     }
 }
 
-chrome.runtime.onInstalled.addListener(() => {
-    chrome.storage.local.get(['trialStart'], (res) => {
-        if (!res.trialStart) {
-            chrome.storage.local.set({ trialStart: Date.now() });
-        }
-    });
-    // Инициализируем системный будильник (срабатывает раз в час)
+chrome.runtime.onInstalled.addListener(async (details) => {
     chrome.alarms.create("cleanupCache", { periodInMinutes: 60 });
+    if (details.reason === 'install') {
+        try {
+            let { installId } = await chrome.storage.local.get(['installId']);
+            if (!installId) {
+                installId = 'inst-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                await chrome.storage.local.set({ installId });
+            }
+            const res = await fetch(API_URL + '/api/trial', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ installId })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.token) {
+                    await chrome.storage.local.set({ sessionToken: data.token });
+                }
+            }
+        } catch (e) {
+            console.warn('Trial activation failed:', e);
+        }
+    }
 });
 
 // Добавляем слушатель будильника
@@ -161,6 +177,8 @@ async function getCryptoUsdPrice(coin) {
     }
 }
 
+const _rateInflight = {};
+
 async function getCrossRate(fromCode, targetCode, sourceCode) {
     if (fromCode === targetCode) return { success: true, rate: 1, date: "Live" };
     
@@ -174,135 +192,146 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
 
     const cacheKey = `v15_rate_${fromCode}_${targetCode}_${sourceCode}`;
     
-    try {
-        const cachedWrap = await chrome.storage.local.get([cacheKey]);
-        const cachedItem = cachedWrap[cacheKey];
-        const CACHE_TTL = isCrypto ? 60 * 1000 : (sourceCode === 'official' ? 12 * 60 * 60 * 1000 : 60 * 60 * 1000);
-
-        if (cachedItem && cachedItem.timestamp && (Date.now() - cachedItem.timestamp < CACHE_TTL)) {
-            return { success: true, rate: cachedItem.rate, date: cachedItem.date };
-        }
-
-        let finalRate = null, dateToReturn = "";
-
-        if (sourceCode === 'official') {
-            try {
-                let targetUsdRate = null;
-                let targetBankName = "";
-                if (targetCode === 'RUB') {
-                    const res = await fetchWithTimeout(CBRF_API);
-                    const data = await res.json();
-                    if (data.Valute) {
-                        targetBankName = "ЦБ РФ";
-                        const getRateInRUB = (code) => {
-                            if (code === 'RUB') return 1;
-                            const entry = data.Valute[code];
-                            return entry ? parseFloat(entry.Value) / parseInt(entry.Nominal || 1, 10) : null;
-                        };
-                        const rFrom = getRateInRUB(fromCode);
-                        const rTarget = getRateInRUB(targetCode);
-                        if (rFrom !== null && rTarget !== null) {
-                            finalRate = rFrom / rTarget;
-                        } else if (data.Valute['USD']) {
-                            targetUsdRate = parseFloat(data.Valute['USD'].Value);
-                        }
-                    }
-                } else if (targetCode === 'UAH') {
-                    const res = await fetchWithTimeout(NBU_API);
-                    const data = await res.json();
-                    targetBankName = "НБУ";
-                    const getRateInUAH = (code) => {
-                        if (code === 'UAH') return 1;
-                        const entry = data.find(c => c.cc === code);
-                        return entry ? parseFloat(entry.rate) : null;
-                    };
-                    const rFrom = getRateInUAH(fromCode);
-                    const rTarget = getRateInUAH(targetCode);
-                    if (rFrom !== null && rTarget !== null) {
-                        finalRate = rFrom / rTarget;
-                    } else {
-                        const usd = data.find(c => c.cc === 'USD');
-                        if (usd) targetUsdRate = parseFloat(usd.rate);
-                    }
-                } else if (targetCode === 'BYN') {
-                    const res = await fetchWithTimeout(NBRB_API);
-                    const data = await res.json();
-                    targetBankName = "НБРБ";
-                    const getRateInBYN = (code) => {
-                        if (code === 'BYN') return 1;
-                        const entry = data.find(c => c.Cur_Abbreviation === code);
-                        return entry ? parseFloat(entry.Cur_OfficialRate) / parseFloat(entry.Cur_Scale || 1) : null;
-                    };
-                    const rFrom = getRateInBYN(fromCode);
-                    const rTarget = getRateInBYN(targetCode);
-                    if (rFrom !== null && rTarget !== null) {
-                        finalRate = rFrom / rTarget;
-                    } else {
-                        const usdObj = data.find(c => c.Cur_Abbreviation === 'USD');
-                        if (usdObj) targetUsdRate = parseFloat(usdObj.Cur_OfficialRate) / parseFloat(usdObj.Cur_Scale || 1);
-                    }
-                } else if (targetCode === 'EUR') {
-                    const res = await fetchWithTimeout(API_FIAT + "EUR");
-                    const data = await res.json();
-                    if (data.rates) {
-                        targetBankName = "ECB";
-                        const rFrom = fromCode === 'EUR' ? 1 : (data.rates[fromCode] ? 1 / data.rates[fromCode] : null);
-                        const rTarget = targetCode === 'EUR' ? 1 : (data.rates[targetCode] ? 1 / data.rates[targetCode] : null);
-                        if (rFrom !== null && rTarget !== null) {
-                            finalRate = rFrom / rTarget;
-                        } else if (data.rates['USD']) {
-                            targetUsdRate = 1 / data.rates['USD'];
-                        }
-                    }
-                }
-                if (!finalRate && targetUsdRate) {
-                    if (isCrypto) {
-                        finalRate = await getCryptoUsdPrice(fromCode) * targetUsdRate;
-                    } else if (fromCode === 'USD') {
-                        finalRate = targetUsdRate;
-                    }
-                }
-                if (finalRate) {
-                    dateToReturn = targetBankName;
-                } else {
-                    throw new Error("Official rate look up failed");
-                }
-            } catch (e) {
-                sourceCode = 'market';
-                return getCrossRate(fromCode, targetCode, 'market');
-            }
-        }
-        
-        if (!finalRate || sourceCode === 'market') {
-            if (isCrypto) {
-                const cryptoUsd = await getCryptoUsdPrice(fromCode);
-                if (targetCode === 'USD') {
-                    finalRate = cryptoUsd;
-                    dateToReturn = "Live";
-                } else {
-                    const res = await fetchWithTimeout(API_FIAT + "USD");
-                    const data = await res.json();
-                    finalRate = cryptoUsd * data.rates[targetCode];
-                    dateToReturn = "Live";
-                }
-            } else {
-                const res = await fetchWithTimeout(API_FIAT + fromCode);
-                const data = await res.json();
-                finalRate = data.rates[targetCode];
-                dateToReturn = "Live";
-            }
-        }
-        
-        if (finalRate) {
-            await chrome.storage.local.set({
-                [cacheKey]: { rate: finalRate, date: dateToReturn, timestamp: Date.now() }
-            });
-            return { success: true, rate: finalRate, date: dateToReturn };
-        }
-        throw new Error();
-    } catch (error) {
-        return { success: false };
+    if (_rateInflight[cacheKey]) {
+        return _rateInflight[cacheKey];
     }
+
+    const promise = (async () => {
+        try {
+            const cachedWrap = await chrome.storage.local.get([cacheKey]);
+            const cachedItem = cachedWrap[cacheKey];
+            const CACHE_TTL = isCrypto ? 60 * 1000 : (sourceCode === 'official' ? 12 * 60 * 60 * 1000 : 60 * 60 * 1000);
+
+            if (cachedItem && cachedItem.timestamp && (Date.now() - cachedItem.timestamp < CACHE_TTL)) {
+                return { success: true, rate: cachedItem.rate, date: cachedItem.date };
+            }
+
+            let finalRate = null, dateToReturn = "";
+
+            if (sourceCode === 'official') {
+                try {
+                    let targetUsdRate = null;
+                    let targetBankName = "";
+                    if (targetCode === 'RUB') {
+                        const res = await fetchWithTimeout(CBRF_API);
+                        const data = await res.json();
+                        if (data.Valute) {
+                            targetBankName = "ЦБ РФ";
+                            const getRateInRUB = (code) => {
+                                if (code === 'RUB') return 1;
+                                const entry = data.Valute[code];
+                                return entry ? parseFloat(entry.Value) / parseInt(entry.Nominal || 1, 10) : null;
+                            };
+                            const rFrom = getRateInRUB(fromCode);
+                            const rTarget = getRateInRUB(targetCode);
+                            if (rFrom !== null && rTarget !== null) {
+                                finalRate = rFrom / rTarget;
+                            } else if (data.Valute['USD']) {
+                                targetUsdRate = parseFloat(data.Valute['USD'].Value);
+                            }
+                        }
+                    } else if (targetCode === 'UAH') {
+                        const res = await fetchWithTimeout(NBU_API);
+                        const data = await res.json();
+                        targetBankName = "НБУ";
+                        const getRateInUAH = (code) => {
+                            if (code === 'UAH') return 1;
+                            const entry = data.find(c => c.cc === code);
+                            return entry ? parseFloat(entry.rate) : null;
+                        };
+                        const rFrom = getRateInUAH(fromCode);
+                        const rTarget = getRateInUAH(targetCode);
+                        if (rFrom !== null && rTarget !== null) {
+                            finalRate = rFrom / rTarget;
+                        } else {
+                            const usd = data.find(c => c.cc === 'USD');
+                            if (usd) targetUsdRate = parseFloat(usd.rate);
+                        }
+                    } else if (targetCode === 'BYN') {
+                        const res = await fetchWithTimeout(NBRB_API);
+                        const data = await res.json();
+                        targetBankName = "НБРБ";
+                        const getRateInBYN = (code) => {
+                            if (code === 'BYN') return 1;
+                            const entry = data.find(c => c.Cur_Abbreviation === code);
+                            return entry ? parseFloat(entry.Cur_OfficialRate) / parseFloat(entry.Cur_Scale || 1) : null;
+                        };
+                        const rFrom = getRateInBYN(fromCode);
+                        const rTarget = getRateInBYN(targetCode);
+                        if (rFrom !== null && rTarget !== null) {
+                            finalRate = rFrom / rTarget;
+                        } else {
+                            const usdObj = data.find(c => c.Cur_Abbreviation === 'USD');
+                            if (usdObj) targetUsdRate = parseFloat(usdObj.Cur_OfficialRate) / parseFloat(usdObj.Cur_Scale || 1);
+                        }
+                    } else if (targetCode === 'EUR') {
+                        const res = await fetchWithTimeout(API_FIAT + "EUR");
+                        const data = await res.json();
+                        if (data.rates) {
+                            targetBankName = "ECB";
+                            const rFrom = fromCode === 'EUR' ? 1 : (data.rates[fromCode] ? 1 / data.rates[fromCode] : null);
+                            const rTarget = targetCode === 'EUR' ? 1 : (data.rates[targetCode] ? 1 / data.rates[targetCode] : null);
+                            if (rFrom !== null && rTarget !== null) {
+                                finalRate = rFrom / rTarget;
+                            } else if (data.rates['USD']) {
+                                targetUsdRate = 1 / data.rates['USD'];
+                            }
+                        }
+                    }
+                    if (!finalRate && targetUsdRate) {
+                        if (isCrypto) {
+                            finalRate = await getCryptoUsdPrice(fromCode) * targetUsdRate;
+                        } else if (fromCode === 'USD') {
+                            finalRate = targetUsdRate;
+                        }
+                    }
+                    if (finalRate) {
+                        dateToReturn = targetBankName;
+                    } else {
+                        throw new Error("Official rate look up failed");
+                    }
+                } catch (e) {
+                    const fallbackResult = await getCrossRate(fromCode, targetCode, 'market');
+                    return { ...fallbackResult, fallback: true };
+                }
+            }
+            
+            if (!finalRate || sourceCode === 'market') {
+                if (isCrypto) {
+                    const cryptoUsd = await getCryptoUsdPrice(fromCode);
+                    if (targetCode === 'USD') {
+                        finalRate = cryptoUsd;
+                        dateToReturn = "Live";
+                    } else {
+                        const res = await fetchWithTimeout(API_FIAT + "USD");
+                        const data = await res.json();
+                        finalRate = cryptoUsd * data.rates[targetCode];
+                        dateToReturn = "Live";
+                    }
+                } else {
+                    const res = await fetchWithTimeout(API_FIAT + fromCode);
+                    const data = await res.json();
+                    finalRate = data.rates[targetCode];
+                    dateToReturn = "Live";
+                }
+            }
+            
+            if (finalRate) {
+                await chrome.storage.local.set({
+                    [cacheKey]: { rate: finalRate, date: dateToReturn, timestamp: Date.now() }
+                });
+                return { success: true, rate: finalRate, date: dateToReturn };
+            }
+            throw new Error();
+        } catch (error) {
+            return { success: false };
+        }
+    })().finally(() => {
+        delete _rateInflight[cacheKey];
+    });
+
+    _rateInflight[cacheKey] = promise;
+    return promise;
 }
 
 if (typeof module !== 'undefined' && typeof exports !== 'undefined') {

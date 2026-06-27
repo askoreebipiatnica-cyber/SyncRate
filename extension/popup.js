@@ -40,12 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Декодируем тариф из токена или используем обратную совместимость
-    let initialTier = 'basic';
-    if (state.sessionToken) {
-        initialTier = getTierFromToken(state.sessionToken);
-    } else if (state.appTier && state.appTier !== 'basic') {
-        initialTier = state.appTier;
-    }
+    const initialTier = state.sessionToken ? getTierFromToken(state.sessionToken) : 'basic';
     state.appTier = initialTier;
 
     let currentLang = state.lang === 'auto' ? (navigator.language.split('-')[0] || 'en') : state.lang;

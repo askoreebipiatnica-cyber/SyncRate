@@ -14,8 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         rateSource: 'market',
         dashboardBases: ['USD', 'EUR', 'RUB', 'GBP'],
         theme: 'dark',
-        appTier: 'basic',
-        trialStart: null,
         licenseKey: '',
         sessionToken: '',
         installId: ''
@@ -146,8 +144,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     dashSels.forEach((sel, i) => populateCurrencies(sel, state.dashboardBases[i]));
 
     // Check Trial
-    const isTrialActive = state.trialStart && (Date.now() - state.trialStart < 48 * 60 * 60 * 1000);
-    let activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
+    const isTrialActive = false; // trial теперь в JWT, не в trialStart
+    let activeTier = state.appTier; // tier уже декодирован из токена выше
 
     const updateDashboardSels = (tier) => {
         if (tier === 'basic') {
@@ -163,12 +161,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
     updateDashboardSels(activeTier);
-
-    if (isTrialActive && state.appTier === 'basic') {
-        const hoursLeft = Math.max(0, Math.floor((48 * 60 * 60 * 1000 - (Date.now() - state.trialStart)) / (1000 * 60 * 60)));
-        trialBanner.style.display = 'block';
-        trialBanner.textContent = i18n('trial_left') + hoursLeft;
-    }
 
     // Tabs
     tabs.forEach(tab => {
@@ -291,10 +283,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (state.appTier !== 'basic') {
             trialBanner.style.display = 'none';
-        } else if (isTrialActive) {
-            trialBanner.style.display = 'block';
         }
-        activeTier = (state.appTier === 'pro_plus' || isTrialActive) ? 'pro_plus' : state.appTier;
+        activeTier = state.appTier;
         updateDashboardSels(activeTier);
         loadDashboard();
     };

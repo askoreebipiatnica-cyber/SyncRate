@@ -91,6 +91,77 @@
         }
       },
       "required": ["message", "version", "tier", "browser", "installId", "createdAt"]
+    },
+    "Install": {
+      "title": "Install",
+      "description": "Device installation mapping for licensing bounds",
+      "type": "object",
+      "properties": {
+        "licenseKey": {
+          "type": "string",
+          "description": "Associated license key"
+        },
+        "installId": {
+          "type": "string",
+          "description": "Unique browser installation ID"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Mapping timestamp"
+        }
+      },
+      "required": ["licenseKey", "installId", "createdAt"]
+    },
+    "PaymentTransaction": {
+      "title": "PaymentTransaction",
+      "description": "Secure online/simulated checkout transaction state record",
+      "type": "object",
+      "properties": {
+        "transactionId": {
+          "type": "string",
+          "description": "Cryptographically secure identifier"
+        },
+        "amount": {
+          "type": "number",
+          "description": "USD value amount of transaction"
+        },
+        "isDonation": {
+          "type": "boolean",
+          "description": "Whether transaction is a donation"
+        },
+        "tier": {
+          "type": "string",
+          "description": "Selected product tier (pro, pro_plus)"
+        },
+        "email": {
+          "type": "string",
+          "description": "Customer/payer email address"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Selected checkout gateway (global, ru, crypto)"
+        },
+        "status": {
+          "type": "string",
+          "description": "Transaction payment status (pending, completed, failed)"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Transaction creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Transaction last updated timestamp"
+        },
+        "stripeSessionId": {
+          "type": "string",
+          "description": "Optional external Stripe session ID"
+        }
+      },
+      "required": ["transactionId", "amount", "status", "createdAt", "updatedAt"]
     }
   },
   "firestore": {
@@ -109,6 +180,14 @@
     "feedbacks/{feedbackId}": {
       "schema": "Feedback",
       "description": "Collection of user feedback submissions"
+    },
+    "installs/{installRecordId}": {
+      "schema": "Install",
+      "description": "Collection of device bindings and license limits"
+    },
+    "payment_transactions/{transactionId}": {
+      "schema": "PaymentTransaction",
+      "description": "Collection of checkout transactions and statuses"
     }
   }
 }

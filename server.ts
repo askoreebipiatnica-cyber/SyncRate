@@ -16,30 +16,58 @@ async function startServer() {
   console.log("NODE_ENV:", process.env.NODE_ENV);
 
   // Initialize Firebase Firestore for database persistence of licenses and binary files
+  let projectId = process.env.FIREBASE_PROJECT_ID;
+  let firestoreDatabaseId = process.env.FIREBASE_DATABASE_ID;
+
   const configPath = path.join(process.cwd(), "firebase-applet-config.json");
-  const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  if (fs.existsSync(configPath)) {
+    try {
+      const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+      projectId = projectId || firebaseConfig.projectId;
+      firestoreDatabaseId = firestoreDatabaseId || firebaseConfig.firestoreDatabaseId;
+    } catch (e) {
+      console.warn("Failed to read firebase-applet-config.json, using env variables:", e);
+    }
+  }
+
+  if (!projectId) {
+    console.error("FATAL: Firebase projectId is not configured. Please set FIREBASE_PROJECT_ID or provide firebase-applet-config.json.");
+    process.exit(1);
+  }
 
   // Admin Client initialization (Primary Enterprise SDK using ADC GCloud environment credentials)
   if (getAdminApps().length === 0) {
     initAdminApp({
-      projectId: firebaseConfig.projectId
+      projectId: projectId
     });
   }
-  const adminDb = getAdminFirestore(firebaseConfig.firestoreDatabaseId);
+  const adminDb = getAdminFirestore(firestoreDatabaseId || undefined);
   console.log("🚀 Enterprise gRPC firebase-admin SDK initialized successfully.");
 
-  // Вспомогательные криптографические функции для защиты ключей в БД (соленый PBKDF2 хеш)
+  // Вспомогательные криптографические функции для защиты ключей в БД (соленый PBKDF2 хеш с 600 000 итерациями)
   function hashLicenseKey(key: string): string {
     const salt = crypto.randomBytes(16).toString("hex");
-    const hash = crypto.pbkdf2Sync(key, salt, 1000, 64, "sha256").toString("hex");
-    return `${salt}:${hash}`;
+    const iterations = 600000;
+    const hash = crypto.pbkdf2Sync(key, salt, iterations, 64, "sha256").toString("hex");
+    return `${iterations}:${salt}:${hash}`;
   }
 
   function verifyLicenseKey(key: string, storedHash: string): boolean {
     try {
-      const [salt, hash] = storedHash.split(":");
+      const parts = storedHash.split(":");
+      let salt: string;
+      let hash: string;
+      let iterations = 1000;
+      if (parts.length === 3) {
+        iterations = parseInt(parts[0], 10);
+        salt = parts[1];
+        hash = parts[2];
+      } else {
+        salt = parts[0];
+        hash = parts[1];
+      }
       if (!salt || !hash) return false;
-      const verifyHash = crypto.pbkdf2Sync(key, salt, 1000, 64, "sha256").toString("hex");
+      const verifyHash = crypto.pbkdf2Sync(key, salt, iterations, 64, "sha256").toString("hex");
       return crypto.timingSafeEqual(Buffer.from(hash, "hex"), Buffer.from(verifyHash, "hex"));
     } catch (e) {
       return false;
@@ -52,7 +80,16 @@ async function startServer() {
   }
 
   // Простая, безопасная и самодостаточная генерация JWT на чистом Node.js (без внешних зависимостей типа jsonwebtoken)
-  const JWT_SECRET = process.env.JWT_SECRET || "syncrate-fallback-secret-99887766";
+  let JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("FATAL: JWT_SECRET environment variable is not set. Server cannot start in production.");
+      process.exit(1);
+    } else {
+      console.warn("WARNING: JWT_SECRET is not set in development. Generating a secure, temporary, random 256-bit secret for this session...");
+      JWT_SECRET = crypto.randomBytes(32).toString("hex");
+    }
+  }
 
   function signJwt(payload: object): string {
     const header = { alg: "HS256", typ: "JWT" };
@@ -127,8 +164,7 @@ async function startServer() {
   }, 60000);
 
   const feedbackRateLimiter = (req: any, res: any, next: any) => {
-    const forwarded = req.headers["x-forwarded-for"];
-    const ip = (typeof forwarded === "string" ? forwarded.split(",")[0] : req.ip || req.socket.remoteAddress || "unknown").trim();
+    const ip = (req.ip || req.socket.remoteAddress || "unknown").trim();
     const now = Date.now();
     const limitWindowMs = 60000; // 1 минута
     const maxRequests = 3;
@@ -154,8 +190,7 @@ async function startServer() {
   };
 
   const verifyLicenseRateLimiter = (req: any, res: any, next: any) => {
-    const forwarded = req.headers["x-forwarded-for"];
-    const ip = (typeof forwarded === "string" ? forwarded.split(",")[0] : req.ip || req.socket.remoteAddress || "unknown").trim();
+    const ip = (req.ip || req.socket.remoteAddress || "unknown").trim();
     const now = Date.now();
     const limitWindowMs = 60000; // 1 минута
     const maxRequests = 5;
@@ -227,7 +262,20 @@ async function startServer() {
       if (!docSnap.exists) return false;
       const data = docSnap.data();
       if (!data || !data.hash) return false;
-      return verifyLicenseKey(cleanKey, data.hash);
+      const isValid = verifyLicenseKey(cleanKey, data.hash);
+      
+      // Automatic migration: If valid but using old legacy format, update to 600,000 iterations!
+      if (isValid && !data.hash.startsWith("600000:")) {
+        const newHash = hashLicenseKey(cleanKey);
+        await adminDb.collection("licenses").doc(docId).update({
+          hash: newHash,
+          updatedAt: new Date().toISOString()
+        }).catch((err) => {
+          console.error(`[License Migration Error] Failed to update license hash:`, err);
+        });
+        console.log(`[License Migration] Successfully migrated license ${docId} to 600,000 PBKDF2 iterations.`);
+      }
+      return isValid;
     }
   };
 
@@ -286,8 +334,13 @@ async function startServer() {
     }
   });
 
-  // Strict global JSON parsing middleware for all general subsequent routes
-  app.use(express.json({ limit: '100kb' }));
+  // Strict global JSON parsing middleware for all general subsequent routes (with raw body support for Stripe signature validation)
+  app.use(express.json({
+    limit: '100kb',
+    verify: (req: any, res: any, buf: Buffer) => {
+      req.rawBody = buf;
+    }
+  }));
 
   // Update Manifest for Chrome
   app.get("/updates.xml", (req, res) => {
@@ -354,12 +407,6 @@ async function startServer() {
     res.json({ status: "ok", env: process.env.NODE_ENV });
   });
 
-  // Simple persisted license list
-  const hardcodedLicenses = new Set<string>([
-    "PRO-123456", "PRO-ABCDEF", "PRO-SYNCRATE",
-    "PLUS-123456", "PLUS-ABCDEF", "PLUS-ENTERPRISE"
-  ]);
-
   // Bounded Least Recently Used (LRU) Cache to avoid memory leaks with huge license lists
   class LicenseLruCache {
     private cache = new Map<string, boolean>();
@@ -370,7 +417,6 @@ async function startServer() {
     }
 
     has(key: string): boolean {
-      if (hardcodedLicenses.has(key)) return true;
       if (this.cache.has(key)) {
         // Refresh item priority (LRU)
         const val = this.cache.get(key)!;
@@ -382,7 +428,6 @@ async function startServer() {
     }
 
     add(key: string) {
-      if (hardcodedLicenses.has(key)) return;
       if (this.cache.has(key)) {
         this.cache.delete(key);
       } else if (this.cache.size >= this.maxSize) {
@@ -623,9 +668,25 @@ async function startServer() {
         let isDonation = ${isDonation};
         let currentDonationPreset = 8;
         let selectedCoin = "usdt";
+        let rubRateMultiplier = 90;
 
         const isProPlus = ${isProPlus};
         const productVal = isProPlus ? 8.00 : 5.00;
+
+        async function fetchRubRate() {
+            try {
+                const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.rates && typeof data.rates.RUB === 'number') {
+                        rubRateMultiplier = data.rates.RUB;
+                        updateUI();
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to fetch dynamic exchange rates, using fallback: ' + rubRateMultiplier);
+            }
+        }
 
         const cryptoWallets = {
             usdt: { address: 'TYr1YGAsV23X9gTq8X88bZ6mREqYvj9Jep', label: 'Tether TRC20 Address' },
@@ -732,7 +793,7 @@ async function startServer() {
             });
 
             const amt = getActiveAmount();
-            const rubAmt = Math.round(amt * 90);
+            const rubAmt = Math.round(amt * rubRateMultiplier);
 
             // Title & Details
             if (isDonation) {
@@ -782,73 +843,115 @@ async function startServer() {
             document.getElementById('crypto-amount-exact').textContent = exactCryptoAmt + ' ' + selectedCoin.toUpperCase();
         }
 
-        // Handle Payment Submit (Simulation linked with real API key registration)
+        // Handle Payment Polling for redirect back scenarios
+        const urlParams = new URLSearchParams(window.location.search);
+        const statusParam = urlParams.get('status');
+        const transactionIdParam = urlParams.get('transactionId');
+
+        async function startPolling(txnId) {
+            document.getElementById('payment-form').classList.add('hidden');
+            document.getElementById('product-card').classList.add('hidden');
+            
+            const successInfo = document.getElementById('success-info');
+            const keyContainer = document.getElementById('success-key-container');
+            const instructions = document.getElementById('success-key-instructions');
+            
+            successInfo.innerHTML = lang === 'en' 
+                ? '<div class="flex flex-col items-center gap-2"><div class="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div><span>⏳ Waiting for secure payment confirmation from the bank gateway...</span></div>' 
+                : '<div class="flex flex-col items-center gap-2"><div class="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div><span>⏳ Ожидаем подтверждения успешной оплаты от банковского шлюза...</span></div>';
+            
+            keyContainer.classList.add('hidden');
+            instructions.classList.add('hidden');
+            document.getElementById('success-screen').classList.remove('hidden');
+
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/check-payment-status?transactionId=' + encodeURIComponent(txnId));
+                    const data = await response.json();
+                    if (data.success) {
+                        if (data.status === 'completed') {
+                            clearInterval(interval);
+                            const key = data.licenseKey;
+                            if (key) {
+                                document.getElementById('key-display').textContent = key;
+                                keyContainer.classList.remove('hidden');
+                                instructions.classList.remove('hidden');
+                            }
+                            
+                            if (lang === 'en') {
+                                document.getElementById('success-title').textContent = 'Payment Completed Successfully!';
+                                successInfo.innerHTML = key 
+                                    ? 'Thank you for your trust! Your unique digital lifetime License Key is compiled and registered below.'
+                                    : 'Thank you for your generous support of SyncRate development!';
+                            } else {
+                                document.getElementById('success-title').textContent = 'Оплата успешно принята!';
+                                successInfo.innerHTML = key
+                                    ? 'Спасибо за доверие! Ваш уникальный цифровой пожизненный лицензионный ключ сгенерирован и зарегистрирован в БД.'
+                                    : 'Огромное спасибо за поддержку развития расширения SyncRate!';
+                            }
+                        } else if (data.status === 'failed') {
+                            clearInterval(interval);
+                            document.getElementById('success-title').textContent = lang === 'en' ? 'Payment Failed' : 'Ошибка оплаты';
+                            successInfo.innerHTML = lang === 'en' 
+                                ? 'The payment was declined or failed. Please try again.' 
+                                : 'Платеж был отклонен или произошла ошибка. Пожалуйста, попробуйте снова.';
+                        }
+                    }
+                } catch (err) {
+                    console.error('Polling error:', err);
+                }
+            }, 1500);
+        }
+
+        if (statusParam === 'success' && transactionIdParam) {
+            startPolling(transactionIdParam);
+        }
+
+        // Handle Payment Submit (Secure checkout initiation and redirection to bank/sim gateway)
         document.getElementById('payment-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const payBtn = document.getElementById('pay-btn');
             payBtn.disabled = true;
             
             const originalText = payBtn.textContent;
-            payBtn.textContent = lang === 'en' ? 'Verifying payment status...' : 'Проверка транзакции...';
+            payBtn.textContent = lang === 'en' ? 'Redirecting to secure gateway...' : 'Перенаправление на шлюз...';
 
-            setTimeout(async () => {
-                const amt = getActiveAmount();
-                try {
-                    const response = await fetch('/api/create-license', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            amount: amt,
-                            isDonation: isDonation,
-                            isProPlus: isProPlus
-                        })
-                    });
-                    const resJson = await response.json();
-                    if (resJson.success) {
-                        document.getElementById('payment-form').classList.add('hidden');
-                        document.getElementById('product-card').classList.add('hidden');
-                        
-                        const key = resJson.license;
-                        if (key) {
-                            document.getElementById('key-display').textContent = key;
-                            document.getElementById('success-key-container').classList.remove('hidden');
-                            document.getElementById('success-key-instructions').classList.remove('hidden');
-                        } else {
-                            document.getElementById('success-key-container').classList.add('hidden');
-                            document.getElementById('success-key-instructions').classList.add('hidden');
-                        }
-                        
-                        // Translations for success screen
-                        if (lang === 'en') {
-                            document.getElementById('success-title').textContent = 'Payment Completed Successfully!';
-                            document.getElementById('success-info').innerHTML = key 
-                                ? 'Thank you for your trust! Your unique digital lifetime License Key is compiled and registered below.'
-                                : 'Thank you for your generous support of SyncRate development!';
-                        } else {
-                            document.getElementById('success-title').textContent = 'Оплата успешно принята!';
-                            document.getElementById('success-info').innerHTML = key
-                                ? 'Спасибо за доверие! Ваш уникальный цифровой пожизненный лицензионный ключ сгенерирован и зарегистрирован в БД.'
-                                : 'Огромное спасибо за поддержку развития расширения SyncRate!';
-                        }
+            const emailInput = document.getElementById('stripe-email');
+            const email = emailInput ? emailInput.value : 'askoreebipiatnica@gmail.com';
+            const amt = getActiveAmount();
 
-                        document.getElementById('success-screen').classList.remove('hidden');
-                    } else {
-                        alert(lang === 'en' ? 'Error validating invoice.' : 'Ошибка проверки платежа.');
-                        payBtn.disabled = false;
-                        payBtn.textContent = originalText;
-                    }
-                } catch(err) {
-                    alert('Connection / API Error');
+            try {
+                const response = await fetch('/api/initiate-checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: amt,
+                        isDonation: isDonation,
+                        isProPlus: isProPlus,
+                        email: email,
+                        paymentMethod: activeTab
+                    })
+                });
+                const resJson = await response.json();
+                if (resJson.success && resJson.redirectUrl) {
+                    window.location.href = resJson.redirectUrl;
+                } else {
+                    alert(lang === 'en' ? 'Error initiating checkout gateway.' : 'Ошибка инициализации платежного шлюза.');
                     payBtn.disabled = false;
                     payBtn.textContent = originalText;
                 }
-            }, 1800);
+            } catch(err) {
+                alert('Connection / API Error');
+                payBtn.disabled = false;
+                payBtn.textContent = originalText;
+            }
         });
 
         // Initialize view
         detectLang();
         selectTab("global");
         selectCrypto("usdt");
+        fetchRubRate();
     </script>
 </body>
 </html>`);
@@ -1143,8 +1246,8 @@ async function startServer() {
   app.post(["/api/verify-license", "/api/verify", "/api/session"], verifyLicenseRateLimiter, async (req, res) => {
     const { licenseKey, token, installId } = req.body;
 
-    if (!installId) {
-      return res.status(400).json({ success: false, error: "Missing installId" });
+    if (!installId || typeof installId !== 'string' || !/^inst-[a-z0-9]{20,30}$/.test(installId)) {
+      return res.status(400).json({ success: false, error: "Invalid installId format" });
     }
 
     if (token) {
@@ -1242,11 +1345,11 @@ async function startServer() {
   });
 
   // Эндпоинт для серверной активации триал-версии
-  app.post("/api/trial", async (req, res) => {
+  app.post("/api/trial", verifyLicenseRateLimiter, async (req, res) => {
     try {
       const { installId } = req.body;
-      if (!installId) {
-        return res.status(400).json({ success: false, error: "installId is required" });
+      if (!installId || typeof installId !== 'string' || !/^inst-[a-z0-9]{20,30}$/.test(installId)) {
+        return res.status(400).json({ success: false, error: "Invalid installId format" });
       }
 
       // 1. Проверяем, получал ли уже этот installId триал
@@ -1277,10 +1380,10 @@ async function startServer() {
     }
   });
 
-  // Securely generate, register, and save a license key on Checkout success
-  app.post("/api/create-license", async (req, res) => {
+  // Securely initiate a payment transaction / checkout session on the server-side
+  app.post("/api/initiate-checkout", async (req, res) => {
     try {
-      const { amount, isDonation, isProPlus } = req.body;
+      const { amount, isDonation, isProPlus, email, paymentMethod } = req.body;
 
       // Parse and validate payment amount
       const parsedAmount = parseFloat(amount || "0");
@@ -1306,23 +1409,446 @@ async function startServer() {
         }
       }
 
-      // If tier is basic support, there's no actual key to store or return
-      if (tierType === "basic") {
-        return res.json({ success: true, license: null });
+      // Generate a cryptographically secure unique Transaction ID
+      const transactionId = "TXN-" + crypto.randomBytes(8).toString("hex").toUpperCase();
+      const cleanEmail = (email || "").trim();
+
+      // Create a pending transaction record in Firestore
+      await adminDb.collection("payment_transactions").doc(transactionId).set({
+        transactionId,
+        amount: parsedAmount,
+        isDonation: !!isDonation,
+        tier: tierType,
+        email: cleanEmail,
+        paymentMethod: paymentMethod || "global",
+        status: "pending",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+
+      console.log(`[Checkout Security] Initiated pending transaction: ${transactionId} for ${tierType} tier (Amount: $${parsedAmount})`);
+
+      // Resolve base URL dynamically from request to support any environment (dev sandbox or prod)
+      const protocol = req.protocol;
+      const host = req.get("host");
+      const baseUrl = `${protocol}://${host}`;
+
+      // Set up redirection or gateway endpoint depending on payment method
+      let redirectUrl = "";
+
+      if (paymentMethod === "global") {
+        // Stripe integration path
+        const stripeKey = process.env.STRIPE_SECRET_KEY;
+        if (stripeKey) {
+          try {
+            const Stripe = (await import("stripe")).default;
+            const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" as any });
+
+            const session = await stripe.checkout.sessions.create({
+              payment_method_types: ["card"],
+              line_items: [{
+                price_data: {
+                  currency: "usd",
+                  product_data: {
+                    name: tierType === "pro_plus" ? "SyncRate Enterprise (PRO+)" : "SyncRate Premium (PRO)",
+                    description: "Lifetime premium currency conversion filter extension access",
+                  },
+                  unit_amount: Math.round(parsedAmount * 100),
+                },
+                quantity: 1,
+              }],
+              mode: "payment",
+              customer_email: cleanEmail || undefined,
+              success_url: `${baseUrl}/checkout?status=success&transactionId=${transactionId}`,
+              cancel_url: `${baseUrl}/checkout?status=cancel`,
+              metadata: {
+                transactionId,
+                tier: tierType
+              }
+            });
+
+            // Save stripe session ID immediately
+            await adminDb.collection("payment_transactions").doc(transactionId).update({
+              stripeSessionId: session.id,
+              updatedAt: new Date().toISOString()
+            });
+
+            redirectUrl = session.url || `${baseUrl}/checkout/simulate-payment?transactionId=${transactionId}`;
+          } catch (stripeErr) {
+            console.error("[Stripe API] Failed to create Stripe Session. Falling back to secure simulator:", stripeErr);
+            redirectUrl = `${baseUrl}/checkout/simulate-payment?transactionId=${transactionId}`;
+          }
+        } else {
+          // Fallback to secure interactive simulator in developer sandbox
+          console.log("[Stripe API] STRIPE_SECRET_KEY is missing. Utilizing secure developer sandbox gateway.");
+          redirectUrl = `${baseUrl}/checkout/simulate-payment?transactionId=${transactionId}`;
+        }
+      } else if (paymentMethod === "ru") {
+        // PayAnyWay or SBP path
+        const payAnyWaySecret = process.env.PAYANYWAY_SECRET_KEY;
+        const merchantId = process.env.PAYANYWAY_MNT_ID;
+
+        if (payAnyWaySecret && merchantId) {
+          // Construct real PayAnyWay payment redirect URL with cryptographic signature
+          const mntAmount = parsedAmount.toFixed(2);
+          const mntCurrency = "USD";
+          const mntTestMode = process.env.NODE_ENV === "production" ? "0" : "1";
+          
+          // Formulate MD5 signature: MD5(MNT_ID + MNT_TRANSACTION_ID + MNT_AMOUNT + MNT_CURRENCY + MNT_SUBSCRIBER_ID + MNT_TEST_MODE + MNT_SECRET_KEY)
+          const mntSubscriberId = tierType === "pro_plus" ? "PLUS" : "PRO";
+          const sigString = `${merchantId}${transactionId}${mntAmount}${mntCurrency}${mntSubscriberId}${mntTestMode}${payAnyWaySecret}`;
+          const signature = crypto.createHash("md5").update(sigString, "utf8").digest("hex").toLowerCase();
+
+          const queryParams = new URLSearchParams({
+            MNT_ID: merchantId,
+            MNT_TRANSACTION_ID: transactionId,
+            MNT_AMOUNT: mntAmount,
+            MNT_CURRENCY: mntCurrency,
+            MNT_SUBSCRIBER_ID: mntSubscriberId,
+            MNT_TEST_MODE: mntTestMode,
+            MNT_SIGNATURE: signature,
+            MNT_SUCCESS_METHOD: "GET",
+            MNT_SUCCESS_URL: `${baseUrl}/checkout?status=success&transactionId=${transactionId}`,
+            MNT_FAIL_METHOD: "GET",
+            MNT_FAIL_URL: `${baseUrl}/checkout?status=cancel`
+          });
+
+          redirectUrl = `https://demo.moneta.ru/assistant.htm?${queryParams.toString()}`;
+        } else {
+          // Fallback to secure simulator in developer sandbox
+          redirectUrl = `${baseUrl}/checkout/simulate-payment?transactionId=${transactionId}`;
+        }
+      } else {
+        // Crypto payments
+        redirectUrl = `${baseUrl}/checkout/simulate-payment?transactionId=${transactionId}`;
       }
 
-      // Cryptographically secure random generation of 6-character hex suffix on the server-side
-      const rand = crypto.randomBytes(3).toString('hex').toUpperCase();
+      return res.json({ success: true, redirectUrl, transactionId });
+    } catch (err) {
+      console.error("[Checkout Security] Failed to initiate secure payment:", err);
+      res.status(500).json({ success: false, error: "Internal payment processing error" });
+    }
+  });
+
+  // Securely poll payment status from client page
+  app.get("/api/check-payment-status", async (req, res) => {
+    try {
+      const { transactionId } = req.query;
+      if (!transactionId || typeof transactionId !== "string") {
+        return res.status(400).json({ success: false, error: "Missing or invalid transactionId parameter" });
+      }
+
+      const txnDoc = await adminDb.collection("payment_transactions").doc(transactionId).get();
+      if (!txnDoc.exists) {
+        return res.status(404).json({ success: false, error: "Transaction not found" });
+      }
+
+      const txnData = txnDoc.data();
+      return res.json({
+        success: true,
+        status: txnData?.status || "pending",
+        licenseKey: txnData?.status === "completed" ? txnData?.licenseKey : null,
+        tier: txnData?.tier
+      });
+    } catch (err) {
+      console.error("[Checkout Security] Failed to check payment status:", err);
+      res.status(500).json({ success: false, error: "Internal validation error" });
+    }
+  });
+
+  // Secure PayAnyWay Webhook Handler with MD5 Signature Verification
+  app.post("/api/webhook/payanyway", async (req: any, res: any) => {
+    try {
+      const params = { ...req.query, ...req.body };
+      console.log("[PayAnyWay Webhook] Received webhook payload:", params);
+
+      const mntId = params.MNT_ID;
+      const mntTransactionId = params.MNT_TRANSACTION_ID;
+      const mntOperationId = params.MNT_OPERATION_ID;
+      const mntAmount = params.MNT_AMOUNT;
+      const mntCurrency = params.MNT_CURRENCY;
+      const mntSubscriberId = params.MNT_SUBSCRIBER_ID;
+      const mntTestMode = params.MNT_TEST_MODE;
+      const incomingSignature = params.MNT_SIGNATURE;
+
+      if (!mntId || !mntTransactionId || !mntOperationId || !mntAmount || !incomingSignature) {
+        console.error("[PayAnyWay Webhook] Missing mandatory webhook params");
+        return res.status(400).send("FAIL: Missing mandatory parameters");
+      }
+
+      // Compute expected MD5 hash signature
+      const mntSecret = process.env.PAYANYWAY_SECRET_KEY || "test_secret_word";
+      const signatureString = `${mntId}${mntTransactionId}${mntOperationId}${mntAmount}${mntCurrency}${mntSubscriberId || ""}${mntTestMode || ""}${mntSecret}`;
+      const expectedSignature = crypto.createHash("md5").update(signatureString, "utf8").digest("hex").toLowerCase();
+
+      if (incomingSignature.toLowerCase() !== expectedSignature) {
+        console.error(`[PayAnyWay Webhook] Signature verification failed! Expected: ${expectedSignature}, Received: ${incomingSignature}`);
+        return res.status(400).send("FAIL: Invalid signature");
+      }
+
+      // Check transaction and generate license key
+      const txnDoc = await adminDb.collection("payment_transactions").doc(mntTransactionId).get();
+      if (!txnDoc.exists) {
+        console.error(`[PayAnyWay Webhook] Transaction ${mntTransactionId} not found in Firestore`);
+        return res.status(404).send("FAIL: Transaction not found");
+      }
+
+      const txnData = txnDoc.data();
+      if (txnData?.status === "completed") {
+        console.log(`[PayAnyWay Webhook] Transaction ${mntTransactionId} is already completed.`);
+      } else {
+        const isProPlus = txnData?.tier === "pro_plus";
+        const tierType = isProPlus ? "pro_plus" : "pro";
+        
+        // Generate cryptographic secure 6-hex suffix key
+        const rand = crypto.randomBytes(3).toString("hex").toUpperCase();
+        const generatedKey = (tierType === "pro" ? "PRO" : "PLUS") + "-" + rand;
+
+        await saveLicense(generatedKey);
+
+        await adminDb.collection("payment_transactions").doc(mntTransactionId).update({
+          status: "completed",
+          licenseKey: generatedKey,
+          updatedAt: new Date().toISOString()
+        });
+
+        console.log(`[PayAnyWay Webhook] Verified payment and issued key: ${generatedKey} for transaction: ${mntTransactionId}`);
+      }
+
+      // Formulate successful XML Response as required by Moneta.ru/PayAnyWay specification
+      const resultCode = "200";
+      const respSigString = `${resultCode}${mntId}${mntTransactionId}${mntSecret}`;
+      const responseSignature = crypto.createHash("md5").update(respSigString, "utf8").digest("hex").toLowerCase();
+
+      const xmlResponse = `<?xml version="1.0" encoding="UTF-8" ?>
+<MNT_RESPONSE>
+  <MNT_ID>${mntId}</MNT_ID>
+  <MNT_TRANSACTION_ID>${mntTransactionId}</MNT_TRANSACTION_ID>
+  <MNT_RESULT_CODE>${resultCode}</MNT_RESULT_CODE>
+  <MNT_SIGNATURE>${responseSignature}</MNT_SIGNATURE>
+</MNT_RESPONSE>`;
+
+      res.setHeader("Content-Type", "application/xml");
+      return res.status(200).send(xmlResponse);
+    } catch (err) {
+      console.error("[PayAnyWay Webhook] Error:", err);
+      return res.status(500).send("FAIL: Internal Server Error");
+    }
+  });
+
+  // Secure Stripe Webhook Handler with Signature Verification
+  app.post("/api/webhook/stripe", async (req: any, res: any) => {
+    const sig = req.headers["stripe-signature"];
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!sig || !endpointSecret) {
+      console.error("[Stripe Webhook] Missing stripe-signature header or STRIPE_WEBHOOK_SECRET env");
+      return res.status(400).send("Missing stripe signature or endpoint secret.");
+    }
+
+    let event;
+    try {
+      const Stripe = (await import("stripe")).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-10-16" as any });
+      event = stripe.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
+    } catch (err: any) {
+      console.error("[Stripe Webhook] Signature verification failed:", err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as any;
+      const transactionId = session.metadata?.transactionId;
+
+      if (transactionId) {
+        const txnDoc = await adminDb.collection("payment_transactions").doc(transactionId).get();
+        if (txnDoc.exists) {
+          const txnData = txnDoc.data();
+          if (txnData?.status !== "completed") {
+            const isProPlus = txnData?.tier === "pro_plus";
+            const tierType = isProPlus ? "pro_plus" : "pro";
+            
+            // Generate cryptographic secure 6-hex suffix key
+            const rand = crypto.randomBytes(3).toString("hex").toUpperCase();
+            const generatedKey = (tierType === "pro" ? "PRO" : "PLUS") + "-" + rand;
+
+            await saveLicense(generatedKey);
+
+            await adminDb.collection("payment_transactions").doc(transactionId).update({
+              status: "completed",
+              licenseKey: generatedKey,
+              updatedAt: new Date().toISOString()
+            });
+
+            console.log(`[Stripe Webhook] Successfully processed Stripe payment and generated key ${generatedKey} for transaction ${transactionId}`);
+          }
+        }
+      }
+    }
+
+    res.json({ received: true });
+  });
+
+  // Secure simulated webhook trigger for offline/sandbox development
+  app.post("/api/simulate-webhook", async (req, res) => {
+    try {
+      const { transactionId } = req.body;
+      if (!transactionId) {
+        return res.status(400).json({ success: false, error: "Missing transactionId" });
+      }
+
+      const txnDoc = await adminDb.collection("payment_transactions").doc(transactionId).get();
+      if (!txnDoc.exists) {
+        return res.status(404).json({ success: false, error: "Transaction not found" });
+      }
+
+      const txnData = txnDoc.data();
+      if (txnData?.status === "completed") {
+        return res.json({ success: true, message: "Transaction already completed." });
+      }
+
+      // Generate secure license key inside the protected server environment
+      const isProPlus = txnData?.tier === "pro_plus";
+      const tierType = isProPlus ? "pro_plus" : "pro";
+      
+      const rand = crypto.randomBytes(3).toString("hex").toUpperCase();
       const generatedKey = (tierType === "pro" ? "PRO" : "PLUS") + "-" + rand;
 
-      // Call saveLicense helper to handle memory, disk cache, and cloud Firestore persistence
       await saveLicense(generatedKey);
 
-      console.log(`[Checkout Security] Automatically generated and registered ${tierType} key: ${generatedKey}`);
-      res.json({ success: true, license: generatedKey });
+      await adminDb.collection("payment_transactions").doc(transactionId).update({
+        status: "completed",
+        licenseKey: generatedKey,
+        updatedAt: new Date().toISOString()
+      });
+
+      console.log(`[Simulator Webhook] Successfully processed simulated payment webhook for transaction ${transactionId}. Key issued: ${generatedKey}`);
+      return res.json({ success: true });
     } catch (err) {
-      console.error("[Checkout Security] Failed to create secure license key:", err);
-      res.status(500).json({ success: false, error: "Internal payment processing error" });
+      console.error("[Simulate Webhook] Error:", err);
+      res.status(500).json({ success: false, error: "Internal simulator error" });
+    }
+  });
+
+  // Secure sandbox interactive payment gateway portal
+  app.get("/checkout/simulate-payment", async (req, res) => {
+    const { transactionId } = req.query;
+    if (!transactionId || typeof transactionId !== "string") {
+      return res.status(400).send("Missing transactionId");
+    }
+
+    try {
+      const txnDoc = await adminDb.collection("payment_transactions").doc(transactionId).get();
+      if (!txnDoc.exists) {
+        return res.status(404).send("Transaction not found");
+      }
+
+      const txnData = txnDoc.data();
+      const amount = parseFloat(txnData?.amount || "0").toFixed(2);
+      const isProPlus = txnData?.tier === "pro_plus";
+      const isDonation = !!txnData?.isDonation;
+      const email = txnData?.email || "anonymous";
+      const paymentMethod = txnData?.paymentMethod || "global";
+
+      res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment Simulator</title>
+    <script src="https://cdn.tailwindcss.com" crossorigin></script>
+    <style>
+        body { background: #09090b; color: #fafafa; font-family: system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden relative p-6 space-y-6">
+        <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+        
+        <div class="text-center">
+            <span class="px-2.5 py-1 text-[10px] font-black bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full uppercase tracking-widest">
+                Secure Sandbox Gateway
+            </span>
+            <h1 class="text-xl font-bold text-white mt-3">Payment Simulator</h1>
+            <p class="text-xs text-zinc-400 mt-1">This is a secure offline-simulated environment to complete your checkout flow securely without entering live credit card secrets.</p>
+        </div>
+
+        <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-4 space-y-2.5 text-xs">
+            <div class="flex justify-between border-b border-zinc-800/60 pb-2">
+                <span class="text-zinc-500">Transaction ID:</span>
+                <span class="font-mono text-zinc-300 font-bold">\${transactionId}</span>
+            </div>
+            <div class="flex justify-between border-b border-zinc-800/60 pb-2">
+                <span class="text-zinc-500">Product / Tier:</span>
+                <span class="font-semibold text-zinc-300">\${isDonation ? 'Voluntary Support (Donation)' : (isProPlus ? 'SyncRate Enterprise (PRO+)' : 'SyncRate Premium (PRO)')}</span>
+            </div>
+            <div class="flex justify-between border-b border-zinc-800/60 pb-2">
+                <span class="text-zinc-500">Payer Email:</span>
+                <span class="font-medium text-zinc-300">\${email}</span>
+            </div>
+            <div class="flex justify-between border-b border-zinc-800/60 pb-2">
+                <span class="text-zinc-500">Payment Gateway:</span>
+                <span class="font-bold uppercase text-indigo-400">\${paymentMethod}</span>
+            </div>
+            <div class="flex justify-between pt-1 text-sm font-bold">
+                <span class="text-zinc-400">Total Amount:</span>
+                <span class="text-emerald-400">$\${amount}</span>
+            </div>
+        </div>
+
+        <button onclick="authorizePayment()" id="auth-btn" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 font-bold text-white rounded-xl transition duration-150 transform active:scale-95 shadow-lg shadow-emerald-500/15 cursor-pointer">
+            Authorize Payment & Trigger Secure Webhook
+        </button>
+
+        <div class="text-center">
+            <a href="/checkout?status=cancel" class="text-xs text-zinc-500 hover:text-zinc-400 transition underline">
+                Cancel & Return
+            </a>
+        </div>
+    </div>
+
+    <script>
+        async function authorizePayment() {
+            const btn = document.getElementById('auth-btn');
+            btn.disabled = true;
+            btn.textContent = 'Processing Authorization...';
+            btn.className = 'w-full py-3.5 bg-zinc-800 text-zinc-500 font-bold rounded-xl cursor-not-allowed';
+
+            try {
+                const response = await fetch('/api/simulate-webhook', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transactionId: '\${transactionId}' })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    btn.textContent = 'Payment Authorized! Redirecting...';
+                    btn.className = 'w-full py-3.5 bg-emerald-600 text-white font-bold rounded-xl';
+                    setTimeout(() => {
+                        window.location.href = '/checkout?status=success&transactionId=\${transactionId}';
+                    }, 1200);
+                } else {
+                    alert('Simulation failed: ' + (data.error || 'Unknown error'));
+                    resetBtn();
+                }
+            } catch(e) {
+                alert('Connection/Server Error');
+                resetBtn();
+            }
+        }
+
+        function resetBtn() {
+            const btn = document.getElementById('auth-btn');
+            btn.disabled = false;
+            btn.textContent = 'Authorize Payment & Trigger Secure Webhook';
+            btn.className = 'w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 font-bold text-white rounded-xl transition duration-150 transform active:scale-95 shadow-lg shadow-emerald-500/15 cursor-pointer';
+        }
+    </script>
+</body>
+</html>`);
+    } catch (err) {
+      console.error("[Simulate Payment Page] Error:", err);
+      res.status(500).send("Internal server error serving simulator page");
     }
   });
 

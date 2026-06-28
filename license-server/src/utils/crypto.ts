@@ -28,29 +28,43 @@ export function generateKey(tier: string): string {
  * Хеширует лицензионный ключ с использованием соли и PBKDF2 (SHA256).
  * Это предотвращает утечку ключей в открытом виде при компрометации базы данных.
  * @param key Лицензионный ключ в открытом виде
- * @returns Хеш в формате salt:hash
+ * @returns Хеш в формате iterations:salt:hash
  */
 export function hashKey(key: string): string {
   const cleanKey = key.trim().toUpperCase();
   const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.pbkdf2Sync(cleanKey, salt, 1000, 64, 'sha256').toString('hex');
-  return `${salt}:${hash}`;
+  const iterations = 600000;
+  const hash = crypto.pbkdf2Sync(cleanKey, salt, iterations, 64, 'sha256').toString('hex');
+  return `${iterations}:${salt}:${hash}`;
 }
 
 /**
  * Проверяет соответствие введенного ключа сохраненному соленому хешу.
  * Защищена от атак по времени (Timing Attacks) с помощью timingSafeEqual.
  * @param key Введенный лицензионный ключ в открытом виде
- * @param storedHash Хеш из базы данных в формате salt:hash
+ * @param storedHash Хеш из базы данных в формате iterations:salt:hash или salt:hash
  * @returns Результат проверки
  */
 export function verifyKey(key: string, storedHash: string): boolean {
   try {
     const cleanKey = key.trim().toUpperCase();
-    const [salt, originalHash] = storedHash.split(':');
+    const parts = storedHash.split(':');
+    let salt: string;
+    let originalHash: string;
+    let iterations = 1000;
+
+    if (parts.length === 3) {
+      iterations = parseInt(parts[0], 10);
+      salt = parts[1];
+      originalHash = parts[2];
+    } else {
+      salt = parts[0];
+      originalHash = parts[1];
+    }
+
     if (!salt || !originalHash) return false;
 
-    const computedHash = crypto.pbkdf2Sync(cleanKey, salt, 1000, 64, 'sha256').toString('hex');
+    const computedHash = crypto.pbkdf2Sync(cleanKey, salt, iterations, 64, 'sha256').toString('hex');
     
     // Безопасное сравнение во избежание атак по времени
     return crypto.timingSafeEqual(

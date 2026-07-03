@@ -1,4 +1,4 @@
-const API_URL = "https://syncrate-backend.onrender.com";
+const API_URL = "https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app";
 const API_FIAT = "https://open.er-api.com/v6/latest/";
 const CRYPTO_API = "https://min-api.cryptocompare.com/data/price?fsym=";
 const CBRF_API = "https://www.cbr-xml-daily.ru/daily_json.js";

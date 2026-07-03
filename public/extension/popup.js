@@ -1,5 +1,5 @@
 const CONFIG = {
-    API_BASE_URL: 'https://syncrate-backend.onrender.com',
+    API_BASE_URL: 'https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app',
     VERSION: '15.0'
 };
 const API_URL = CONFIG.API_BASE_URL;

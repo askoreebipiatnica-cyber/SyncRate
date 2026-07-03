@@ -11,6 +11,7 @@ import {
   Monitor, Laptop, Terminal, Chrome, Cpu, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import TrialModal from './components/TrialModal';
 
 type Language = 'ru' | 'en' | 'zh' | 'kk' | 'de' | 'uk' | 'es';
 
@@ -728,6 +729,7 @@ export default function App() {
   const [lang, setLang] = useState<Language>('ru');
   const [showInstructions, setShowInstructions] = useState(false);
   const [showCapabilities, setShowCapabilities] = useState(false);
+  const [showTrialModal, setShowTrialModal] = useState(false);
 
   useEffect(() => {
     const browserLang = (navigator.language || 'en').split('-')[0];
@@ -977,7 +979,13 @@ export default function App() {
                 <span>{t.feature_no_crypto}</span>
               </li>
             </ul>
-            <p className="text-sm text-[#8b949e] italic">{t.desc_basic}</p>
+            <p className="text-sm text-[#8b949e] italic mb-6">{t.desc_basic}</p>
+            <button 
+              onClick={() => document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' })}
+              className="mt-auto w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-black rounded-2xl transition-all cursor-pointer"
+            >
+              {lang === 'ru' ? 'Скачать бесплатно' : 'Download Free'}
+            </button>
           </div>
 
           {/* PRO */}
@@ -1004,7 +1012,13 @@ export default function App() {
                 <span>{t.feature_dark_mode}</span>
               </li>
             </ul>
-            <p className="text-sm text-[#8b949e] italic">{t.desc_pro}</p>
+            <p className="text-sm text-[#8b949e] italic mb-6">{t.desc_pro}</p>
+            <a 
+              href="/checkout?tier=pro" 
+              className="mt-auto w-full py-4 bg-[#6e40c9] hover:bg-[#8957e5] text-white text-center font-black rounded-2xl transition-all block cursor-pointer"
+            >
+              {lang === 'ru' ? 'Купить PRO' : 'Buy PRO'}
+            </a>
           </div>
 
           {/* PRO+ */}
@@ -1031,7 +1045,13 @@ export default function App() {
                 <span>{t.feature_top30_crypto}</span>
               </li>
             </ul>
-            <p className="text-sm text-[#8b949e] italic">{t.desc_pro_plus}</p>
+            <p className="text-sm text-[#8b949e] italic mb-6">{t.desc_pro_plus}</p>
+            <a 
+              href="/checkout?tier=pro_plus" 
+              className="mt-auto w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-black text-center font-black rounded-2xl transition-all block cursor-pointer"
+            >
+              {lang === 'ru' ? 'Купить PRO+' : 'Buy PRO+'}
+            </a>
           </div>
         </div>
       </section>
@@ -1044,21 +1064,32 @@ export default function App() {
             {t.download_zip_desc}
           </p>
           
-          <div className="flex flex-col items-center space-y-8">
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#6e40c9] to-[#a371f7] rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-              <button
-                onClick={handleDownload}
-                className="relative flex items-center justify-center min-w-[280px] px-10 py-6 rounded-3xl border-4 transition-all duration-500 bg-[#0d1117] border-[#6e40c9] hover:border-[#a371f7] hover:scale-105 active:scale-95"
-              >
-                <div className="flex items-center gap-4">
-                  <Download className="w-10 h-10 text-[#a371f7]" />
-                  <span className="text-lg font-black text-center leading-tight">
-                    {t.download}
-                  </span>
-                </div>
-              </button>
-            </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-8 max-w-2xl mx-auto">
+            {/* Official Web Store */}
+            <a
+              href="https://chromewebstore.google.com/detail/syncrate"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-white text-black font-black hover:bg-[#f0f6fc] transition-all w-full sm:w-1/2 cursor-pointer shadow-lg active:scale-[0.98]"
+            >
+              <Chrome className="w-6 h-6 text-[#6e40c9]" />
+              <div className="text-left">
+                <div className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Official Store</div>
+                <div className="text-sm font-black">{lang === 'ru' ? 'Chrome Web Store' : 'Chrome Web Store'}</div>
+              </div>
+            </a>
+
+            {/* Offline ZIP */}
+            <a
+              href="/SyncRate.zip"
+              className="flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-[#0d1117] border border-[#30363d] hover:border-[#6e40c9]/50 text-white font-black transition-all w-full sm:w-1/2 cursor-pointer shadow-lg active:scale-[0.98]"
+            >
+              <Download className="w-6 h-6 text-[#a371f7]" />
+              <div className="text-left">
+                <div className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Offline Package</div>
+                <div className="text-sm font-black">{lang === 'ru' ? 'Скачать ZIP архив' : 'Download ZIP Archive'}</div>
+              </div>
+            </a>
           </div>
 
           <div className="mt-12 flex flex-wrap justify-center gap-4">
@@ -1197,6 +1228,12 @@ export default function App() {
             </motion.div>
           </motion.div>
         )}
+
+        <TrialModal 
+          isOpen={showTrialModal} 
+          onClose={() => setShowTrialModal(false)} 
+          lang={lang} 
+        />
       </AnimatePresence>
 
       {/* Free Test Section */}
@@ -1206,7 +1243,7 @@ export default function App() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="p-12 rounded-[3rem] bg-gradient-to-br from-[#6e40c9]/20 to-[#8957e5]/5 border border-[#6e40c9]/30 text-center"
+            className="p-12 rounded-[3rem] bg-gradient-to-br from-[#6e40c9]/20 to-[#8957e5]/5 border border-[#6e40c9]/30 text-center flex flex-col items-center"
           >
             <div className="inline-flex items-center gap-2 bg-[#f39c12]/10 text-[#f39c12] px-4 py-2 rounded-full text-sm font-black mb-8 border border-[#f39c12]/20 uppercase tracking-widest">
               <Sparkles className="w-4 h-4" />
@@ -1218,6 +1255,12 @@ export default function App() {
             <p className="text-xl text-[#8b949e] leading-relaxed max-w-2xl mx-auto">
               {t.free_test_desc}
             </p>
+            <button
+              onClick={() => setShowTrialModal(true)}
+              className="mt-8 bg-[#6e40c9] hover:bg-[#8957e5] text-white px-8 py-4 rounded-2xl font-black text-lg transition-all active:scale-95 cursor-pointer shadow-lg shadow-[#6e40c9]/20"
+            >
+              {t.btn_start_test}
+            </button>
           </motion.div>
         </div>
       </section>
@@ -1239,8 +1282,10 @@ export default function App() {
                 </p>
               </div>
               <a 
-                href="mailto:askoreebipiatnica@gmail.com?subject=SyncRate Feedback"
-                className="inline-flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-black text-lg hover:bg-[#c9d1d9] transition-all active:scale-95"
+                href="/feedback"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-black text-lg hover:bg-[#c9d1d9] transition-all active:scale-95 cursor-pointer"
               >
                 <Sparkles className="w-6 h-6" />
                 {t.btn_feedback}
@@ -1278,6 +1323,15 @@ export default function App() {
           <p className="text-sm text-[#8b949e] leading-relaxed text-justify">
             {t.legal_desc}
           </p>
+        </div>
+        <div className="mt-8 mb-4 flex justify-center gap-6 text-sm text-[#8b949e]">
+          <a href="/checkout?type=donation" className="hover:text-white transition-colors underline decoration-[#6e40c9] cursor-pointer">
+            {lang === 'ru' ? 'Поддержать проект (Донат)' : 'Support Development (Donate)'}
+          </a>
+          <span>•</span>
+          <a href="/feedback" target="_blank" rel="noreferrer" className="hover:text-white transition-colors underline decoration-[#6e40c9] cursor-pointer">
+            {lang === 'ru' ? 'Портал обратной связи' : 'Feedback Portal'}
+          </a>
         </div>
         <p className="text-sm text-[#8b949e] font-medium">
           {t.copyright}

@@ -1,3 +1,5 @@
+importScripts('services.js');
+
 const API_URL = "https://ais-pre-msjrecxeaytix2n65pvx6i-307655937505.us-west2.run.app";
 const API_FIAT = "https://open.er-api.com/v6/latest/";
 const CRYPTO_API = "https://min-api.cryptocompare.com/data/price?fsym=";
@@ -7,6 +9,12 @@ const NBRB_API = "https://api.nbrb.by/exrates/rates?periodicity=0";
 const CRYPTO_CODES = ['BTC','ETH','USDT','BNB','SOL','XRP','USDC','ADA','AVAX','DOGE','DOT','TRX','LINK','MATIC','TON','SHIB','LTC','BCH','ATOM','XLM','NEAR','UNI','XMR','ETC','ICP','FIL','APT','LDO','ARB','VET','MKR','SAT','WAVES'];
 
 async function refreshSession() {
+    try {
+        await SettingsService.initializeDefaultCurrencyIfNeeded(false);
+    } catch (err) {
+        console.warn("Auto-detect currency failed during startup refresh:", err);
+    }
+
     let { sessionToken, installId } = await chrome.storage.local.get(['sessionToken', 'installId']);
     if (!installId) {
         installId = 'inst-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -58,6 +66,12 @@ async function fetchWithTimeout(resource, options = {}) {
 }
 
 chrome.runtime.onInstalled.addListener(async (details) => {
+    try {
+        await SettingsService.initializeDefaultCurrencyIfNeeded(false);
+    } catch (err) {
+        console.warn("Auto-detect currency failed during install:", err);
+    }
+
     chrome.alarms.create("cleanupCache", { periodInMinutes: 60 });
     if (details.reason === 'install') {
         try {
@@ -105,6 +119,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             .then(res => sendResponse(res))
             .catch(() => sendResponse({ success: false }));
         return true; // Важно! Оставляем канал открытым
+    }
+    if (request.action === "DETECT_COUNTRY_CURRENCY") {
+        SettingsService.initializeDefaultCurrencyIfNeeded(true)
+            .then(result => sendResponse({ success: true, ...result }))
+            .catch(err => sendResponse({ success: false, error: err.message }));
+        return true;
     }
     if (request.action === "GET_DASHBOARD") {
         Promise.all(request.bases.map(b => 

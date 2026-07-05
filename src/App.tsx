@@ -11,7 +11,7 @@ import {
   Monitor, Laptop, Terminal, Chrome, Cpu, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import TrialModal from './components/TrialModal';
+import { TrialModal } from './components/TrialModal';
 
 type Language = 'ru' | 'en' | 'zh' | 'kk' | 'de' | 'uk' | 'es';
 
@@ -75,7 +75,7 @@ const translations = {
     instruction_step_5: 'Нажмите кнопку "Загрузить распакованное расширение" (Load unpacked) и выберите папку с расширением.',
     instruction_step_6: 'Закрепите меню расширения в верхней панели браузера для быстрого доступа.',
     instruction_step_7: 'Все настройки расширения (валюта, язык, источник курса) находятся в этом меню.',
-    instruction_step_8: 'Обновления будут происходить автоматически "по воздуху" при выходе новой версии.',
+    instruction_step_8: 'Обновления будут происходить автоматически через Chrome Web Store.',
     feedback_title: 'Обратная связь',
     feedback_desc: 'Есть идеи по улучшению или нашли ошибку? Мы всегда рады критике и похвале!',
     btn_feedback: 'Написать разработчику',
@@ -167,7 +167,7 @@ const translations = {
     instruction_step_5: 'Click "Load unpacked" and select the folder containing the extension.',
     instruction_step_6: 'Pin the extension to the top toolbar for quick access.',
     instruction_step_7: 'All settings (currency, language, rate source) are located in this menu.',
-    instruction_step_8: 'Updates will happen automatically "over-the-air" when a new version is released.',
+    instruction_step_8: 'Updates will happen automatically through the Chrome Web Store.',
     feedback_title: 'Feedback',
     feedback_desc: 'Have ideas for improvement or found a bug? We always welcome criticism and praise!',
     btn_feedback: 'Contact Developer',
@@ -259,9 +259,9 @@ const translations = {
     instruction_step_5: '点击“加载已解压的扩展程序”并选择包含扩展程序的文件夹。',
     instruction_step_6: '将扩展程序固定在顶部工具栏以便快速访问。',
     instruction_step_7: '所有设置（货币、语言、汇率来源）都位于此菜单中。',
-    instruction_step_8: '当新版本发布时，更新将通过“空中下载”自动进行。',
+    instruction_step_8: '更新将通过 Chrome Web Store 自动进行。',
     feedback_title: '反馈',
-    feedback_desc: '有改进建议或发现错误？我们随时欢迎您的批评和表扬！',
+    feedback_desc: '有改进建议 or 发现错误？我们随时欢迎您的批评和表扬！',
     btn_feedback: '联系开发人员',
     update_title: '自动更新',
     update_desc: '更新通过 Chrome Web Store 自动进行。',
@@ -341,7 +341,7 @@ const translations = {
     instruction_step_5: '"Жүктелген кеңейтімді жүктеу" (Load unpacked) батырмасын басып, кеңейтімі бар қалтаны таңдаңыз.',
     instruction_step_6: 'Жылдам қол жеткізу үшін кеңейтімді жоғарғы панельге бекітіңіз.',
     instruction_step_7: 'Кеңейтімнің барлық параметрлері (валюта, тіл, курс көзі) осы мәзірде орналасқан.',
-    instruction_step_8: 'Кеңейтімді жаңарту үшін жаңа ZIP жүктеп алып, орнатуды қайталаңыз (ескі параметрлер сақталады).',
+    instruction_step_8: 'Жаңартулар Chrome Web Store арқылы автоматты түрде орындалады.',
     feedback_title: 'Кері байланыс',
     feedback_desc: 'Жақсарту бойынша идеяларыңыз бар ма немесе қате таптыңыз ба? Біз әрқашан сын мен мақтауға қуаныштымыз!',
     btn_feedback: 'Әзірлеушіге жазу',
@@ -423,7 +423,7 @@ const translations = {
     instruction_step_5: 'Klicken Sie auf "Entpackte Erweiterung laden" und wählen Sie den Ordner mit der Erweiterung aus.',
     instruction_step_6: 'Fixieren Sie die Erweiterung in der oberen Symbolleiste für schnellen Zugriff.',
     instruction_step_7: 'Alle Einstellungen (Währung, Sprache, Kursquelle) befinden sich in diesem Menü.',
-    instruction_step_8: 'Updates erfolgen automatisch "over-the-air", wenn eine neue Version veröffentlicht wird.',
+    instruction_step_8: 'Updates erfolgen automatisch über den Chrome Web Store.',
     feedback_title: 'Feedback',
     feedback_desc: 'Haben Sie Verbesserungsvorschläge oder einen Fehler gefunden? Wir freuen uns immer über Kritik und Lob!',
     btn_feedback: 'Entwickler kontaktieren',
@@ -505,7 +505,7 @@ const translations = {
     instruction_step_5: 'Натисніть "Завантажити розпаковане розширення" та виберіть папку з розширенням.',
     instruction_step_6: 'Закріпіть меню розширення у верхній панелі браузера для швидкого доступу.',
     instruction_step_7: 'Всі налаштування розширення (валюта, мова, джерело курсу) знаходяться в цьому меню.',
-    instruction_step_8: 'Оновлення відбуватимуться автоматично "по повітрю" при виході нової версії.',
+    instruction_step_8: 'Оновлення відбуватимуться автоматично через Chrome Web Store.',
     feedback_title: 'Зворотній зв\'язок',
     feedback_desc: 'Маєте ідеї щодо покращення або знайшли помилку? Ми завжди раді критиці та похвалі!',
     btn_feedback: 'Написати розробнику',
@@ -596,7 +596,7 @@ const translations = {
     instruction_step_5: 'Haz clic en "Cargar descomprimida" y selecciona la carpeta que contiene la extensión.',
     instruction_step_6: 'Fija la extensión en la barra de herramientas superior para un acceso rápido.',
     instruction_step_7: 'Todos los ajustes (moneda, idioma, fuente de tasa) se encuentran en este menú.',
-    instruction_step_8: 'Las actualizaciones se realizarán automáticamente "por aire" cuando se lance una nueva versión.',
+    instruction_step_8: 'Las actualizaciones se realizarán automáticamente a través de Chrome Web Store.',
     feedback_title: 'Comentarios',
     feedback_desc: '¿Tiene ideas para mejorar o encontró un error? ¡Siempre agradecemos las críticas y elogios!',
     btn_feedback: 'Contactar al desarrollador',
@@ -820,12 +820,11 @@ export default function App() {
           {t.hero_desc}
         </motion.p>
         
-        {/* Compact Supported OS badge-block */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="inline-flex flex-wrap items-center justify-center gap-2.5 px-4 py-2 rounded-2xl bg-[#161b22]/60 border border-[#30363d] text-sm text-[#8b949e] mb-12 hover:border-[#6e40c9]/40 transition-colors mx-auto"
+          className="inline-flex flex-wrap items-center justify-center gap-2.5 px-4 py-2 rounded-2xl bg-[#161b22]/60 border border-[#30363d] text-sm text-[#8b949e] mb-8 hover:border-[#6e40c9]/40 transition-colors mx-auto"
         >
           <span className="font-semibold text-[#f0f6fc]/80">{t.supported_os_title}</span>
           <div className="flex items-center gap-2">
@@ -858,10 +857,10 @@ export default function App() {
             <ChevronRight className="w-5 h-5" />
           </button>
           <button 
-            onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-            className="w-full md:w-auto bg-[#161b22] border border-[#30363d] text-white px-8 py-4 rounded-2xl font-black text-lg hover:bg-[#1c2128] transition-all"
+            onClick={() => document.getElementById('tariffs')?.scrollIntoView({ behavior: 'smooth' })}
+            className="w-full md:w-auto bg-[#161b22] border border-[#30363d] text-white px-8 py-4 rounded-2xl font-black text-lg hover:bg-[#1c2128] transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            {t.tariffs_title}
+            {lang === 'ru' ? 'Выбрать тариф' : 'View Plans'}
           </button>
         </motion.div>
       </section>
@@ -924,175 +923,209 @@ export default function App() {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="relative z-10 max-w-4xl mx-auto px-6 py-12">
-        <div className="bg-[#161b22] border border-[#30363d] rounded-[2.5rem] p-10 md:p-12 shadow-2xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Sparkles className="w-32 h-32 text-[#6e40c9]" />
-          </div>
-          <h2 className="text-3xl md:text-4xl font-black mb-8 tracking-tight text-center md:text-left">{t.faq_title}</h2>
-          <div className="space-y-6">
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#6e40c9] flex items-center justify-center font-black text-sm text-white">
-                1
-              </div>
-              <p className="text-[#c9d1d9] leading-relaxed text-base">{t.faq_step_1}</p>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#6e40c9] flex items-center justify-center font-black text-sm text-white">
-                2
-              </div>
-              <p className="text-[#c9d1d9] leading-relaxed text-base">{t.faq_step_2}</p>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#6e40c9] flex items-center justify-center font-black text-sm text-white">
-                3
-              </div>
-              <p className="text-[#c9d1d9] leading-relaxed text-base">{t.faq_step_3}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section id="pricing" className="relative z-10 max-w-7xl mx-auto px-6 py-24">
+      {/* Tariffs Section */}
+      <section id="tariffs" className="relative z-10 max-w-7xl mx-auto px-6 py-24 border-t border-[#30363d]/50">
         <div className="text-center mb-16">
-          <h2 className="text-5xl font-black tracking-tight mb-4">{t.tariffs_title}</h2>
-          <p className="text-[#8b949e] text-lg">{t.tariffs_subtitle}</p>
+          <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight mb-4">
+            {t.tariffs_title}
+          </h2>
+          <p className="text-xl text-[#8b949e] max-w-xl mx-auto">
+            {t.tariffs_subtitle}
+          </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Basic */}
-          <div className="bg-[#161b22] border border-[#30363d] p-8 rounded-[2rem] flex flex-col">
-            <h3 className="text-xl font-bold mb-2">{t.tier_basic}</h3>
-            <div className="text-4xl font-black mb-6">{t.price_free}</div>
-            <ul className="space-y-4 mb-8 flex-grow">
-              <li className="flex items-center gap-3 text-[#8b949e]">
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <span>{t.feature_usd_conv}</span>
-              </li>
-              <li className="flex items-center gap-3 text-[#8b949e]">
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <span>2 {t.feature_dashboard_slots}</span>
-              </li>
-              <li className="flex items-center gap-3 text-[#8b949e]/50">
-                <Lock className="w-5 h-5" />
-                <span>{t.feature_no_crypto}</span>
-              </li>
-            </ul>
-            <p className="text-sm text-[#8b949e] italic mb-6">{t.desc_basic}</p>
-            <button 
-              onClick={() => document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' })}
-              className="mt-auto w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-black rounded-2xl transition-all cursor-pointer"
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
+            className="p-10 rounded-[2.5rem] bg-[#161b22] border border-[#30363d] flex flex-col justify-between transition-colors hover:border-zinc-700 hover:shadow-2xl hover:shadow-zinc-500/5"
+          >
+            <div>
+              <div className="flex justify-between items-center mb-8">
+                <span className="text-sm font-black text-[#8b949e] uppercase tracking-widest">{t.tier_basic}</span>
+              </div>
+              <div className="text-5xl font-black mb-4">{t.price_free}</div>
+              <p className="text-[#8b949e] text-sm leading-relaxed mb-8">{t.desc_basic}</p>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
+                  <CheckCircle2 className="w-5 h-5 text-zinc-500" />
+                  {t.feature_usd_conv}
+                </li>
+                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
+                  <CheckCircle2 className="w-5 h-5 text-zinc-500" />
+                  2 {t.feature_dashboard_slots}
+                </li>
+                <li className="flex items-center gap-3 text-sm text-[#8b949e] line-through decoration-[#30363d]">
+                  {t.feature_no_crypto}
+                </li>
+              </ul>
+            </div>
+            <a
+              href="#download"
+              className="block text-center bg-zinc-800 hover:bg-zinc-700 text-white font-black py-4 rounded-2xl text-sm transition-all active:scale-95"
             >
-              {lang === 'ru' ? 'Скачать бесплатно' : 'Download Free'}
-            </button>
-          </div>
+              {lang === 'ru' ? 'Получить бесплатно' : 'Get for Free'}
+            </a>
+          </motion.div>
 
           {/* PRO */}
-          <div className="bg-[#161b22] border-2 border-[#6e40c9] p-8 rounded-[2rem] flex flex-col relative overflow-hidden group">
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-xl font-bold">{t.tier_pro}</h3>
-              <span className="bg-[#6e40c9] text-white text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-tighter shadow-lg transform rotate-3 group-hover:rotate-0 transition-transform">
-                {t.popular_badge}
-              </span>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
+            className="p-10 rounded-[2.5rem] bg-[#161b22] border border-[#30363d] flex flex-col justify-between relative group transition-colors hover:border-[#6e40c9]/50 hover:shadow-2xl hover:shadow-purple-500/5"
+          >
+            <div>
+              <div className="flex justify-between items-center mb-8">
+                <span className="text-sm font-black text-[#6e40c9] uppercase tracking-widest">{t.tier_pro}</span>
+              </div>
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-5xl font-black">{t.price_pro}</span>
+                <span className="text-[#8b949e] text-sm font-semibold">/ {t.lifetime}</span>
+              </div>
+              <p className="text-[#8b949e] text-sm leading-relaxed mb-8">{t.desc_pro}</p>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
+                  <CheckCircle2 className="w-5 h-5 text-[#6e40c9]" />
+                  {t.feature_top8}
+                </li>
+                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
+                  <CheckCircle2 className="w-5 h-5 text-[#6e40c9]" />
+                  4 {t.feature_dashboard_slots}
+                </li>
+                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
+                  <CheckCircle2 className="w-5 h-5 text-[#6e40c9]" />
+                  {t.feature_dark_mode}
+                </li>
+              </ul>
             </div>
-            <div className="text-4xl font-black mb-1">{t.price_pro}</div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-[#a371f7] mb-6">{t.lifetime}</div>
-            <ul className="space-y-4 mb-8 flex-grow">
-              <li className="flex items-center gap-3 text-[#f0f6fc]">
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <span>{t.feature_top8}</span>
-              </li>
-              <li className="flex items-center gap-3 text-[#f0f6fc]">
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <span>4 {t.feature_dashboard_slots}</span>
-              </li>
-              <li className="flex items-center gap-3 text-[#f0f6fc]">
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <span>{t.feature_dark_mode}</span>
-              </li>
-            </ul>
-            <p className="text-sm text-[#8b949e] italic mb-6">{t.desc_pro}</p>
-            <a 
-              href="/checkout?tier=pro" 
-              className="mt-auto w-full py-4 bg-[#6e40c9] hover:bg-[#8957e5] text-white text-center font-black rounded-2xl transition-all block cursor-pointer"
+            <a
+              href={`/checkout?tier=pro&lang=${lang}`}
+              className="block text-center bg-[#6e40c9] hover:bg-[#8957e5] text-white font-black py-4 rounded-2xl text-sm transition-all active:scale-95 cursor-pointer shadow-lg shadow-[#6e40c9]/10"
             >
               {lang === 'ru' ? 'Купить PRO' : 'Buy PRO'}
             </a>
-          </div>
+          </motion.div>
 
-          {/* PRO+ */}
-          <div className="bg-gradient-to-b from-[#1c2128] to-[#161b22] border border-yellow-500/30 p-8 rounded-[2rem] flex flex-col relative overflow-hidden group">
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-xl font-bold text-yellow-500">{t.tier_pro_plus}</h3>
-              <span className="bg-yellow-500 text-black text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-tighter shadow-lg transform -rotate-3 group-hover:rotate-0 transition-transform">
-                VIP
-              </span>
+          {/* PRO_PLUS */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
+            className="p-10 rounded-[2.5rem] bg-[#161b22] border-2 border-[#6e40c9] flex flex-col justify-between relative transition-colors hover:border-[#8957e5] hover:shadow-2xl hover:shadow-purple-500/10"
+          >
+            <div className="absolute top-0 right-10 -translate-y-1/2 bg-[#6e40c9] text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full">
+              {t.popular_badge}
             </div>
-            <div className="text-4xl font-black mb-1">{t.price_pro_plus}</div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-yellow-500 mb-6">{t.lifetime}</div>
-            <ul className="space-y-4 mb-8 flex-grow">
-              <li className="flex items-center gap-3 text-[#f0f6fc]">
-                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                <span>{t.feature_all_fiats}</span>
-              </li>
-              <li className="flex items-center gap-3 text-[#f0f6fc]">
-                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                <span>{t.feature_nat_banks}</span>
-              </li>
-              <li className="flex items-center gap-3 text-[#f0f6fc]">
-                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                <span>{t.feature_top30_crypto}</span>
-              </li>
-            </ul>
-            <p className="text-sm text-[#8b949e] italic mb-6">{t.desc_pro_plus}</p>
-            <a 
-              href="/checkout?tier=pro_plus" 
-              className="mt-auto w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-black text-center font-black rounded-2xl transition-all block cursor-pointer"
+            <div>
+              <div className="flex justify-between items-center mb-8">
+                <span className="text-sm font-black text-[#a371f7] uppercase tracking-widest">{t.tier_pro_plus}</span>
+              </div>
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-5xl font-black">{t.price_pro_plus}</span>
+                <span className="text-[#8b949e] text-sm font-semibold">/ {t.lifetime}</span>
+              </div>
+              <p className="text-[#8b949e] text-sm leading-relaxed mb-8">{t.desc_pro_plus}</p>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
+                  <CheckCircle2 className="w-5 h-5 text-amber-500" />
+                  {t.feature_all_fiats}
+                </li>
+                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
+                  <CheckCircle2 className="w-5 h-5 text-amber-500" />
+                  {t.feature_nat_banks}
+                </li>
+                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
+                  <CheckCircle2 className="w-5 h-5 text-amber-500" />
+                  {t.feature_top30_crypto}
+                </li>
+              </ul>
+            </div>
+            <a
+              href={`/checkout?tier=pro_plus&lang=${lang}`}
+              className="block text-center bg-[#6e40c9] hover:bg-[#8957e5] text-white font-black py-4 rounded-2xl text-sm transition-all active:scale-95 cursor-pointer shadow-lg shadow-[#6e40c9]/10"
             >
               {lang === 'ru' ? 'Купить PRO+' : 'Buy PRO+'}
             </a>
-          </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Free Test Section */}
+      <section className="relative z-10 py-24 px-6 border-t border-[#30363d]/50">
+        <div className="max-w-4xl mx-auto">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="p-12 rounded-[3rem] bg-gradient-to-br from-[#6e40c9]/20 to-[#8957e5]/5 border border-[#6e40c9]/30 text-center flex flex-col items-center"
+          >
+            <div className="inline-flex items-center gap-2 bg-[#f39c12]/10 text-[#f39c12] px-4 py-2 rounded-full text-sm font-black mb-8 border border-[#f39c12]/20 uppercase tracking-widest">
+              <Sparkles className="w-4 h-4" />
+              {t.limited_offer}
+            </div>
+            <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-tight">
+              {t.free_test_title}
+            </h2>
+            <p className="text-xl text-[#8b949e] leading-relaxed max-w-2xl mx-auto">
+              {t.free_test_desc}
+            </p>
+            <button
+              onClick={() => setShowTrialModal(true)}
+              className="mt-8 bg-[#6e40c9] hover:bg-[#8957e5] text-white px-8 py-4 rounded-2xl font-black text-lg transition-all active:scale-95 cursor-pointer shadow-lg shadow-[#6e40c9]/20"
+            >
+              {t.btn_start_test}
+            </button>
+          </motion.div>
         </div>
       </section>
 
       {/* Download Section */}
       <section id="download" className="relative z-10 max-w-4xl mx-auto px-6 py-24">
-        <div className="bg-[#161b22] border border-[#30363d] rounded-[3rem] p-12 text-center shadow-2xl">
-          <h2 className="text-4xl font-black mb-6">{t.btn_download_zip}</h2>
-          <p className="text-[#8b949e] text-lg mb-12 max-w-xl mx-auto">
-            {t.download_zip_desc}
+        <div className="bg-[#161b22] border border-[#30363d] rounded-[3rem] p-12 text-center shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Terminal className="w-32 h-32 text-[#6e40c9]" />
+          </div>
+          <h2 className="text-4xl font-black mb-6">{lang === 'ru' ? 'Скачать SyncRate' : 'Download SyncRate'}</h2>
+          <p className="text-[#8b949e] text-lg mb-12 max-w-xl mx-auto leading-relaxed">
+            {lang === 'ru' 
+              ? 'Установите расширение в один клик из официального магазина Chrome Web Store или скачайте ZIP-архив для ручной установки.'
+              : 'Install the extension in one click from the official Chrome Web Store or download the ZIP archive for manual installation.'
+            }
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-8 max-w-2xl mx-auto">
-            {/* Official Web Store */}
-            <a
-              href="https://chromewebstore.google.com/detail/syncrate"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-white text-black font-black hover:bg-[#f0f6fc] transition-all w-full sm:w-1/2 cursor-pointer shadow-lg active:scale-[0.98]"
+            {/* Official Chrome Web Store */}
+            <button
+              onClick={handleDownload}
+              className="flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-[#6e40c9] text-white font-black hover:bg-[#8957e5] transition-all w-full cursor-pointer shadow-lg shadow-[#6e40c9]/20 active:scale-[0.98] relative z-10 animate-pulse hover:animate-none"
             >
-              <Chrome className="w-6 h-6 text-[#6e40c9]" />
+              <Chrome className="w-6 h-6 text-white" />
               <div className="text-left">
-                <div className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Official Store</div>
-                <div className="text-sm font-black">{lang === 'ru' ? 'Chrome Web Store' : 'Chrome Web Store'}</div>
+                <div className="text-xs text-purple-200 font-bold uppercase tracking-wider">Official Store</div>
+                <div className="text-sm font-black">{lang === 'ru' ? 'Установить из Chrome Store' : 'Add to Chrome'}</div>
               </div>
-            </a>
+            </button>
 
-            {/* Offline ZIP */}
+            {/* Offline ZIP (Representing Github release of the client part) */}
             <a
               href="/SyncRate.zip"
-              className="flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-[#0d1117] border border-[#30363d] hover:border-[#6e40c9]/50 text-white font-black transition-all w-full sm:w-1/2 cursor-pointer shadow-lg active:scale-[0.98]"
+              className="flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-white text-black font-black hover:bg-[#f0f6fc] transition-all w-full cursor-pointer shadow-lg active:scale-[0.98] relative z-10"
             >
-              <Download className="w-6 h-6 text-[#a371f7]" />
+              <Download className="w-6 h-6 text-[#6e40c9]" />
               <div className="text-left">
-                <div className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Offline Package</div>
-                <div className="text-sm font-black">{lang === 'ru' ? 'Скачать ZIP архив' : 'Download ZIP Archive'}</div>
+                <div className="text-xs text-zinc-500 font-bold uppercase tracking-wider">GitHub Package</div>
+                <div className="text-sm font-black">{lang === 'ru' ? 'Скачать с GitHub (ZIP)' : 'Download from GitHub (ZIP)'}</div>
               </div>
             </a>
           </div>
 
-          <div className="mt-12 flex flex-wrap justify-center gap-4">
+          <div className="mt-12 flex flex-wrap justify-center gap-4 relative z-10">
             <button 
               onClick={() => setShowInstructions(true)}
               className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#161b22] border border-[#30363d] hover:border-[#6e40c9] transition-all text-sm font-bold"
@@ -1107,6 +1140,22 @@ export default function App() {
               <Layout className="w-4 h-4 text-[#6e40c9]" />
               {t.btn_capabilities}
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="relative z-10 max-w-4xl mx-auto px-6 py-24 border-t border-[#30363d]/50">
+        <h2 className="text-4xl font-black tracking-tight text-center mb-12">{t.faq_title}</h2>
+        <div className="space-y-6">
+          <div className="bg-[#161b22] border border-[#30363d] rounded-2xl p-6">
+            <p className="text-[#f0f6fc] font-bold mb-2">{t.faq_step_1}</p>
+          </div>
+          <div className="bg-[#161b22] border border-[#30363d] rounded-2xl p-6">
+            <p className="text-[#f0f6fc] font-bold mb-2">{t.faq_step_2}</p>
+          </div>
+          <div className="bg-[#161b22] border border-[#30363d] rounded-2xl p-6">
+            <p className="text-[#f0f6fc] font-bold mb-2">{t.faq_step_3}</p>
           </div>
         </div>
       </section>
@@ -1228,42 +1277,16 @@ export default function App() {
             </motion.div>
           </motion.div>
         )}
+        
+        {showTrialModal && (
+          <TrialModal 
+            isOpen={showTrialModal} 
+            onClose={() => setShowTrialModal(false)} 
+            lang={lang} 
+          />
+        )}
 
-        <TrialModal 
-          isOpen={showTrialModal} 
-          onClose={() => setShowTrialModal(false)} 
-          lang={lang} 
-        />
       </AnimatePresence>
-
-      {/* Free Test Section */}
-      <section className="relative z-10 py-24 px-6">
-        <div className="max-w-4xl mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="p-12 rounded-[3rem] bg-gradient-to-br from-[#6e40c9]/20 to-[#8957e5]/5 border border-[#6e40c9]/30 text-center flex flex-col items-center"
-          >
-            <div className="inline-flex items-center gap-2 bg-[#f39c12]/10 text-[#f39c12] px-4 py-2 rounded-full text-sm font-black mb-8 border border-[#f39c12]/20 uppercase tracking-widest">
-              <Sparkles className="w-4 h-4" />
-              {t.limited_offer}
-            </div>
-            <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-tight">
-              {t.free_test_title}
-            </h2>
-            <p className="text-xl text-[#8b949e] leading-relaxed max-w-2xl mx-auto">
-              {t.free_test_desc}
-            </p>
-            <button
-              onClick={() => setShowTrialModal(true)}
-              className="mt-8 bg-[#6e40c9] hover:bg-[#8957e5] text-white px-8 py-4 rounded-2xl font-black text-lg transition-all active:scale-95 cursor-pointer shadow-lg shadow-[#6e40c9]/20"
-            >
-              {t.btn_start_test}
-            </button>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Feedback Section */}
       <section className="relative z-10 py-24 px-6">

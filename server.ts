@@ -30,19 +30,24 @@ async function startServer() {
     }
   }
 
+  let rawAdminDb = null;
   if (!projectId) {
-    console.error("FATAL: Firebase projectId is not configured. Please set FIREBASE_PROJECT_ID or provide firebase-applet-config.json.");
-    process.exit(1);
+    console.warn("⚠️ WARNING: Firebase projectId is not configured. Falling back to IN-MEMORY database mode.");
+  } else {
+    try {
+      // Admin Client initialization (Primary Enterprise SDK using ADC GCloud environment credentials)
+      if (getAdminApps().length === 0) {
+        initAdminApp({
+          projectId: projectId
+        });
+      }
+      rawAdminDb = getAdminFirestore(firestoreDatabaseId || undefined);
+      console.log("🚀 Enterprise gRPC firebase-admin SDK initialized successfully.");
+    } catch (e) {
+      console.error("Failed to initialize Firebase Admin SDK, falling back to IN-MEMORY mode:", e);
+      rawAdminDb = null;
+    }
   }
-
-  // Admin Client initialization (Primary Enterprise SDK using ADC GCloud environment credentials)
-  if (getAdminApps().length === 0) {
-    initAdminApp({
-      projectId: projectId
-    });
-  }
-  const rawAdminDb = getAdminFirestore(firestoreDatabaseId || undefined);
-  console.log("🚀 Enterprise gRPC firebase-admin SDK initialized successfully.");
 
   // Robust, self-contained transparent in-memory fallback for Firestore database operations
   const memoryStore: Record<string, Record<string, any>> = {

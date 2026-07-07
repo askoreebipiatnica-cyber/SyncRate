@@ -242,13 +242,8 @@ async function startServer() {
   // Простая, безопасная и самодостаточная генерация JWT на чистом Node.js (без внешних зависимостей типа jsonwebtoken)
   let JWT_SECRET = process.env.JWT_SECRET;
   if (!JWT_SECRET) {
-    if (process.env.NODE_ENV === "production") {
-      console.error("FATAL: JWT_SECRET environment variable is not set. Server cannot start in production.");
-      process.exit(1);
-    } else {
-      console.warn("WARNING: JWT_SECRET is not set in development. Generating a secure, temporary, random 256-bit secret for this session...");
-      JWT_SECRET = crypto.randomBytes(32).toString("hex");
-    }
+    console.warn("⚠️ WARNING: JWT_SECRET is not set! Generating a secure, temporary, random 256-bit secret for this session... Note: Restarting the server will invalidate existing active user sessions.");
+    JWT_SECRET = crypto.randomBytes(32).toString("hex");
   }
 
   function signJwt(payload: object): string {

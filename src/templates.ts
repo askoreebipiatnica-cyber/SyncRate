@@ -111,6 +111,7 @@ SyncRate respects your privacy. The extension DOES NOT read passwords, credit ca
     <div class="header">
         <h2>⚡ SyncRate</h2>
         <div class="header-actions">
+            <button class="icon-btn" id="donate-btn" title="❤️ Support Project" style="width: auto; padding: 0 10px; border-radius: 15px; border-color: rgba(229, 57, 53, 0.3); background: rgba(229, 57, 53, 0.05); color: #e53935; font-size: 11px; font-weight: bold; gap: 4px;"><span data-i18n="btn_donate">❤️ Support Project</span></button>
             <button class="icon-btn" id="feedback-btn" title="Feedback"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></button>
             <button class="icon-btn" id="theme-btn" title="Dark/Light Mode"><svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
         </div>
@@ -354,6 +355,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         targetLbl.textContent = state.targetCurrency;
         
+        const donateEl = document.querySelector('[data-i18n="btn_donate"]');
+        if (donateEl) {
+            const donateLabels = {
+                ru: '❤️ Поддержать проект',
+                uk: '❤️ Підтримати проект',
+                kk: '❤️ Қолдау',
+                en: '❤️ Support Project',
+                de: '❤️ Spenden',
+                es: '❤️ Apoyar',
+                zh: '❤️ 支持项目'
+            };
+            donateEl.textContent = donateLabels[currentLang] || donateLabels['en'];
+        }
+        
         const lblLicense = document.querySelector('[data-i18n="lbl_license"]');
         const btnActivate = document.querySelector('[data-i18n="btn_activate"]');
         if (lblLicense) {
@@ -531,6 +546,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (feedbackBtn) {
         feedbackBtn.addEventListener('click', () => {
             chrome.tabs.create({ url: API_URL + '/feedback?v=' + encodeURIComponent(CONFIG.VERSION) + '&tier=' + encodeURIComponent(activeTier) + '&installId=' + encodeURIComponent(state.installId) });
+        });
+    }
+
+    const donateBtn = document.getElementById('donate-btn');
+    if (donateBtn) {
+        donateBtn.addEventListener('click', () => {
+            chrome.tabs.create({ url: 'https://pay.cloudtips.ru/p/59a0c662' });
         });
     }
 

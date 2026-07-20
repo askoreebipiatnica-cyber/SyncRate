@@ -72,6 +72,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         targetLbl.textContent = state.targetCurrency;
         
+        const donateEl = document.querySelector('[data-i18n="btn_donate"]');
+        if (donateEl) {
+            const donateLabels = {
+                ru: '❤️ Поддержать проект',
+                uk: '❤️ Підтримати проект',
+                kk: '❤️ Қолдау',
+                en: '❤️ Support Project',
+                de: '❤️ Spenden',
+                es: '❤️ Apoyar',
+                zh: '❤️ 支持项目'
+            };
+            donateEl.textContent = donateLabels[currentLang] || donateLabels['en'];
+        }
+        
         const lblLicense = document.querySelector('[data-i18n="lbl_license"]');
         const btnActivate = document.querySelector('[data-i18n="btn_activate"]');
         if (lblLicense) {
@@ -249,6 +263,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (feedbackBtn) {
         feedbackBtn.addEventListener('click', () => {
             chrome.tabs.create({ url: API_URL + '/feedback?v=' + encodeURIComponent(CONFIG.VERSION) + '&tier=' + encodeURIComponent(activeTier) + '&installId=' + encodeURIComponent(state.installId) });
+        });
+    }
+
+    const donateBtn = document.getElementById('donate-btn');
+    if (donateBtn) {
+        donateBtn.addEventListener('click', () => {
+            chrome.tabs.create({ url: 'https://pay.cloudtips.ru/p/59a0c662' });
         });
     }
 

@@ -34,11 +34,6 @@ function writeExtensionFiles() {
   fs.writeFileSync(path.join(OUTPUT_DIR, 'store_ru.txt'), templates.storeRu);
   fs.writeFileSync(path.join(OUTPUT_DIR, 'store_en.txt'), templates.storeEn);
 
-  // Write binary icons
-  fs.writeFileSync(path.join(ICONS_DIR, 'icon16.png'), Buffer.from(ICON_16, 'base64'));
-  fs.writeFileSync(path.join(ICONS_DIR, 'icon48.png'), Buffer.from(ICON_48, 'base64'));
-  fs.writeFileSync(path.join(ICONS_DIR, 'icon128.png'), Buffer.from(ICON_128, 'base64'));
-
   // Also duplicate in public/extension for web hosting / static serving
   const PUBLIC_OUTPUT_DIR = path.join(process.cwd(), 'public', 'extension');
   const PUBLIC_ICONS_DIR = path.join(PUBLIC_OUTPUT_DIR, 'icons');
@@ -53,9 +48,27 @@ function writeExtensionFiles() {
   fs.writeFileSync(path.join(PUBLIC_OUTPUT_DIR, 'store_ru.txt'), templates.storeRu);
   fs.writeFileSync(path.join(PUBLIC_OUTPUT_DIR, 'store_en.txt'), templates.storeEn);
 
-  fs.writeFileSync(path.join(PUBLIC_ICONS_DIR, 'icon16.png'), Buffer.from(ICON_16, 'base64'));
-  fs.writeFileSync(path.join(PUBLIC_ICONS_DIR, 'icon48.png'), Buffer.from(ICON_48, 'base64'));
-  fs.writeFileSync(path.join(PUBLIC_ICONS_DIR, 'icon128.png'), Buffer.from(ICON_128, 'base64'));
+  // Handle binary icons by preserving user-uploaded icons if they exist in either directory
+  const writeIcon = (filename: string, fallbackBase64: string) => {
+    const targetPath = path.join(ICONS_DIR, filename);
+    const publicTargetPath = path.join(PUBLIC_ICONS_DIR, filename);
+    
+    if (fs.existsSync(targetPath)) {
+      console.log(`ℹ️ Icon ${filename} found in /extension/icons. Copying to public...`);
+      fs.copyFileSync(targetPath, publicTargetPath);
+    } else if (fs.existsSync(publicTargetPath)) {
+      console.log(`ℹ️ Icon ${filename} found in /public/extension/icons. Copying to /extension/icons...`);
+      fs.copyFileSync(publicTargetPath, targetPath);
+    } else {
+      console.log(`ℹ️ Icon ${filename} not found. Writing fallback base64 icon...`);
+      fs.writeFileSync(targetPath, Buffer.from(fallbackBase64, 'base64'));
+      fs.writeFileSync(publicTargetPath, Buffer.from(fallbackBase64, 'base64'));
+    }
+  };
+
+  writeIcon('icon16.png', ICON_16);
+  writeIcon('icon48.png', ICON_48);
+  writeIcon('icon128.png', ICON_128);
 
   console.log('✅ Unpacked extension built successfully to /extension and /public/extension!');
 }

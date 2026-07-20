@@ -1,4 +1,9 @@
-# SyncRate - The Ultimate Currency & Crypto Converter / Мультивалютный конвертер прямо на страницах сайтов
+# SyncRate — Free & Open Source Currency & Crypto Converter
+> **Transform your browsing experience with real-time currency conversions inside any webpage.**
+
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/SyncRate)
+[![Platform](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge%20%7C%20Firefox-orange.svg)](#)
 
 [English](#english) | [Русский](#русский)
 
@@ -7,15 +12,17 @@
 <a name="english"></a>
 ## 🇬🇧 English: Description & Installation Guide
 
-**SyncRate** is an elegant, powerful, and privacy-focused browser extension (Enterprise Edition v15.0) designed to save you from copying prices and switching to external calculators. Simply highlight any amount or price in any currency on any website, and the converter will instantly display the converted value in your target custom currency in a stylish hover tooltip right next to the cursor.
+**SyncRate** is an elegant, lightweight, and privacy-focused browser extension designed to save you from manually copying prices and switching to external calculators. Simply highlight any amount or price in any currency (fiat or crypto) on any website, and the converter will instantly display the converted value in your target currency in a stylish hover tooltip right next to your cursor.
+
+All premium features — including advanced cryptocurrencies, official national bank exchange rates, and real-time custom dashboard slots — are **100% free and open-source**.
 
 ### Key Features
-* **Select & Convert**: Seamless instant matching of text selections.
-* **160+ Fiat Currencies & Top Cryptocurrencies**: Fully integrated with live exchange platforms and major global fiat currencies.
-* **Official Exchange Rates**: Real-time reference rates from the European Central Bank (ECB), Central Bank of the Russian Federation (CBRF), National Bank of Ukraine (NBU), and National Bank of the Republic of Belarus (NBRB).
-* **Multi-language UI**: Localization for English, Russian, Ukrainian, Kazakh, German, Spanish, and Chinese.
-* **Local Caching & Offline Support**: Optimized caching reduces network requests and keeps the browser lightweight.
-* **Privacy-First Design**: Performs all conversion algorithms locally without storing or tracking sensitive user data.
+* **Select & Convert**: Seamless, instant text selection parser with auto-detection.
+* **160+ Fiat Currencies & Top Cryptocurrencies**: Fully integrated with live exchange rates and major global assets.
+* **Official Central Bank Rates**: Real-time reference rates from the European Central Bank (ECB), Central Bank of the Russian Federation (CBRF), National Bank of Ukraine (NBU), and National Bank of the Republic of Belarus (NBRB).
+* **Multi-language UI**: Fully localized into English, Russian, Ukrainian, Kazakh, German, Spanish, and Chinese.
+* **Local Caching & Offline Support**: Optimized storage reduces network requests and keeps your browser lightweight and responsive.
+* **Privacy-First Design**: Performs all conversion algorithms locally inside your browser; no sensitive user data is ever stored, tracked, or transmitted.
 
 ---
 
@@ -48,13 +55,15 @@
 <a name="русский"></a>
 ## 🇷🇺 Русский: Описание и руководство по установке
 
-**SyncRate** — это элегантное, мощное и конфиденциальное браузерное расширение (Enterprise Edition v15.0), которое избавляет вас от необходимости вручную копировать цены и переходить в калькуляторы. Достаточно выделить любую сумму в валюте или крипте на любом сайте, и конвертер мгновенно отобразит эквивалент в выбранной вами валюте в аккуратной всплывающей подсказке прямо около курсора мыши.
+**SyncRate** — это элегантное, легкое и безопасное браузерное расширение для мгновенной конвертации валют и криптовалют прямо на страницах сайтов. Достаточно выделить любую денежную сумму на любом веб-ресурсе, и конвертер мгновенно отобразит эквивалент в выбранной вами валюте в аккуратной всплывающей подсказке прямо около курсора мыши.
+
+Все премиум-функции — включая продвинутые криптовалюты, курсы официальных центробанков и настраиваемую панель мониторинга — **полностью бесплатны и открыты для сообщества**.
 
 ### Основные возможности
 * **Выдели и Конвертируй**: Микросекундный запуск и разбор денежных сумм прямо на лету при выделении текста.
 * **Более 160 фиатных валют и топ-30 криптовалют**: Полная интеграция с биржами и основными мировыми активами.
-* **Официальные курсы ЦБ**: Интеграция с Центральным банком РФ (ЦБ РФ), Национальным банком Украины (НБУ), Национальным банком Республики Беларусь (НБРБ) и Европейским центральным банком (ЕЦБ).
-* **Мультиязычный интерфейс**: Поддержка английского, русского, украинского, казахского, немецкого, испанского и китайского языков.
+* **Официальные курсы ЦБ**: Поддержка курсов Европейского центрального банка (ЕЦБ), Центрального банка РФ (ЦБ РФ), Национального банка Украины (НБУ) и Национального банка Республики Беларусь (НБРБ).
+* **Мультиязычный интерфейс**: Полная локализация на английский, русский, украинский, казахский, немецкий, испанский и китайский языки.
 * **Локальное кэширование курсов**: Умное кэширование экономит трафик и обеспечивает мгновенную отзывчивость.
 * **Высокая конфиденциальность**: Все вычисления происходят прямо в браузере; личные данные пользователей не собираются и никуда не передаются.
 
@@ -86,11 +95,29 @@
 
 ---
 
-## Technical Maintenance (Node Server & Build) / Сборка и запуск веб-сервера
+## ❤️ Поддержать проект / Support Development
 
-This project includes an optional enterprise dashboard server and sandbox payment pages. To build or deploy the full-stack version:
+### 🇷🇺 Русский
 
-Этот проект также включает в себя опциональный веб-сервер панели управления и страниц оплаты. Для сборки и развертывания full-stack сервера:
+Если SyncRate помогает вам в работе и экономит время, вы можете поддержать дальнейшее развитие проекта. Любая сумма помогает оплачивать разработку, тестирование, инфраструктуру и выпуск новых версий.
+
+**[❤️ Поддержать проект](https://pay.cloudtips.ru/p/59a0c662)**
+
+---
+
+### 🇬🇧 English
+
+If SyncRate helps you in your work and saves you time, you can support the further development of the project. Any amount helps pay for development, testing, infrastructure, and releasing new versions.
+
+**[❤️ Support Development](https://pay.cloudtips.ru/p/59a0c662)**
+
+---
+
+## Technical Maintenance & Commands / Сборка и запуск локально
+
+This project includes a React dashboard and a helper local node proxy server. To install dependencies and run locally:
+
+Этот проект содержит React-панель мониторинга и вспомогательный прокси-сервер. Для локальной установки и запуска:
 
 ```bash
 # Install dependencies / Установка зависимостей
@@ -106,7 +133,11 @@ npm run build
 npm start
 ```
 
+---
+
 ## License / Лицензия
 
-© 2026 SyncRate. All rights reserved. Registered developers access only. Unauthorized redistribution or modification is strictly prohibited.
-© 2026 SyncRate. Все права защищены. Доступ разрешен только верифицированным разработчикам. Несанкционированное распространение или модификация строго запрещены.
+Licensed under the [Apache License, Version 2.0](LICENSE) (the "License"). You may obtain a copy of the License at:
+http://www.apache.org/licenses/LICENSE-2.0
+
+Лицензировано под свободной лицензией [Apache License, Version 2.0](LICENSE). Вы можете использовать и модифицировать данный проект в соответствии с условиями лицензии.

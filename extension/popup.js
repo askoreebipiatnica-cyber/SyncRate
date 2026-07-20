@@ -8,72 +8,9 @@ const FIAT_CURRENCIES=['USD','EUR','GBP','CHF','JPY','CNY','CAD','AED','TRY','RU
 const CRYPTO_CURRENCIES=['BTC','ETH','USDT','SOL','BNB','XRP','ADA','DOGE','DOT','MATIC','SHIB','LTC'];
 const BANK_NAMES={'RUB':'ЦБ РФ','UAH':'НБУ','BYN':'НБРБ','EUR':'ECB'};
 document.addEventListener('DOMContentLoaded', async () => {
-    // Extend DICT and FIAT_CURRENCIES dynamically for the new currencies
-    if (typeof FIAT_CURRENCIES !== 'undefined' && !FIAT_CURRENCIES.includes('PLN')) {
-        FIAT_CURRENCIES.push('PLN', 'CZK', 'AUD');
-    }
-    const newKeys = {
-        opt_auto_currency: {
-            ru: '🔌 Автоопределение по IP',
-            uk: '🔌 Автовизначення за IP',
-            kk: '🔌 IP арқылы автоматты анықтау',
-            en: '🔌 Auto-detect by IP',
-            zh: '🔌 自动检测 (按 IP)',
-            de: '🔌 Automatisch (per IP)',
-            es: '🔌 Autodetección por IP'
-        },
-        btn_auto_detect: {
-            ru: 'Определить по IP',
-            uk: 'Визначити за IP',
-            kk: 'IP арқылы анықтау',
-            en: 'Detect by IP',
-            zh: '通过 IP 检测',
-            de: 'Über IP erkennen',
-            es: 'Detectar por IP'
-        },
-        cur_pln: {
-            ru: '🇵🇱 Польский злотый (PLN)',
-            uk: '🇵🇱 Польський злотий (PLN)',
-            kk: '🇵🇱 Польша злотысы (PLN)',
-            en: '🇵🇱 Polish Zloty (PLN)',
-            zh: '🇵🇱 波兰兹罗提 (PLN)',
-            de: '🇵🇱 Polnischer Zloty (PLN)',
-            es: '🇵🇱 Zloty polaco (PLN)'
-        },
-        cur_czk: {
-            ru: '🇨🇿 Чешская крона (CZK)',
-            uk: '🇨🇿 Чеська крона (CZK)',
-            kk: '🇨🇿 Чехия кронасы (CZK)',
-            en: '🇨🇿 Czech Koruna (CZK)',
-            zh: '🇨🇿 捷克克朗 (CZK)',
-            de: '🇨🇿 Tschechische Krone (CZK)',
-            es: '🇨🇿 Corona checa (CZK)'
-        },
-        cur_aud: {
-            ru: '🇦🇺 Австралийский доллар (AUD)',
-            uk: '🇦🇺 Австралійський долар (AUD)',
-            kk: '🇦🇺 Австралия доллары (AUD)',
-            en: '🇦🇺 Australian Dollar (AUD)',
-            zh: '🇦🇺 澳大利亚元 (AUD)',
-            de: '🇦🇺 Australischer Dollar (AUD)',
-            es: '🇦🇺 Dólar australiano (AUD)'
-        }
-    };
-    if (typeof DICT !== 'undefined') {
-        for (const key in newKeys) {
-            for (const lang in newKeys[key]) {
-                if (DICT[lang]) {
-                    DICT[lang][key] = newKeys[key][lang];
-                }
-            }
-        }
-    }
-
     const state = await chrome.storage.local.get({
         lang: 'auto',
         targetCurrency: 'RUB',
-        currencyMode: 'auto',
-        detectedCountryCode: null,
         rateSource: 'market',
         dashboardBases: ['USD', 'EUR', 'RUB', 'GBP'],
         theme: 'dark',
@@ -88,20 +25,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function getTierFromToken(token) {
-        const VALID_TIERS = ['basic', 'pro', 'pro_plus'];
-        if (!token) return 'basic';
-        try {
-            const [header, payload, sig] = token.split('.');
-            if (!header || !payload || !sig) return 'basic';
-            const data = JSON.parse(atob(payload));
-            if (data.exp < Date.now() / 1000) return 'basic'; // истёк
-            if (!VALID_TIERS.includes(data.tier)) return 'basic'; // невалидное значение
-            return data.tier;
-        } catch { return 'basic'; }
+        return 'pro_plus';
     }
 
-    // Всегда PRO+ для всех пользователей
-    const initialTier = 'pro_plus';
     state.appTier = 'pro_plus';
 
     let currentLang = state.lang === 'auto' ? (navigator.language.split('-')[0] || 'en') : state.lang;
@@ -202,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     langSel.value = state.lang;
-    targetSel.value = state.currencyMode === 'auto' ? 'auto' : state.targetCurrency;
+    targetSel.value = state.targetCurrency;
     sourceSel.value = state.rateSource;
     dashSels.forEach((sel, i) => populateCurrencies(sel, state.dashboardBases[i]));
 
@@ -244,44 +170,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Save Settings
-    saveBtn.addEventListener('click', async () => {
-        const isAuto = targetSel.value === 'auto';
+    saveBtn.addEventListener('click', () => {
         const newSettings = {
             lang: langSel.value,
+            targetCurrency: targetSel.value,
             rateSource: sourceSel.value,
-            dashboardBases: dashSels.map(s => s.value),
-            currencyMode: isAuto ? 'auto' : 'manual'
+            dashboardBases: dashSels.map(s => s.value)
         };
-        if (!isAuto) {
-            newSettings.targetCurrency = targetSel.value;
-        }
-
-        if (isAuto) {
-            try {
-                const response = await chrome.runtime.sendMessage({ action: "DETECT_COUNTRY_CURRENCY" });
-                if (response && response.success) {
-                    newSettings.targetCurrency = response.currency;
-                    newSettings.detectedCountryCode = response.countryCode;
-                }
-            } catch (e) {
-                console.warn("Auto-detect during save failed:", e);
-            }
-        }
-
         chrome.storage.local.set(newSettings, () => {
             saveBtn.textContent = i18n('ready');
             setTimeout(() => {
                 saveBtn.textContent = i18n('btn_save');
                 state.lang = newSettings.lang;
-                state.currencyMode = newSettings.currencyMode;
+                state.targetCurrency = newSettings.targetCurrency;
                 state.rateSource = newSettings.rateSource;
                 state.dashboardBases = newSettings.dashboardBases;
-                if (newSettings.targetCurrency) {
-                    state.targetCurrency = newSettings.targetCurrency;
-                }
-                if (newSettings.detectedCountryCode) {
-                    state.detectedCountryCode = newSettings.detectedCountryCode;
-                }
 
                 currentLang = state.lang === 'auto' ? (navigator.language.split('-')[0] || 'en') : state.lang;
                 if (currentLang === 'ua') currentLang = 'uk';
@@ -294,46 +197,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, 1000);
         });
     });
-
-    // Auto-detect Button Click Handler
-    const autoDetectBtn = document.getElementById('btn-auto-detect');
-    if (autoDetectBtn) {
-        autoDetectBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const originalText = autoDetectBtn.textContent;
-            autoDetectBtn.textContent = '...';
-            try {
-                const response = await chrome.runtime.sendMessage({ action: "DETECT_COUNTRY_CURRENCY" });
-                if (response && response.success) {
-                    state.targetCurrency = response.currency;
-                    state.detectedCountryCode = response.countryCode;
-                    state.currencyMode = 'auto';
-
-                    targetSel.value = 'auto';
-                    await chrome.storage.local.set({
-                        currencyMode: 'auto',
-                        targetCurrency: response.currency,
-                        detectedCountryCode: response.countryCode
-                    });
-
-                    autoDetectBtn.textContent = '✓ ' + (response.countryCode || '');
-                    setTimeout(() => {
-                        autoDetectBtn.textContent = originalText;
-                    }, 2000);
-
-                    translateUI();
-                    loadDashboard();
-                } else {
-                    autoDetectBtn.textContent = '❌';
-                    setTimeout(() => { autoDetectBtn.textContent = originalText; }, 2000);
-                }
-            } catch (err) {
-                console.error("Auto-detect click failed:", err);
-                autoDetectBtn.textContent = '❌';
-                setTimeout(() => { autoDetectBtn.textContent = originalText; }, 2000);
-            }
-        });
-    }
 
     // Load Dashboard
     const loadDashboard = async () => {
@@ -381,99 +244,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     loadDashboard();
 
-    // Plan Selection - Removed for Free Version
-
-    // Функция обновления тарифа во всем интерфейсе
-    const applyTierChange = (newTier) => {
-        state.appTier = 'pro_plus';
-        trialBanner.style.display = 'none';
-        activeTier = 'pro_plus';
-        updateDashboardSels(activeTier);
-        loadDashboard();
-    };
-
-    // License Activation via Server API
-    const activateBtn = document.getElementById('btn-activate');
-    const licenseInput = document.getElementById('input-license');
-
-    // Предзаполняем поле, если ключ уже сохранен
-    if (licenseInput && state.licenseKey) {
-        licenseInput.value = state.licenseKey;
-    }
-
-    // Функция активации лицензии с проверкой сети и сохранением в локальное хранилище
-    async function verifyAndActivateLicense(licenseKey) {
-        if (!licenseKey) {
-            alert('Пожалуйста, введите лицензионный ключ');
-            return;
-        }
-
-        const originalText = activateBtn.textContent;
-        activateBtn.textContent = '...';
-        activateBtn.disabled = true;
-
-        try {
-            // Запрос на сервер /api/verify (адрес берется из API_URL / constants.ts)
-            const response = await fetch(API_URL + '/api/verify', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ licenseKey, installId: state.installId })
-            });
-
-            if (!response.ok) {
-                if (response.status === 429) {
-                    throw new Error('Слишком много запросов. Пожалуйста, подождите немного перед повторной попыткой.');
-                }
-                throw new Error('Ошибка сервера (Код ' + response.status + '). Пожалуйста, попробуйте позже.');
-            }
-
-            const data = await response.json();
-
-            if (data.success && data.tier && data.token) {
-                // Сохраняем статус лицензии и сам ключ в chrome.storage.local
-                chrome.storage.local.remove(['appTier']); // Очищаем старое незащищенное поле
-                chrome.storage.local.set({ sessionToken: data.token, licenseKey: licenseKey }, () => {
-                    const successMsg = '✅ Лицензия успешно активирована! Ваш тариф: ' + data.tier.toUpperCase();
-                    alert(successMsg);
-                    
-                    // Обновляем локальное состояние расширения и интерфейс
-                    applyTierChange(data.tier);
-                });
-            } else {
-                const errorMessage = data.error || 'Неверный или истекший лицензионный ключ';
-                alert('❌ ' + errorMessage);
-            }
-        } catch (err) {
-            console.error('Ошибка при верификации лицензии:', err);
-            // Обработка сетевых ошибок
-            if (err.message && (err.message.includes('Ошибка сервера') || err.message.includes('Слишком много'))) {
-                alert('❌ ' + err.message);
-            } else {
-                alert('❌ Ошибка сети. Не удалось подключиться к серверу верификации. Проверьте соединение с интернетом.');
-            }
-        } finally {
-            activateBtn.textContent = originalText;
-            activateBtn.disabled = false;
-        }
-    }
-
-    if (activateBtn && licenseInput) {
-        activateBtn.addEventListener('click', async () => {
-            const licenseKey = licenseInput.value.trim();
-            await verifyAndActivateLicense(licenseKey);
+    // All features are unlocked in this open source edition
+    const feedbackBtn = document.getElementById('feedback-btn');
+    if (feedbackBtn) {
+        feedbackBtn.addEventListener('click', () => {
+            chrome.tabs.create({ url: API_URL + '/feedback?v=' + encodeURIComponent(CONFIG.VERSION) + '&tier=' + encodeURIComponent(activeTier) + '&installId=' + encodeURIComponent(state.installId) });
         });
     }
-
-    document.getElementById('donate-btn').addEventListener('click', () => {
-        chrome.tabs.create({ url: API_URL + '/checkout?type=donation' });
-    });
-
-    document.getElementById('feedback-btn').addEventListener('click', () => {
-        chrome.tabs.create({ url: API_URL + '/feedback?v=' + encodeURIComponent(CONFIG.VERSION) + '&tier=' + encodeURIComponent(activeTier) + '&installId=' + encodeURIComponent(state.installId) });
-    });
 
     document.getElementById('update-link').addEventListener('click', async (e) => {
         e.preventDefault();

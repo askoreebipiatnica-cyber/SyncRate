@@ -3,7 +3,7 @@ export const templates = {
   "manifest_version": 3,
   "name": "SyncRate: Currency & Crypto Converter",
   "version": "15.0",
-  "description": "Мгновенная конвертация. Нацбанки и Крипта. Внимание: Реверс-инжиниринг и взлом PRO версии преследуется по закону (DMCA).",
+  "description": "Мгновенная конвертация валют и криптовалют при выделении текста. Полностью бесплатное расширение с открытым исходным кодом.",
   "permissions":["storage", "alarms"],
   "host_permissions":[
     "https://open.er-api.com/*",
@@ -31,15 +31,12 @@ SyncRate: Конвертер Валют и Крипты[КРАТКОЕ ОПИС�
 [ПОЛНОЕ ОПИСАНИЕ]
 SyncRate — это ультимативный финансовый инструмент для браузера. Забудьте о том, чтобы копировать цифры и открывать новые вкладки с калькулятором. Просто выделите любую сумму (например, "$ 5,040" или "0.5 BTC") на любом сайте, и SyncRate мгновенно покажет её эквивалент в вашей национальной валюте прямо возле курсора!
 
-🌟 ГЛАВНЫЕ ФУНКЦИИ (FREE):
-- Конвертация из USD в вашу национальную валюту.
-- Умный парсинг: распознает суффиксы K, M, B, тыс, млн, млрд, трлн.
-- Удобный встроенный дашборд с главными валютными парами.
-
-💎 ФУНКЦИИ ВЕРСИИ PRO+:
+🌟 ГЛАВНЫЕ ФУНКЦИИ (ПОЛНОСТЬЮ БЕСПЛАТНО):
 - 160+ фиатных валют со всего мира.
-- Интеграция с Официальными Национальными Банками (ЦБ РФ, НБУ, НБРБ, ЕЦБ) для точных налоговых и бухгалтерских расчетов.
-- Поддержка Топ-30 криптовалют (BTC, ETH, SOL, USDT и др.) с обновлением курса каждую минуту!
+- Интеграция с Официальными Национальными Банками (ЦБ РФ, НБУ, НБРБ, ЕЦБ) для точных расчетов.
+- Поддержка Топ-30 криптовалют (BTC, ETH, SOL, USDT и др.) с обновлением курса в реальном времени.
+- Умный парсинг: распознает суффиксы K, M, B, тыс, млн, млрд, трлн и любые символы валют.
+- Удобный встроенный дашборд с главными валютными парами.
 - Умная Темная Тема (Dark Mode).
 - Перевод интерфейса на 10 языков (включая Русский, Английский, Китайский, Немецкий, Казахский).
 
@@ -54,15 +51,12 @@ Highlight any price on any website to instantly convert it to your local currenc
 [FULL DESCRIPTION]
 SyncRate is the ultimate financial tool for your browser. Forget about copying numbers and opening new tabs with calculators. Simply highlight any amount (e.g., "$ 5,040" or "0.5 BTC") on any website, and SyncRate will instantly show its equivalent in your national currency right next to your cursor!
 
-🌟 CORE FEATURES (FREE):
-- Convert from USD to your local currency.
+🌟 CORE FEATURES (100% FREE & OPEN SOURCE):
+- 160+ fiat currencies from around the world.
+- Integration with Official National Banks (ECB, CBRF, NBU, NBRB) for precise calculations.
+- Support for Top-30 Cryptocurrencies (BTC, ETH, SOL, USDT, etc.) with rates updated in real-time!
 - Smart parsing: understands suffixes like K, M, B, millions, billions.
 - Convenient built-in dashboard with main currency pairs.
-
-💎 PRO+ FEATURES:
-- 160+ fiat currencies from around the world.
-- Integration with Official National Banks (ECB, CBRF, NBU, NBRB) for precise accounting and tax calculations.
-- Support for Top-30 Cryptocurrencies (BTC, ETH, SOL, USDT, etc.) with rates updated every minute!
 - Smart Dark Mode.
 - Interface translated into 10 languages (including English, Russian, Chinese, German, Spanish).
 
@@ -114,12 +108,10 @@ SyncRate respects your privacy. The extension DOES NOT read passwords, credit ca
     </style>
 </head>
 <body>
-    <div id="trial-banner" class="trial-banner"></div>
     <div class="header">
         <h2>⚡ SyncRate</h2>
         <div class="header-actions">
             <button class="icon-btn" id="feedback-btn" title="Feedback"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></button>
-            <button class="icon-btn" id="donate-btn" title="Donate"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
             <button class="icon-btn" id="theme-btn" title="Dark/Light Mode"><svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
         </div>
     </div>
@@ -127,7 +119,6 @@ SyncRate respects your privacy. The extension DOES NOT read passwords, credit ca
     <div class="tabs">
         <div class="tab active" data-target="tab-dash"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg><span data-i18n="tab_rates">Курсы</span></div>
         <div class="tab" data-target="tab-settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span data-i18n="tab_settings">Настройки</span></div>
-        <div class="tab" data-target="tab-plans"><svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span data-i18n="tab_plans">Тарифы</span></div>
     </div>
     
     <div id="tab-dash" class="tab-content active">
@@ -150,7 +141,7 @@ SyncRate respects your privacy. The extension DOES NOT read passwords, credit ca
                 <option value="RUB" data-i18n="cur_rub">🇷🇺 Российский рубль (RUB)</option><option value="EUR" data-i18n="cur_eur">🇪🇺 Euro (EUR)</option><option value="USD" data-i18n="cur_usd">🇺🇸 US Dollar (USD)</option><option value="CNY" data-i18n="cur_cny">🇨🇳 Chinese Yuan (CNY)</option><option value="KZT" data-i18n="cur_kzt">🇰🇿 Казахский тенге (KZT)</option><option value="UAH" data-i18n="cur_uah">🇺🇦 Українська гривня (UAH)</option><option value="BYN" data-i18n="cur_byn">🇧🇾 Беларускі рубель (BYN)</option><option value="GBP" data-i18n="cur_gbp">🇬🇧 British Pound (GBP)</option>
             </select>
         </div>
-        <div class="setting-group"><label><span data-i18n="lbl_source">Источник курса</span> <span class="badge pro-plus">PRO+</span></label>
+        <div class="setting-group"><label><span data-i18n="lbl_source">Источник курса</span></label>
             <select id="sel-source">
                 <option value="market" data-i18n="opt_market">🌐 Рыночный (Биржи)</option>
                 <option value="official" data-i18n="opt_official">🏛 Официальный Нацбанк</option>
@@ -161,28 +152,14 @@ SyncRate respects your privacy. The extension DOES NOT read passwords, credit ca
         </div>
         <button class="btn-save" id="btn-save-settings"><span data-i18n="btn_save">Сохранить</span></button>
         <div style="margin-top: 20px; font-size: 10px; color: var(--subtext); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px;">
-            <span>SyncRate Enterprise v15.0</span>
+            <span>SyncRate Community v15.0</span>
             <a href="#" id="update-link" style="color: var(--primary); text-decoration: none; font-weight: 700;" data-i18n="check_updates">Проверить обновления</a>
             <span id="new-version-badge" class="update-badge">NEW</span>
         </div>
     </div>
-    
-    <div id="tab-plans" class="tab-content">
-        <label class="plan" id="plan-basic"><input type="radio" name="tier" value="basic"><div class="plan-header"><div class="plan-title" data-i18n="tier_basic">Базовая</div><div>0 $</div></div><p class="plan-desc" data-i18n="desc_basic">Конвертация только из USD.</p></label>
-        <label class="plan" id="plan-pro"><input type="radio" name="tier" value="pro"><div class="plan-header"><div class="plan-title">PRO <span class="badge pro">PRO</span></div><div style="color:var(--primary); font-weight:800;">2 $ <span data-i18n="lifetime">навсегда</span></div></div><p class="plan-desc" data-i18n="desc_pro">Топ-8 фиатных валют мира.</p></label>
-        <label class="plan" id="plan-pro_plus"><input type="radio" name="tier" value="pro_plus"><div class="plan-header"><div class="plan-title">PRO+ <span class="badge pro-plus">PRO+</span></div><div style="color:#e53935; font-weight:800;">5 $ <span data-i18n="lifetime">навсегда</span></div></div><p class="plan-desc" data-i18n="desc_pro_plus">Нацбанки СНГ, Все валюты, Топ-30 Крипты.</p></label>
-        <button class="btn-save" id="btn-upgrade" style="display:none; background:#f39c12;" data-i18n="btn_pay">💳 Оплатить доступ</button>
-        <div style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
-            <label style="display: block; font-size: 11px; color: var(--text); margin-bottom: 6px;" data-i18n="lbl_license">Активация лицензии</label>
-            <div style="display: flex; gap: 6px;">
-                <input type="text" id="input-license" placeholder="PRO-XXXXXX / PLUS-XXXXXX" style="flex: 1; padding: 6px 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-family: monospace; font-size: 11px;">
-                <button id="btn-activate" style="padding: 6px 12px; background: var(--primary); border: none; border-radius: 6px; color: white; font-weight: 600; font-size: 11px; cursor: pointer;" data-i18n="btn_activate">Активировать</button>
-            </div>
-        </div>
-    </div>
     <div class="footer">
-        v15.0 | SyncRate Enterprise
-        <span class="legal">© 2026 SyncRate. Protected by DMCA laws. Piracy prohibited.</span>
+        v15.0 | SyncRate Community Edition
+        <span class="legal">© 2026 SyncRate. Open Source under Apache-2.0 License.</span>
     </div>
     <script src="popup.js"></script>
 </body>
@@ -330,21 +307,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function getTierFromToken(token) {
-        const VALID_TIERS = ['basic', 'pro', 'pro_plus'];
-        if (!token) return 'basic';
-        try {
-            const [header, payload, sig] = token.split('.');
-            if (!header || !payload || !sig) return 'basic';
-            const data = JSON.parse(atob(payload));
-            if (data.exp < Date.now() / 1000) return 'basic'; // истёк
-            if (!VALID_TIERS.includes(data.tier)) return 'basic'; // невалидное значение
-            return data.tier;
-        } catch { return 'basic'; }
+        return 'pro_plus';
     }
 
-    // Декодируем тариф из токена или используем обратную совместимость
-    const initialTier = state.sessionToken ? getTierFromToken(state.sessionToken) : 'basic';
-    state.appTier = initialTier;
+    state.appTier = 'pro_plus';
 
     let currentLang = state.lang === 'auto' ? (navigator.language.split('-')[0] || 'en') : state.lang;
     if (currentLang === 'ua') currentLang = 'uk';
@@ -560,177 +526,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     loadDashboard();
 
-    // Plan Selection
-    const planRadios = document.querySelectorAll('input[name="tier"]');
-    planRadios.forEach(radio => {
-        if (radio.value === state.appTier) {
-            radio.checked = true;
-            radio.closest('.plan').classList.add('active');
-            upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
-        }
-        radio.addEventListener('change', () => {
-            document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
-            radio.closest('.plan').classList.add('active');
-            upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
-        });
-    });
-
-    // Функция обновления тарифа во всем интерфейсе
-    const applyTierChange = (newTier) => {
-        state.appTier = newTier;
-        planRadios.forEach(radio => {
-            if (radio.value === state.appTier) {
-                radio.checked = true;
-                document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
-                radio.closest('.plan').classList.add('active');
-                upgradeBtn.style.display = radio.value === 'basic' ? 'none' : 'block';
-            }
-        });
-        if (state.appTier !== 'basic') {
-            trialBanner.style.display = 'none';
-        }
-        activeTier = state.appTier;
-        updateDashboardSels(activeTier);
-        loadDashboard();
-    };
-
-    // Handle Buy / Real Redirect to Stripe Checkout or Billing portal
-    upgradeBtn.addEventListener('click', () => {
-        const checked = document.querySelector('input[name="tier"]:checked');
-        if (checked) {
-            const selectedTier = checked.value;
-            chrome.tabs.create({ url: API_URL + '/checkout?tier=' + selectedTier });
-        }
-    });
-
-    // License Activation via Server API
-    const activateBtn = document.getElementById('btn-activate');
-    const licenseInput = document.getElementById('input-license');
-
-    // Предзаполняем поле, если ключ уже сохранен
-    if (licenseInput && state.licenseKey) {
-        licenseInput.value = state.licenseKey;
-    }
-
-    // Фоновая тихая валидация токена сессии или ключа на сервере при каждом открытии попапа
-    if (state.sessionToken || state.licenseKey) {
-        const bodyObj = { installId: state.installId };
-        let endpoint = '/api/verify';
-        if (state.sessionToken) {
-            bodyObj.token = state.sessionToken;
-            endpoint = '/api/session';
-        } else {
-            bodyObj.licenseKey = state.licenseKey;
-        }
-
-        fetch(API_URL + endpoint, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(bodyObj)
-        })
-        .then(res => {
-            if (res.ok) return res.json();
-            throw new Error('Network or server error');
-        })
-        .then(data => {
-            if (data.success && data.tier && data.token) {
-                chrome.storage.local.remove(['appTier']);
-                chrome.storage.local.set({ sessionToken: data.token }, () => {
-                    applyTierChange(data.tier);
-                });
-            } else {
-                // Сервер отклонил токен или ключ -> сброс в basic
-                chrome.storage.local.remove(['appTier']);
-                chrome.storage.local.set({ sessionToken: '', licenseKey: '' }, () => {
-                    applyTierChange('basic');
-                    if (licenseInput) {
-                        licenseInput.value = '';
-                    }
-                });
-            }
-        })
-        .catch(err => {
-            console.warn('Silent session validation failed (offline or server error):', err);
-            // При ошибке сети/офлайн-режиме мягко доверяем локальному кэшу (продолжаем работать в офлайне)
+    // All features are unlocked in this open source edition
+    const feedbackBtn = document.getElementById('feedback-btn');
+    if (feedbackBtn) {
+        feedbackBtn.addEventListener('click', () => {
+            chrome.tabs.create({ url: API_URL + '/feedback?v=' + encodeURIComponent(CONFIG.VERSION) + '&tier=' + encodeURIComponent(activeTier) + '&installId=' + encodeURIComponent(state.installId) });
         });
     }
-
-    // Функция активации лицензии с проверкой сети и сохранением в локальное хранилище
-    async function verifyAndActivateLicense(licenseKey) {
-        if (!licenseKey) {
-            alert('Пожалуйста, введите лицензионный ключ');
-            return;
-        }
-
-        const originalText = activateBtn.textContent;
-        activateBtn.textContent = '...';
-        activateBtn.disabled = true;
-
-        try {
-            // Запрос на сервер /api/verify (адрес берется из API_URL / constants.ts)
-            const response = await fetch(API_URL + '/api/verify', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ licenseKey, installId: state.installId })
-            });
-
-            if (!response.ok) {
-                if (response.status === 429) {
-                    throw new Error('Слишком много запросов. Пожалуйста, подождите немного перед повторной попыткой.');
-                }
-                throw new Error('Ошибка сервера (Код ' + response.status + '). Пожалуйста, попробуйте позже.');
-            }
-
-            const data = await response.json();
-
-            if (data.success && data.tier && data.token) {
-                // Сохраняем статус лицензии и сам ключ в chrome.storage.local
-                chrome.storage.local.remove(['appTier']); // Очищаем старое незащищенное поле
-                chrome.storage.local.set({ sessionToken: data.token, licenseKey: licenseKey }, () => {
-                    const successMsg = '✅ Лицензия успешно активирована! Ваш тариф: ' + data.tier.toUpperCase();
-                    alert(successMsg);
-                    
-                    // Обновляем локальное состояние расширения и интерфейс
-                    applyTierChange(data.tier);
-                });
-            } else {
-                const errorMessage = data.error || 'Неверный или истекший лицензионный ключ';
-                alert('❌ ' + errorMessage);
-            }
-        } catch (err) {
-            console.error('Ошибка при верификации лицензии:', err);
-            // Обработка сетевых ошибок
-            if (err.message && (err.message.includes('Ошибка сервера') || err.message.includes('Слишком много'))) {
-                alert('❌ ' + err.message);
-            } else {
-                alert('❌ Ошибка сети. Не удалось подключиться к серверу верификации. Проверьте соединение с интернетом.');
-            }
-        } finally {
-            activateBtn.textContent = originalText;
-            activateBtn.disabled = false;
-        }
-    }
-
-    if (activateBtn && licenseInput) {
-        activateBtn.addEventListener('click', async () => {
-            const licenseKey = licenseInput.value.trim();
-            await verifyAndActivateLicense(licenseKey);
-        });
-    }
-
-    document.getElementById('donate-btn').addEventListener('click', () => {
-        chrome.tabs.create({ url: API_URL + '/checkout?type=donation' });
-    });
-
-    document.getElementById('feedback-btn').addEventListener('click', () => {
-        chrome.tabs.create({ url: API_URL + '/feedback?v=' + encodeURIComponent(CONFIG.VERSION) + '&tier=' + encodeURIComponent(activeTier) + '&installId=' + encodeURIComponent(state.installId) });
-    });
 
     document.getElementById('update-link').addEventListener('click', async (e) => {
         e.preventDefault();
@@ -1113,16 +915,7 @@ if (typeof module !== 'undefined' && typeof exports !== 'undefined') {
 }
 `,
   content: `function getTierFromToken(token) {
-    const VALID_TIERS = ['basic', 'pro', 'pro_plus'];
-    if (!token) return 'basic';
-    try {
-        const [, payload, sig] = token.split('.');
-        if (!payload || !sig) return 'basic';
-        const data = JSON.parse(atob(payload));
-        if (data.exp < Date.now() / 1000) return 'basic';
-        if (!VALID_TIERS.includes(data.tier)) return 'basic';
-        return data.tier;
-    } catch { return 'basic'; }
+    return 'pro_plus';
 }
 const CRYPTO_MAP={'BTC':'BTC','BITCOIN':'BTC','БИТКОИН':'BTC','БИТОК':'BTC','ETH':'ETH','ETHEREUM':'ETH','ЭФИРИУМ':'ETH','ЭФИР':'ETH','USDT':'USDT','TETHER':'USDT','ТЕЗЕР':'USDT','BNB':'BNB','BINANCECOIN':'BNB','SOL':'SOL','SOLANA':'SOL','СОЛАНА':'SOL','XRP':'XRP','RIPPLE':'XRP','РИПЛ':'XRP','USDC':'USDC','USDCOIN':'USDC','ADA':'ADA','CARDANO':'ADA','КАРДАНО':'ADA','AVAX':'AVAX','AVALANCHE':'AVAX','АВАКС':'AVAX','DOGE':'DOGE','DOGECOIN':'DOGE','ДОГИКОИН':'DOGE','ДОГИ':'DOGE','DOT':'DOT','POLKADOT':'DOT','ПОЛКАДОТ':'DOT','TRX':'TRX','TRON':'TRX','ТРОН':'TRX','LINK':'LINK','CHAINLINK':'LINK','ЛИНК':'LINK','MATIC':'MATIC','POLYGON':'MATIC','МАТИК':'MATIC','TON':'TON','TONCOIN':'TON','ТОН':'TON','SHIB':'SHIB','SHIBAINU':'SHIB','ШИБА':'SHIB','LTC':'LTC','LITECOIN':'LTC','ЛАЙТКОИН':'LTC','BCH':'BCH','BITCOINCASH':'BCH','БИТКОИНКЕШ':'BCH','SAT':'SAT','SATOSHI':'SAT','САТОШИ':'SAT','WAVES':'WAVES','ВЕЙВС':'WAVES'};const FIAT_MAP={'$':'USD','USD':'USD','€':'EUR','EUR':'EUR','£':'GBP','GBP':'GBP','¥':'CNY','CNY':'CNY','JPY':'JPY','₣':'CHF','FR.':'CHF','CHF':'CHF','A$':'AUD','AUD':'AUD','C$':'CAD','CAD':'CAD','₺':'TRY','TRY':'TRY','AED':'AED','₴':'UAH','UAH':'UAH','ГРН':'UAH','ГРИВНА':'UAH','ГРИВЕН':'UAH','₸':'KZT','KZT':'KZT','ТНГ':'KZT','ТЕНГЕ':'KZT','₼':'AZN','AZN':'AZN','BGN':'BGN','LEV':'BGN','BR':'BYN','BYN':'BYN','БР':'BYN','БЕЛРУБ':'BYN','BYR':'BYN','РБ':'BYN','₹':'INR','INR':'INR','KGS':'KGS','₩':'KRW','KRW':'KRW','L':'MDL','MDL':'MDL','SM':'TJS','TJS':'TJS','TMT':'TMT','UZS':'UZS','SUM':'UZS','₪':'ILS','ILS':'ILS','¢':'USD','₽':'RUB','Р':'RUB','РУБ':'RUB','РУБ.':'RUB','РУБЛЕЙ':'RUB','RUB':'RUB','ДОЛЛАР':'USD','ДОЛЛАРОВ':'USD','ЕВРО':'EUR','ЮАНЬ':'CNY','ИЕНА':'JPY','ТЕНГЕ':'KZT'};const CURRENCY_MAP={...FIAT_MAP,...CRYPTO_MAP};const CRYPTO_CODES=Object.values(CRYPTO_MAP);const PRO_CURRENCIES=['USD','EUR','GBP','CHF','JPY','CAD','CNY','AED'];let hideTimeout=null,currentTooltip=null;document.addEventListener('mouseup',handleSelection);document.addEventListener('mousedown',(e)=>{if(currentTooltip&&currentTooltip.contains(e.target))return;removeTooltip();});chrome.runtime.onMessage.addListener((message,sender,sendResponse)=>{if(message&&message.action==="RENDER_IN_TOP_FRAME"){const isIframe=window!==window.top;if(!isIframe){processSelectionText(message.text,0,0,true);}}});async function handleSelection(event){try{if(!chrome.runtime?.id)return;const selection=window.getSelection();let text=selection.toString();text=text.replace(/[\\u00A0\\u202F\\u200B-\\u200D\\uFEFF]/g,' ').trim();if(!text||text.length>50)return;function isSelectionInSensitiveField(){const sel=window.getSelection();if(!sel.rangeCount)return false;const node=sel.getRangeAt(0).commonAncestorContainer;const el=node.nodeType===1?node:node.parentElement;if(!el)return false;if(el.closest('[contenteditable="true"]'))return true;const closestInput=el.closest('input, textarea');if(!closestInput)return false;const type=(closestInput.type||'').toLowerCase();const name=(closestInput.name||'').toLowerCase();const id=(closestInput.id||'').toLowerCase();return type==='password'||type==='hidden'||name.includes('cc')||name.includes('card')||name.includes('cvv')||name.includes('password')||name.includes('secret')||id.includes('cc')||id.includes('card')||id.includes('cvv')||id.includes('password')||id.includes('secret');}if(isSelectionInSensitiveField())return;const parseResult=parseCurrencyString(text);if(!parseResult)return;const isIframe=window!==window.top;if(isIframe){chrome.runtime.sendMessage({action:"RENDER_IN_TOP_FRAME",text:text,clientX:event.clientX,clientY:event.clientY}).catch(()=>{});return;}await processSelectionText(text,event.pageX,event.pageY,false);}catch(e){}}async function processSelectionText(text,x,y,fromIframe=false){try{const parseResult=parseCurrencyString(text);if(!parseResult)return;const settings=await chrome.storage.local.get({sessionToken:'',targetCurrency:'RUB',rateSource:'market',lang:'auto'});const tierFromToken = getTierFromToken(settings.sessionToken);const activeTier = tierFromToken;let currentLang=settings.lang==='auto'?(navigator.language.split('-')[0]||'en'):settings.lang;if(currentLang==='ua')currentLang='uk';const C_DICT={'uk':{lock:'Блокування',req:'Потрібен тариф'},'ru':{lock:'Блокировка',req:'Требуется тариф'},'en':{lock:'Locked',req:'Requires plan'},'de':{lock:'Gesperrt',req:'Erfordert Plan'},'es':{lock:'Bloqueado',req:'Requiere plan'},'zh':{lock:'已锁定',req:'需要方案'},'kk':{lock:'Блокталған',req:'Тариф қажет'}};const m=C_DICT[currentLang]||C_DICT['en'];if(parseResult.isSat){showTooltip(x,y,parseResult.amount,"Live","BTC",currentLang,fromIframe);return;}const targetCurrencyUpper=(settings.targetCurrency||"RUB").trim().toUpperCase();if(parseResult.currency===targetCurrencyUpper){showTooltip(x,y,parseResult.amount,"Live",targetCurrencyUpper,currentLang,fromIframe);return;}const isByDomain=window.location.hostname.endsWith('.by');const allowedBasic=['USD','EUR','RUB'];if(isByDomain)allowedBasic.push('BYN');if(activeTier==='basic'&&!allowedBasic.includes(parseResult.currency))return showUpsell(x,y,parseResult.currency,"PRO",m,fromIframe);if(activeTier==='pro'&&!PRO_CURRENCIES.includes(parseResult.currency))return showUpsell(x,y,parseResult.currency,"PRO+",m,fromIframe);const actualSource=activeTier==='pro_plus'?settings.rateSource:'market';const res=await chrome.runtime.sendMessage({action:"GET_RATE",from:parseResult.currency,to:targetCurrencyUpper,source:actualSource});if (res && res.success && res.rate) {
     const displayDate = res.fallback ? (res.date + ' ⚠️') : res.date;

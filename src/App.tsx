@@ -8,10 +8,9 @@ import {
   Download, ShieldCheck, RefreshCw, Globe, Sparkles, CheckCircle2, 
   AlertCircle, FileJson, FileCode, Layout, MousePointer2, 
   Coins, Landmark, ChevronRight, Languages, Star, Lock, DollarSign,
-  Monitor, Laptop, Terminal, Chrome, Cpu, Info
+  Monitor, Laptop, Terminal, Chrome, Cpu, Info, Heart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { TrialModal } from './components/TrialModal';
 
 type Language = 'ru' | 'en' | 'zh' | 'kk' | 'de' | 'uk' | 'es';
 
@@ -75,12 +74,12 @@ const translations = {
     instruction_step_5: 'Нажмите кнопку "Загрузить распакованное расширение" (Load unpacked) и выберите папку с расширением.',
     instruction_step_6: 'Закрепите меню расширения в верхней панели браузера для быстрого доступа.',
     instruction_step_7: 'Все настройки расширения (валюта, язык, источник курса) находятся в этом меню.',
-    instruction_step_8: 'Обновления будут происходить автоматически через Chrome Web Store.',
+    instruction_step_8: 'Новые версии публикуются в официальном репозитории GitHub. Для получения обновлений скачайте последнюю версию расширения из раздела Releases.',
     feedback_title: 'Обратная связь',
     feedback_desc: 'Есть идеи по улучшению или нашли ошибку? Мы всегда рады критике и похвале!',
     btn_feedback: 'Написать разработчику',
     update_title: 'Авто-обновления',
-    update_desc: 'Обновления происходят автоматически через Chrome Web Store',
+    update_desc: 'Новые версии публикуются в официальном репозитории GitHub. Для получения обновлений скачайте последнюю версию расширения из раздела Releases.',
     faq_title: 'Как активировать PRO?',
     faq_step_1: 'Шаг 1: Установите расширение из официального магазина Chrome Web Store.',
     faq_step_2: 'Шаг 2: Приобретите лицензионный ключ на этом сайте.',
@@ -167,12 +166,12 @@ const translations = {
     instruction_step_5: 'Click "Load unpacked" and select the folder containing the extension.',
     instruction_step_6: 'Pin the extension to the top toolbar for quick access.',
     instruction_step_7: 'All settings (currency, language, rate source) are located in this menu.',
-    instruction_step_8: 'Updates will happen automatically through the Chrome Web Store.',
+    instruction_step_8: 'New versions are published in the official GitHub repository. To get updates, download the latest version from the Releases section.',
     feedback_title: 'Feedback',
     feedback_desc: 'Have ideas for improvement or found a bug? We always welcome criticism and praise!',
     btn_feedback: 'Contact Developer',
     update_title: 'Auto-Updates',
-    update_desc: 'Updates happen automatically through the Chrome Web Store.',
+    update_desc: 'New versions are published in the official GitHub repository. To get updates, download the latest version from the Releases section.',
     faq_title: 'How to activate PRO?',
     faq_step_1: 'Step 1: Install the extension from the official Chrome Web Store.',
     faq_step_2: 'Step 2: Purchase a license key on this website.',
@@ -259,12 +258,12 @@ const translations = {
     instruction_step_5: '点击“加载已解压的扩展程序”并选择包含扩展程序的文件夹。',
     instruction_step_6: '将扩展程序固定在顶部工具栏以便快速访问。',
     instruction_step_7: '所有设置（货币、语言、汇率来源）都位于此菜单中。',
-    instruction_step_8: '更新将通过 Chrome Web Store 自动进行。',
+    instruction_step_8: '新版本发布在 GitHub 官方仓库中。要获取更新，请从 Releases 页面下载最新版本的扩展程序。',
     feedback_title: '反馈',
-    feedback_desc: '有改进建议 or 发现错误？我们随时欢迎您的批评和表扬！',
+    feedback_desc: '有改进建议 or 发现错误？我们随时欢迎您的批评 and 表扬！',
     btn_feedback: '联系开发人员',
     update_title: '自动更新',
-    update_desc: '更新通过 Chrome Web Store 自动进行。',
+    update_desc: '新版本发布在 GitHub 官方仓库中。要获取更新，请从 Releases 页面下载最新版本的扩展程序。',
     faq_title: '如何激活 PRO？',
     faq_step_1: '步骤 1：从官方 Chrome Web Store 安装扩展程序。',
     faq_step_2: '步骤 2：在此网站上购买授权密钥。',
@@ -341,12 +340,12 @@ const translations = {
     instruction_step_5: '"Жүктелген кеңейтімді жүктеу" (Load unpacked) батырмасын басып, кеңейтімі бар қалтаны таңдаңыз.',
     instruction_step_6: 'Жылдам қол жеткізу үшін кеңейтімді жоғарғы панельге бекітіңіз.',
     instruction_step_7: 'Кеңейтімнің барлық параметрлері (валюта, тіл, курс көзі) осы мәзірде орналасқан.',
-    instruction_step_8: 'Жаңартулар Chrome Web Store арқылы автоматты түрде орындалады.',
+    instruction_step_8: 'Жаңа нұсқалар ресми GitHub репозиторийінде жарияланады. Жаңартуларды алу үшін Releases бөлімінен кеңейтімнің соңғы нұсқасын жүктеп алыңыз.',
     feedback_title: 'Кері байланыс',
     feedback_desc: 'Жақсарту бойынша идеяларыңыз бар ма немесе қате таптыңыз ба? Біз әрқашан сын мен мақтауға қуаныштымыз!',
     btn_feedback: 'Әзірлеушіге жазу',
     update_title: 'Авто-жаңартулар',
-    update_desc: 'Жаңартулар Chrome Web Store арқылы автоматты түрде орындалады.',
+    update_desc: 'Жаңа нұсқалар ресми GitHub репозиторийінде жарияланады. Жаңартуларды алу үшін Releases бөлімінен кеңейтімнің соңғы нұсқасын жүктеп алыңыз.',
     faq_title: 'PRO-ды қалай белсендіруге болады?',
     faq_step_1: '1-қадам: Кеңейтімді ресми Chrome Web Store дүкенінен орнатыңыз.',
     faq_step_2: '2-қадам: Осы сайттан лицензиялық кілтті сатып алыңыз.',
@@ -423,12 +422,12 @@ const translations = {
     instruction_step_5: 'Klicken Sie auf "Entpackte Erweiterung laden" und wählen Sie den Ordner mit der Erweiterung aus.',
     instruction_step_6: 'Fixieren Sie die Erweiterung in der oberen Symbolleiste für schnellen Zugriff.',
     instruction_step_7: 'Alle Einstellungen (Währung, Sprache, Kursquelle) befinden sich in diesem Menü.',
-    instruction_step_8: 'Updates erfolgen automatisch über den Chrome Web Store.',
+    instruction_step_8: 'Neue Versionen werden im offiziellen GitHub-Repository veröffentlicht. Um Updates zu erhalten, laden Sie die neueste Version aus dem Bereich Releases herunter.',
     feedback_title: 'Feedback',
     feedback_desc: 'Haben Sie Verbesserungsvorschläge oder einen Fehler gefunden? Wir freuen uns immer über Kritik und Lob!',
     btn_feedback: 'Entwickler kontaktieren',
     update_title: 'Auto-Updates',
-    update_desc: 'Updates erfolgen automatisch über den Chrome Web Store.',
+    update_desc: 'Neue Versionen werden im offiziellen GitHub-Repository veröffentlicht. Um Updates zu erhalten, laden Sie die neueste Version aus dem Bereich Releases herunter.',
     faq_title: 'Wie aktiviere ich PRO?',
     faq_step_1: 'Schritt 1: Installieren Sie die Erweiterung aus dem offiziellen Chrome Web Store.',
     faq_step_2: 'Schritt 2: Erwerben Sie einen Lizenzschlüssel auf dieser Website.',
@@ -505,12 +504,12 @@ const translations = {
     instruction_step_5: 'Натисніть "Завантажити розпаковане розширення" та виберіть папку з розширенням.',
     instruction_step_6: 'Закріпіть меню розширення у верхній панелі браузера для швидкого доступу.',
     instruction_step_7: 'Всі налаштування розширення (валюта, мова, джерело курсу) знаходяться в цьому меню.',
-    instruction_step_8: 'Оновлення відбуватимуться автоматично через Chrome Web Store.',
+    instruction_step_8: 'Нові версії публікуються в офіційному репозиторії GitHub. Для отримання оновлень завантажте останню версію розширення з розділу Releases.',
     feedback_title: 'Зворотній зв\'язок',
     feedback_desc: 'Маєте ідеї щодо покращення або знайшли помилку? Ми завжди раді критиці та похвалі!',
     btn_feedback: 'Написати розробнику',
     update_title: 'Авто-оновлення',
-    update_desc: 'Оновлення відбуваються автоматично через Chrome Web Store.',
+    update_desc: 'Нові версії публікуються в офіційному репозиторії GitHub. Для отримання оновлень завантажте останню версію розширення з розділу Releases.',
     faq_title: 'Як активувати PRO?',
     faq_step_1: 'Крок 1: Встановіть розширення з офіційного магазину Chrome Web Store.',
     faq_step_2: 'Крок 2: Придбайте ліцензійний ключ на цьому сайті.',
@@ -596,12 +595,12 @@ const translations = {
     instruction_step_5: 'Haz clic en "Cargar descomprimida" y selecciona la carpeta que contiene la extensión.',
     instruction_step_6: 'Fija la extensión en la barra de herramientas superior para un acceso rápido.',
     instruction_step_7: 'Todos los ajustes (moneda, idioma, fuente de tasa) se encuentran en este menú.',
-    instruction_step_8: 'Las actualizaciones se realizarán automáticamente a través de Chrome Web Store.',
+    instruction_step_8: 'Las nuevas versiones se publican en el repositorio oficial de GitHub. Para obtener actualizaciones, descargue la última versión de la sección Releases.',
     feedback_title: 'Comentarios',
     feedback_desc: '¿Tiene ideas para mejorar o encontró un error? ¡Siempre agradecemos las críticas y elogios!',
     btn_feedback: 'Contactar al desarrollador',
     update_title: 'Auto-actualizaciones',
-    update_desc: 'Las actualizaciones se realizan automáticamente a través de Chrome Web Store.',
+    update_desc: 'Las nuevas versiones se publican en el repositorio oficial de GitHub. Para obtener actualizaciones, descargue la última versión de la sección Releases.',
     faq_title: '¿Cómo activar PRO?',
     faq_step_1: 'Paso 1: Instale la extensión desde la Chrome Web Store oficial.',
     faq_step_2: 'Paso 2: Compre una clave de licencia en este sitio web.',
@@ -729,7 +728,6 @@ export default function App() {
   const [lang, setLang] = useState<Language>('ru');
   const [showInstructions, setShowInstructions] = useState(false);
   const [showCapabilities, setShowCapabilities] = useState(false);
-  const [showTrialModal, setShowTrialModal] = useState(false);
 
   useEffect(() => {
     const browserLang = (navigator.language || 'en').split('-')[0];
@@ -783,9 +781,18 @@ export default function App() {
               <option value="uk" className="bg-[#161b22] text-[#f0f6fc]">UK</option>
             </select>
           </div>
+            <a 
+              href="https://pay.cloudtips.ru/p/59a0c662"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden sm:flex items-center gap-1.5 bg-[#21262d] border border-[#30363d] hover:border-[#8b949e] text-white px-4 py-2 rounded-full text-sm font-bold transition-all cursor-pointer"
+            >
+              <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+              <span>{lang === 'ru' ? 'Поддержать' : 'Donate'}</span>
+            </a>
             <button 
               onClick={() => document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' })}
-              className="hidden md:block bg-[#6e40c9] hover:bg-[#8957e5] text-white px-5 py-2 rounded-full text-sm font-bold transition-all"
+              className="hidden md:block bg-[#6e40c9] hover:bg-[#8957e5] text-white px-5 py-2 rounded-full text-sm font-bold transition-all cursor-pointer"
             >
               {t.btn_download}
             </button>
@@ -795,14 +802,6 @@ export default function App() {
 
       {/* Hero Section */}
       <section className="relative z-10 pt-24 pb-16 px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6e40c9]/10 border border-[#6e40c9]/20 text-[#a371f7] text-xs font-bold uppercase tracking-wider mb-8"
-        >
-          <Sparkles className="w-3 h-3" />
-          {t.version_badge}
-        </motion.div>
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -847,20 +846,14 @@ export default function App() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="flex flex-col md:flex-row items-center justify-center gap-4"
+          className="flex items-center justify-center"
         >
           <button 
             onClick={() => document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' })}
-            className="w-full md:w-auto bg-white text-black px-8 py-4 rounded-2xl font-black text-lg hover:bg-[#f0f6fc] transition-all flex items-center justify-center gap-2"
+            className="w-full md:w-auto bg-white text-black px-8 py-4 rounded-2xl font-black text-lg hover:bg-[#f0f6fc] transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             {t.btn_download}
             <ChevronRight className="w-5 h-5" />
-          </button>
-          <button 
-            onClick={() => document.getElementById('tariffs')?.scrollIntoView({ behavior: 'smooth' })}
-            className="w-full md:w-auto bg-[#161b22] border border-[#30363d] text-white px-8 py-4 rounded-2xl font-black text-lg hover:bg-[#1c2128] transition-all flex items-center justify-center gap-2 cursor-pointer"
-          >
-            {lang === 'ru' ? 'Выбрать тариф' : 'View Plans'}
           </button>
         </motion.div>
       </section>
@@ -923,165 +916,56 @@ export default function App() {
         </div>
       </section>
 
-      {/* Tariffs Section */}
-      <section id="tariffs" className="relative z-10 max-w-7xl mx-auto px-6 py-24 border-t border-[#30363d]/50">
-        <div className="text-center mb-16">
-          <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight mb-4">
-            {t.tariffs_title}
+      {/* Open Source Banner Section */}
+      <section id="opensource" className="relative z-10 max-w-7xl mx-auto px-6 py-24 border-t border-[#30363d]/50 text-center">
+        <div className="max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-8">
+            <ShieldCheck className="w-4 h-4" />
+            100% Free & Open Source
+          </div>
+          <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tighter leading-tight bg-gradient-to-b from-white to-[#8b949e] bg-clip-text text-transparent">
+            {lang === 'ru' ? 'Полностью бесплатно и открыто' : 'Completely Free & Open Source'}
           </h2>
-          <p className="text-xl text-[#8b949e] max-w-xl mx-auto">
-            {t.tariffs_subtitle}
+          <p className="text-xl text-[#8b949e] leading-relaxed max-w-2xl mx-auto mb-12">
+            {lang === 'ru' 
+              ? <strong>Все возможности расширения доступны абсолютно бесплатно каждому пользователю навсегда.</strong>
+              : <strong>All features of the extension are available completely free to every user forever.</strong>
+            }
           </p>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {/* Basic */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
-            className="p-10 rounded-[2.5rem] bg-[#161b22] border border-[#30363d] flex flex-col justify-between transition-colors hover:border-zinc-700 hover:shadow-2xl hover:shadow-zinc-500/5"
-          >
-            <div>
-              <div className="flex justify-between items-center mb-8">
-                <span className="text-sm font-black text-[#8b949e] uppercase tracking-widest">{t.tier_basic}</span>
-              </div>
-              <div className="text-5xl font-black mb-4">{t.price_free}</div>
-              <p className="text-[#8b949e] text-sm leading-relaxed mb-8">{t.desc_basic}</p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
-                  <CheckCircle2 className="w-5 h-5 text-zinc-500" />
-                  {t.feature_usd_conv}
-                </li>
-                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
-                  <CheckCircle2 className="w-5 h-5 text-zinc-500" />
-                  2 {t.feature_dashboard_slots}
-                </li>
-                <li className="flex items-center gap-3 text-sm text-[#8b949e] line-through decoration-[#30363d]">
-                  {t.feature_no_crypto}
-                </li>
-              </ul>
+          {/* Support / Donate Card */}
+          <div className="mt-12 p-8 md:p-12 rounded-[2.5rem] bg-[#161b22] border border-[#30363d] relative overflow-hidden text-center max-w-3xl mx-auto shadow-2xl">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+              <Heart className="w-32 h-32 text-red-500" />
             </div>
-            <a
-              href="#download"
-              className="block text-center bg-zinc-800 hover:bg-zinc-700 text-white font-black py-4 rounded-2xl text-sm transition-all active:scale-95"
-            >
-              {lang === 'ru' ? 'Получить бесплатно' : 'Get for Free'}
-            </a>
-          </motion.div>
-
-          {/* PRO */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
-            className="p-10 rounded-[2.5rem] bg-[#161b22] border border-[#30363d] flex flex-col justify-between relative group transition-colors hover:border-[#6e40c9]/50 hover:shadow-2xl hover:shadow-purple-500/5"
-          >
-            <div>
-              <div className="flex justify-between items-center mb-8">
-                <span className="text-sm font-black text-[#6e40c9] uppercase tracking-widest">{t.tier_pro}</span>
-              </div>
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-5xl font-black">{t.price_pro}</span>
-                <span className="text-[#8b949e] text-sm font-semibold">/ {t.lifetime}</span>
-              </div>
-              <p className="text-[#8b949e] text-sm leading-relaxed mb-8">{t.desc_pro}</p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
-                  <CheckCircle2 className="w-5 h-5 text-[#6e40c9]" />
-                  {t.feature_top8}
-                </li>
-                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
-                  <CheckCircle2 className="w-5 h-5 text-[#6e40c9]" />
-                  4 {t.feature_dashboard_slots}
-                </li>
-                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
-                  <CheckCircle2 className="w-5 h-5 text-[#6e40c9]" />
-                  {t.feature_dark_mode}
-                </li>
-              </ul>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider mb-6">
+              <Heart className="w-3.5 h-3.5 fill-red-400 text-red-400" />
+              {lang === 'ru' ? 'Добровольная поддержка' : 'Voluntary Support'}
             </div>
-            <a
-              href={`/checkout?tier=pro&lang=${lang}`}
-              className="block text-center bg-[#6e40c9] hover:bg-[#8957e5] text-white font-black py-4 rounded-2xl text-sm transition-all active:scale-95 cursor-pointer shadow-lg shadow-[#6e40c9]/10"
-            >
-              {lang === 'ru' ? 'Купить PRO' : 'Buy PRO'}
-            </a>
-          </motion.div>
-
-          {/* PRO_PLUS */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
-            className="p-10 rounded-[2.5rem] bg-[#161b22] border-2 border-[#6e40c9] flex flex-col justify-between relative transition-colors hover:border-[#8957e5] hover:shadow-2xl hover:shadow-purple-500/10"
-          >
-            <div className="absolute top-0 right-10 -translate-y-1/2 bg-[#6e40c9] text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full">
-              {t.popular_badge}
-            </div>
-            <div>
-              <div className="flex justify-between items-center mb-8">
-                <span className="text-sm font-black text-[#a371f7] uppercase tracking-widest">{t.tier_pro_plus}</span>
-              </div>
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-5xl font-black">{t.price_pro_plus}</span>
-                <span className="text-[#8b949e] text-sm font-semibold">/ {t.lifetime}</span>
-              </div>
-              <p className="text-[#8b949e] text-sm leading-relaxed mb-8">{t.desc_pro_plus}</p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
-                  <CheckCircle2 className="w-5 h-5 text-amber-500" />
-                  {t.feature_all_fiats}
-                </li>
-                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
-                  <CheckCircle2 className="w-5 h-5 text-amber-500" />
-                  {t.feature_nat_banks}
-                </li>
-                <li className="flex items-center gap-3 text-sm text-[#c9d1d9]">
-                  <CheckCircle2 className="w-5 h-5 text-amber-500" />
-                  {t.feature_top30_crypto}
-                </li>
-              </ul>
-            </div>
-            <a
-              href={`/checkout?tier=pro_plus&lang=${lang}`}
-              className="block text-center bg-[#6e40c9] hover:bg-[#8957e5] text-white font-black py-4 rounded-2xl text-sm transition-all active:scale-95 cursor-pointer shadow-lg shadow-[#6e40c9]/10"
-            >
-              {lang === 'ru' ? 'Купить PRO+' : 'Buy PRO+'}
-            </a>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Free Test Section */}
-      <section className="relative z-10 py-24 px-6 border-t border-[#30363d]/50">
-        <div className="max-w-4xl mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="p-12 rounded-[3rem] bg-gradient-to-br from-[#6e40c9]/20 to-[#8957e5]/5 border border-[#6e40c9]/30 text-center flex flex-col items-center"
-          >
-            <div className="inline-flex items-center gap-2 bg-[#f39c12]/10 text-[#f39c12] px-4 py-2 rounded-full text-sm font-black mb-8 border border-[#f39c12]/20 uppercase tracking-widest">
-              <Sparkles className="w-4 h-4" />
-              {t.limited_offer}
-            </div>
-            <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-tight">
-              {t.free_test_title}
-            </h2>
-            <p className="text-xl text-[#8b949e] leading-relaxed max-w-2xl mx-auto">
-              {t.free_test_desc}
+            <h3 className="text-2xl md:text-3xl font-black mb-4">
+              {lang === 'ru' ? 'Поддержать разработку' : 'Support Development'}
+            </h3>
+            <p className="text-[#8b949e] text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-8 text-justify md:text-center">
+              {lang === 'ru' ? (
+                <>
+                  <strong>SyncRate — полностью бесплатный Open Source-проект.</strong> Все возможности доступны каждому пользователю без ограничений и навсегда останутся бесплатными. Если расширение оказалось полезным, вы можете добровольно поддержать дальнейшую разработку проекта. Донат не открывает дополнительных функций, преимуществ или привилегий — это исключительно способ помочь развитию проекта.
+                </>
+              ) : (
+                <>
+                  <strong>SyncRate is a completely free Open Source project.</strong> All features are available to every user without limitations and will remain free forever. If the extension has been helpful, you can voluntarily support the further development of the project. A donation does not unlock any extra features, advantages, or privileges — it is purely a way to help the project grow.
+                </>
+              )}
             </p>
-            <button
-              onClick={() => setShowTrialModal(true)}
-              className="mt-8 bg-[#6e40c9] hover:bg-[#8957e5] text-white px-8 py-4 rounded-2xl font-black text-lg transition-all active:scale-95 cursor-pointer shadow-lg shadow-[#6e40c9]/20"
+            <a
+              href="https://pay.cloudtips.ru/p/59a0c662"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-red-500 hover:bg-red-600 text-white font-black text-lg transition-all shadow-lg shadow-red-500/20 cursor-pointer hover:scale-[1.02] active:scale-[0.98] relative z-10"
             >
-              {t.btn_start_test}
-            </button>
-          </motion.div>
+              <Heart className="w-5 h-5 fill-white" />
+              {lang === 'ru' ? 'Поддержать проект' : 'Support Development'}
+            </a>
+          </div>
         </div>
       </section>
 
@@ -1094,33 +978,21 @@ export default function App() {
           <h2 className="text-4xl font-black mb-6">{lang === 'ru' ? 'Скачать SyncRate' : 'Download SyncRate'}</h2>
           <p className="text-[#8b949e] text-lg mb-12 max-w-xl mx-auto leading-relaxed">
             {lang === 'ru' 
-              ? 'Установите расширение в один клик из официального магазина Chrome Web Store или скачайте ZIP-архив для ручной установки.'
-              : 'Install the extension in one click from the official Chrome Web Store or download the ZIP archive for manual installation.'
+              ? 'Скачайте и установите расширение из официального репозитория GitHub.'
+              : 'Download and install the extension from the official GitHub repository.'
             }
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-8 max-w-2xl mx-auto">
-            {/* Official Chrome Web Store */}
-            <button
-              onClick={handleDownload}
-              className="flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-[#6e40c9] text-white font-black hover:bg-[#8957e5] transition-all w-full cursor-pointer shadow-lg shadow-[#6e40c9]/20 active:scale-[0.98] relative z-10 animate-pulse hover:animate-none"
-            >
-              <Chrome className="w-6 h-6 text-white" />
-              <div className="text-left">
-                <div className="text-xs text-purple-200 font-bold uppercase tracking-wider">Official Store</div>
-                <div className="text-sm font-black">{lang === 'ru' ? 'Установить из Chrome Store' : 'Add to Chrome'}</div>
-              </div>
-            </button>
-
-            {/* Offline ZIP (Representing Github release of the client part) */}
+          <div className="flex items-center justify-center gap-6 mt-8 max-w-md mx-auto">
+            {/* Download from GitHub */}
             <a
               href="/SyncRate.zip"
-              className="flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-white text-black font-black hover:bg-[#f0f6fc] transition-all w-full cursor-pointer shadow-lg active:scale-[0.98] relative z-10"
+              className="flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-[#6e40c9] text-white font-black hover:bg-[#8957e5] transition-all w-full cursor-pointer shadow-lg shadow-[#6e40c9]/20 active:scale-[0.98] relative z-10 animate-pulse hover:animate-none"
             >
-              <Download className="w-6 h-6 text-[#6e40c9]" />
+              <Download className="w-6 h-6 text-white" />
               <div className="text-left">
-                <div className="text-xs text-zinc-500 font-bold uppercase tracking-wider">GitHub Package</div>
-                <div className="text-sm font-black">{lang === 'ru' ? 'Скачать с GitHub (ZIP)' : 'Download from GitHub (ZIP)'}</div>
+                <div className="text-xs text-purple-200 font-bold uppercase tracking-wider">GitHub Releases</div>
+                <div className="text-sm font-black">{lang === 'ru' ? 'Скачать с GitHub' : 'Download from GitHub'}</div>
               </div>
             </a>
           </div>
@@ -1128,34 +1000,18 @@ export default function App() {
           <div className="mt-12 flex flex-wrap justify-center gap-4 relative z-10">
             <button 
               onClick={() => setShowInstructions(true)}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#161b22] border border-[#30363d] hover:border-[#6e40c9] transition-all text-sm font-bold"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#161b22] border border-[#30363d] hover:border-[#6e40c9] transition-all text-sm font-bold cursor-pointer"
             >
               <FileCode className="w-4 h-4 text-[#6e40c9]" />
               {t.btn_instructions}
             </button>
             <button 
               onClick={() => setShowCapabilities(true)}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#161b22] border border-[#30363d] hover:border-[#6e40c9] transition-all text-sm font-bold"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#161b22] border border-[#30363d] hover:border-[#6e40c9] transition-all text-sm font-bold cursor-pointer"
             >
               <Layout className="w-4 h-4 text-[#6e40c9]" />
               {t.btn_capabilities}
             </button>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="relative z-10 max-w-4xl mx-auto px-6 py-24 border-t border-[#30363d]/50">
-        <h2 className="text-4xl font-black tracking-tight text-center mb-12">{t.faq_title}</h2>
-        <div className="space-y-6">
-          <div className="bg-[#161b22] border border-[#30363d] rounded-2xl p-6">
-            <p className="text-[#f0f6fc] font-bold mb-2">{t.faq_step_1}</p>
-          </div>
-          <div className="bg-[#161b22] border border-[#30363d] rounded-2xl p-6">
-            <p className="text-[#f0f6fc] font-bold mb-2">{t.faq_step_2}</p>
-          </div>
-          <div className="bg-[#161b22] border border-[#30363d] rounded-2xl p-6">
-            <p className="text-[#f0f6fc] font-bold mb-2">{t.faq_step_3}</p>
           </div>
         </div>
       </section>
@@ -1277,14 +1133,6 @@ export default function App() {
             </motion.div>
           </motion.div>
         )}
-        
-        {showTrialModal && (
-          <TrialModal 
-            isOpen={showTrialModal} 
-            onClose={() => setShowTrialModal(false)} 
-            lang={lang} 
-          />
-        )}
 
       </AnimatePresence>
 
@@ -1329,7 +1177,7 @@ export default function App() {
               </div>
               <div className="flex items-center gap-3 text-[#a371f7] font-black text-lg">
                 <RefreshCw className="w-6 h-6 animate-spin-slow" />
-                Enterprise
+                SyncRate
               </div>
             </motion.div>
           </div>
@@ -1348,8 +1196,14 @@ export default function App() {
           </p>
         </div>
         <div className="mt-8 mb-4 flex justify-center gap-6 text-sm text-[#8b949e]">
-          <a href="/checkout?type=donation" className="hover:text-white transition-colors underline decoration-[#6e40c9] cursor-pointer">
-            {lang === 'ru' ? 'Поддержать проект (Донат)' : 'Support Development (Donate)'}
+          <a 
+            href="https://pay.cloudtips.ru/p/59a0c662" 
+            target="_blank" 
+            rel="noreferrer" 
+            className="hover:text-white transition-colors underline decoration-red-500 cursor-pointer flex items-center gap-1"
+          >
+            <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
+            {lang === 'ru' ? 'Поддержать проект' : 'Support Development (Donate)'}
           </a>
           <span>•</span>
           <a href="/feedback" target="_blank" rel="noreferrer" className="hover:text-white transition-colors underline decoration-[#6e40c9] cursor-pointer">

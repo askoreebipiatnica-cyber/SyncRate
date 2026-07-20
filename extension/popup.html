@@ -44,12 +44,10 @@
     </style>
 </head>
 <body>
-    <div id="trial-banner" class="trial-banner"></div>
     <div class="header">
         <h2>⚡ SyncRate</h2>
         <div class="header-actions">
             <button class="icon-btn" id="feedback-btn" title="Feedback"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></button>
-            <button class="icon-btn" id="donate-btn" title="Donate"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
             <button class="icon-btn" id="theme-btn" title="Dark/Light Mode"><svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
         </div>
     </div>
@@ -74,14 +72,9 @@
                 <option value="es">🇪🇸 Español</option>
             </select>
         </div>
-        <div class="setting-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <label data-i18n="lbl_target" style="margin-bottom: 0;">Ваша национальная валюта</label>
-                <a href="#" id="btn-auto-detect" style="font-size: 11px; color: var(--primary); text-decoration: none; font-weight: 700; cursor: pointer;" data-i18n="btn_auto_detect">Определить по IP</a>
-            </div>
+        <div class="setting-group"><label data-i18n="lbl_target">Ваша национальная валюта</label>
             <select id="sel-target">
-                <option value="auto" data-i18n="opt_auto_currency">🔌 Автоопределение по IP</option>
-                <option value="RUB" data-i18n="cur_rub">🇷🇺 Российский рубль (RUB)</option><option value="EUR" data-i18n="cur_eur">🇪🇺 Euro (EUR)</option><option value="USD" data-i18n="cur_usd">🇺🇸 US Dollar (USD)</option><option value="CNY" data-i18n="cur_cny">🇨🇳 Chinese Yuan (CNY)</option><option value="KZT" data-i18n="cur_kzt">🇰🇿 Казахский тенге (KZT)</option><option value="UAH" data-i18n="cur_uah">🇺🇦 Українська гривна (UAH)</option><option value="BYN" data-i18n="cur_byn">🇧🇾 Белорусский рубль (BYN)</option><option value="GBP" data-i18n="cur_gbp">🇬🇧 Британский фунт (GBP)</option><option value="TRY" data-i18n="cur_try">🇹🇷 Турецкая лира (TRY)</option><option value="CHF" data-i18n="cur_chf">🇨🇭 Швейцарский франк (CHF)</option><option value="JPY" data-i18n="cur_jpy">🇯🇵 Японская иена (JPY)</option><option value="CAD" data-i18n="cur_cad">🇨🇦 Канадский доллар (CAD)</option><option value="AED" data-i18n="cur_aed">🇦🇪 Дирхам ОАЭ (AED)</option><option value="PLN" data-i18n="cur_pln">🇵🇱 Польский злотый (PLN)</option><option value="CZK" data-i18n="cur_czk">🇨🇿 Чешская крона (CZK)</option><option value="AUD" data-i18n="cur_aud">🇦🇺 Австралийский доллар (AUD)</option>
+                <option value="RUB" data-i18n="cur_rub">🇷🇺 Российский рубль (RUB)</option><option value="EUR" data-i18n="cur_eur">🇪🇺 Euro (EUR)</option><option value="USD" data-i18n="cur_usd">🇺🇸 US Dollar (USD)</option><option value="CNY" data-i18n="cur_cny">🇨🇳 Chinese Yuan (CNY)</option><option value="KZT" data-i18n="cur_kzt">🇰🇿 Казахский тенге (KZT)</option><option value="UAH" data-i18n="cur_uah">🇺🇦 Українська гривня (UAH)</option><option value="BYN" data-i18n="cur_byn">🇧🇾 Беларускі рубель (BYN)</option><option value="GBP" data-i18n="cur_gbp">🇬🇧 British Pound (GBP)</option>
             </select>
         </div>
         <div class="setting-group"><label><span data-i18n="lbl_source">Источник курса</span></label>
@@ -95,15 +88,14 @@
         </div>
         <button class="btn-save" id="btn-save-settings"><span data-i18n="btn_save">Сохранить</span></button>
         <div style="margin-top: 20px; font-size: 10px; color: var(--subtext); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px;">
-            <span>SyncRate Enterprise v15.0</span>
+            <span>SyncRate Community v15.0</span>
             <a href="#" id="update-link" style="color: var(--primary); text-decoration: none; font-weight: 700;" data-i18n="check_updates">Проверить обновления</a>
             <span id="new-version-badge" class="update-badge">NEW</span>
         </div>
     </div>
-    
     <div class="footer">
-        v15.0 | SyncRate Enterprise
-        <span class="legal">© 2026 SyncRate. Protected by DMCA laws. Piracy prohibited.</span>
+        v15.0 | SyncRate Community Edition
+        <span class="legal">© 2026 SyncRate. Open Source under Apache-2.0 License.</span>
     </div>
     <script src="popup.js"></script>
 </body>

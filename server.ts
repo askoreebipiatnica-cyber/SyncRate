@@ -190,7 +190,7 @@ async function startServer() {
     res.send(`<?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/updateflash/statustext/1.0' protocol='2.0'>
   <app appid='msjrecxeaytix2n65pvx6i'>
-    <updatecheck codebase='${appUrl}/SyncRate.crx' version='15.0' />
+    <updatecheck codebase='${appUrl}/SyncRate.crx' version='1.0.0' />
   </app>
 </gupdate>`);
   });
@@ -198,7 +198,7 @@ async function startServer() {
   // Version info
   app.get("/version.json", (req, res) => {
     res.json({
-      version: "15.0",
+      version: "1.0.0",
       notes: "Open Source Edition: Added National Banks and Top-30 Crypto support. Fully free and open-source.",
       date: "2026-03-31"
     });

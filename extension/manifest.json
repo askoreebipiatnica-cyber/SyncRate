@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SyncRate: Currency & Crypto Converter",
-  "version": "15.0",
+  "version": "1.0.0",
   "description": "Мгновенная конвертация валют и криптовалют при выделении текста. Полностью бесплатное расширение с открытым исходным кодом.",
   "permissions":["storage", "alarms"],
   "host_permissions":[

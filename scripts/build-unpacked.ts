@@ -50,20 +50,34 @@ function writeExtensionFiles() {
   fs.writeFileSync(path.join(PUBLIC_OUTPUT_DIR, 'store_en.txt'), templates.storeEn);
 
   // Handle binary icons by preserving user-uploaded icons if they exist in either directory
+  const isValidPng = (filePath: string): boolean => {
+    try {
+      if (!fs.existsSync(filePath)) return false;
+      const buffer = fs.readFileSync(filePath);
+      return buffer.length > 8 && buffer.slice(0, 8).toString('hex') === '89504e470d0a1a0a';
+    } catch {
+      return false;
+    }
+  };
+
   const writeIcon = (filename: string, fallbackBase64: string) => {
     const targetPath = path.join(ICONS_DIR, filename);
     const publicTargetPath = path.join(PUBLIC_ICONS_DIR, filename);
     
-    if (fs.existsSync(targetPath)) {
-      console.log(`ℹ️ Icon ${filename} found in /extension/icons. Copying to public...`);
+    const targetValid = isValidPng(targetPath);
+    const publicValid = isValidPng(publicTargetPath);
+
+    if (targetValid) {
+      console.log(`ℹ️ Valid icon ${filename} found in /extension/icons. Copying to public...`);
       fs.copyFileSync(targetPath, publicTargetPath);
-    } else if (fs.existsSync(publicTargetPath)) {
-      console.log(`ℹ️ Icon ${filename} found in /public/extension/icons. Copying to /extension/icons...`);
+    } else if (publicValid) {
+      console.log(`ℹ️ Valid icon ${filename} found in /public/extension/icons. Copying to /extension/icons...`);
       fs.copyFileSync(publicTargetPath, targetPath);
     } else {
-      console.log(`ℹ️ Icon ${filename} not found. Writing fallback base64 icon...`);
-      fs.writeFileSync(targetPath, Buffer.from(fallbackBase64, 'base64'));
-      fs.writeFileSync(publicTargetPath, Buffer.from(fallbackBase64, 'base64'));
+      console.log(`ℹ️ Icon ${filename} not found or corrupted. Writing fallback base64 icon...`);
+      const buffer = Buffer.from(fallbackBase64, 'base64');
+      fs.writeFileSync(targetPath, buffer);
+      fs.writeFileSync(publicTargetPath, buffer);
     }
   };
 

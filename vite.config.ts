@@ -6,7 +6,7 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base: './',
+    base: process.env.GITHUB_ACTIONS === 'true' ? '/SyncRate/' : './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {

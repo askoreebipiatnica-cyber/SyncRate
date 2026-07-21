@@ -56,16 +56,6 @@
 
 ---
 
-### 💬 Часто задаваемые вопросы (FAQ)
-
-**В: Нужно ли покупать ключ для активации премиум-функций?**  
-О: **Нет!** SyncRate полностью бесплатен для всех пользователей. Наш промо-сайт упоминает «PRO тарифы» только в качестве примера демонстрационного дизайна или интеграции с тестовой биллинговой системой, но само расширение имеет открытый исходный код и предоставляет все возможности абсолютно бесплатно навсегда.
-
-**В: Как обновить расширение до новой версии?**  
-О: Для обновления скачайте новый ZIP-архив с этой страницы, распакуйте его поверх старой папки и нажмите кнопку «Обновить» на странице расширений в браузере.
-
----
-
 ### ❤️ Добровольная поддержка проекта
 
 Если расширение оказалось полезным и экономит ваше время, вы можете добровольно поддержать дальнейшую поддержку проекта. Любая сумма помогает оплачивать инфраструктуру серверов получения курсов валют и выпуск новых версий.
@@ -108,16 +98,6 @@ For standard manual installation into your browser, follow these simple steps:
    Click the **"Load unpacked"** button in the top-left corner, and select the folder where you extracted the ZIP archive.
 6. **All Set!**
    The extension is installed. Pin it to your toolbar, choose your target currency, and highlight any price on any web page to see instant conversions.
-
----
-
-### 💬 FAQ (Frequently Asked Questions)
-
-**Q: Do I need a license key to unlock features?**  
-A: **No.** SyncRate is fully free and open-source. All core and premium functionalities are unlocked out-of-the-box. There is no paywall or forced subscription.
-
-**Q: How do I get updates?**  
-A: Simply download the latest `SyncRate.zip` from our releases, unzip it over the previous directory, and click the reload icon in `chrome://extensions/`.
 
 ---
 

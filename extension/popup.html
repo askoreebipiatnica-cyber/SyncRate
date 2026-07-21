@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root { --bg: #ffffff; --text: #1a1a1a; --card: #ffffff; --border: #e0e0e0; --primary: #6e40c9; --primary-hover: #8957e5; --shadow: rgba(0,0,0,0.08); --subtext: #666; --trial: #d2a8ff; }[data-theme="dark"] { --bg: #0d1117; --text: #f0f6fc; --card: #161b22; --border: #30363d; --primary: #8957e5; --primary-hover: #a371f7; --shadow: rgba(0,0,0,0.5); --subtext: #8b949e; --trial: #6e40c9; }
+        body { width: 360px; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); transition: 0.2s; user-select: none; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--card); border-bottom: 1px solid var(--border); }
+        .header h2 { margin: 0; font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+        .header-actions { display: flex; gap: 8px; }
+        .icon-btn { cursor: pointer; padding: 6px; border-radius: 50%; background: transparent; border: 1px solid var(--border); color: var(--text); transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
+        .icon-btn:hover { background: var(--border); }
+        .icon-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .update-badge { background: #e53935; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 800; margin-left: 6px; display: none; }
+        .trial-banner { background: var(--trial); color: #fff; text-align: center; padding: 6px; font-size: 11px; font-weight: 600; display: none; }
+        .tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--border); }
+        .tab { flex: 1; display: flex; justify-content: center; align-items: center; gap: 6px; padding: 12px 0; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--subtext); transition: 0.2s; }
+        .tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .tab-content { display: none; padding: 16px; }
+        .tab-content.active { display: block; }
+        .grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .dash-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 4px 12px var(--shadow); }
+        .dash-card-title { font-size: 12px; color: var(--subtext); font-weight: 600; margin-bottom: 4px; }
+        .dash-card-value { font-size: 14px; color: var(--text); font-weight: 700; }
+        .setting-group { margin-bottom: 16px; }
+        .setting-group label { display: block; font-size: 11px; font-weight: 600; color: var(--subtext); margin-bottom: 6px; text-transform: uppercase; }
+        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 13px; outline: none; cursor: pointer; }
+        select:disabled { opacity: 0.5; cursor: not-allowed; }
+        optgroup { font-weight: bold; color: var(--primary); }
+        .btn-save { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 8px; }
+        .btn-save:hover { background: var(--primary-hover); transform: scale(0.98); }
+        .plan { display: block; background: var(--card); border: 2px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .plan input { display: none; }
+        .plan.active { border-color: var(--primary); background: rgba(110,64,201,0.05); }
+        .plan-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .plan-title { font-weight: 700; font-size: 14px; }
+        .plan-desc { font-size: 11px; color: var(--subtext); margin: 0; line-height: 1.4; }
+        .badge { padding: 3px 6px; border-radius: 4px; font-size: 9px; font-weight: 800; color: white; }
+        .badge.pro { background: #f39c12; }
+        .badge.pro-plus { background: #e53935; }
+        .footer { text-align: center; padding: 12px; font-size: 10px; color: var(--subtext); border-top: 1px solid var(--border); background: var(--card); line-height: 1.4;}
+        .legal { font-size: 9px; opacity: 0.6; display: block; margin-top: 4px;}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>⚡ SyncRate</h2>
+        <div class="header-actions">
+            <button class="icon-btn" id="donate-btn" title="❤️ Support Project" style="width: auto; padding: 0 10px; border-radius: 15px; border-color: rgba(229, 57, 53, 0.3); background: rgba(229, 57, 53, 0.05); color: #e53935; font-size: 11px; font-weight: bold; gap: 4px;"><span data-i18n="btn_donate">❤️ Support Project</span></button>
+            <button class="icon-btn" id="feedback-btn" title="Feedback"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></button>
+            <button class="icon-btn" id="theme-btn" title="Dark/Light Mode"><svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
+        </div>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" data-target="tab-dash"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg><span data-i18n="tab_rates">Курсы</span></div>
+        <div class="tab" data-target="tab-settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span data-i18n="tab_settings">Настройки</span></div>
+    </div>
+    
+    <div id="tab-dash" class="tab-content active">
+        <div style="font-size: 12px; color: var(--subtext); text-align: center; margin-bottom: 12px;"><span data-i18n="your_currency">Ваша валюта:</span> <strong id="lbl-target-currency" style="color:var(--text);">RUB</strong></div>
+        <div class="grid-2x2" id="dashboard-grid"></div>
+    </div>
+    
+    <div id="tab-settings" class="tab-content">
+        <div class="setting-group"><label data-i18n="lbl_lang">Язык / Language</label>
+            <select id="sel-lang">
+                <option value="auto" data-i18n="opt_auto">Авто (Браузер) / Auto</option>
+                <option value="ru">🇷🇺 Русский</option><option value="en">🇬🇧 English</option>
+                <option value="kk">🇰🇿 Қазақша</option><option value="uk">🇺🇦 Українська</option>
+                <option value="zh">🇨🇳 中文 (Chinese)</option><option value="de">🇩🇪 Deutsch</option>
+                <option value="es">🇪🇸 Español</option>
+            </select>
+        </div>
+        <div class="setting-group"><label data-i18n="lbl_target">Ваша национальная валюта</label>
+            <select id="sel-target">
+                <option value="RUB" data-i18n="cur_rub">🇷🇺 Российский рубль (RUB)</option><option value="EUR" data-i18n="cur_eur">🇪🇺 Euro (EUR)</option><option value="USD" data-i18n="cur_usd">🇺🇸 US Dollar (USD)</option><option value="CNY" data-i18n="cur_cny">🇨🇳 Chinese Yuan (CNY)</option><option value="KZT" data-i18n="cur_kzt">🇰🇿 Казахский тенге (KZT)</option><option value="UAH" data-i18n="cur_uah">🇺🇦 Українська гривня (UAH)</option><option value="BYN" data-i18n="cur_byn">🇧🇾 Беларускі рубель (BYN)</option><option value="GBP" data-i18n="cur_gbp">🇬🇧 British Pound (GBP)</option>
+            </select>
+        </div>
+        <div class="setting-group"><label><span data-i18n="lbl_source">Источник курса</span></label>
+            <select id="sel-source">
+                <option value="market" data-i18n="opt_market">🌐 Рыночный (Биржи)</option>
+                <option value="official" data-i18n="opt_official">🏛 Официальный Нацбанк</option>
+            </select>
+        </div>
+        <div class="setting-group"><label data-i18n="lbl_dash">Валюты для Дашборда (Топ 4)</label>
+            <div class="grid-2x2"><select class="sel-dash" id="dash-1"></select><select class="sel-dash" id="dash-2"></select><select class="sel-dash" id="dash-3"></select><select class="sel-dash" id="dash-4"></select></div>
+        </div>
+        <button class="btn-save" id="btn-save-settings"><span data-i18n="btn_save">Сохранить</span></button>
+        <div style="margin-top: 20px; font-size: 10px; color: var(--subtext); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px;">
+            <span>SyncRate Community</span>
+            <a href="#" id="update-link" style="color: var(--primary); text-decoration: none; font-weight: 700;" data-i18n="check_updates">Проверить обновления</a>
+            <span id="new-version-badge" class="update-badge">NEW</span>
+        </div>
+    </div>
+    <div class="footer">
+        SyncRate Community Edition
+        <span class="legal">© 2026 SyncRate. Open Source under Apache-2.0 License.</span>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>

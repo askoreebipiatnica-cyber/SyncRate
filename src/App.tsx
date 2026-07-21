@@ -728,6 +728,28 @@ export default function App() {
   const [lang, setLang] = useState<Language>('ru');
   const [showInstructions, setShowInstructions] = useState(false);
   const [showCapabilities, setShowCapabilities] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState<string>('https://github.com/askoreebipiatnica-cyber/SyncRate/releases/latest/download/SyncRate.zip');
+
+  useEffect(() => {
+    fetch('https://api.github.com/repos/askoreebipiatnica-cyber/SyncRate/releases/latest')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch latest release metadata');
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (data && Array.isArray(data.assets)) {
+          const zipAsset = data.assets.find((asset: any) => asset.name === 'SyncRate.zip');
+          if (zipAsset && zipAsset.browser_download_url) {
+            setDownloadUrl(zipAsset.browser_download_url);
+          }
+        }
+      })
+      .catch(err => {
+        console.warn('Using fallback direct download URL:', err);
+      });
+  }, []);
 
   useEffect(() => {
     const browserLang = (navigator.language || 'en').split('-')[0];
@@ -986,7 +1008,7 @@ export default function App() {
           <div className="flex items-center justify-center gap-6 mt-8 max-w-md mx-auto">
             {/* Download from GitHub */}
             <a
-              href="/SyncRate.zip"
+              href={downloadUrl}
               className="flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-[#6e40c9] text-white font-black hover:bg-[#8957e5] transition-all w-full cursor-pointer shadow-lg shadow-[#6e40c9]/20 active:scale-[0.98] relative z-10 animate-pulse hover:animate-none"
             >
               <Download className="w-6 h-6 text-white" />

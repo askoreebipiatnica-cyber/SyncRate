@@ -8,12 +8,20 @@
 
 ---
 
+### 🌐 Official Website & Live Demo / Официальный промо-сайт
+
+🚀 **[Visit Promo Website / Посетить промо-сайт](https://askoreebipiatnica-cyber.github.io/SyncRate/)**
+
+[![Visit Promo Website](https://img.shields.io/badge/%F0%9F%8C%90_Visit_Promo_Website-SyncRate-6e40c9?style=for-the-badge)](https://askoreebipiatnica-cyber.github.io/SyncRate/)
+
+---
+
 ## 🎯 Быстрые ссылки / Quick Links
 
 | Кнопка / Button | Ссылка / Destination |
 | :--- | :--- |
-| **🌐 Website** | [Открыть промо-сайт / Visit Website](https://syncrate.ru) |
-| **📦 Download Extension** | [Скачать готовое расширение (ZIP)](https://syncrate.ru/SyncRate.zip) |
+| **🌐 Website** | [Открыть промо-сайт / Visit Website](https://askoreebipiatnica-cyber.github.io/SyncRate/) |
+| **📦 Download Extension** | [Скачать готовое расширение (ZIP)](https://github.com/askoreebipiatnica-cyber/SyncRate/releases/latest/download/SyncRate.zip) |
 | **📖 Documentation** | [Инструкция и возможности](#-описание-возможностей) |
 | **❤️ Support Project** | [Поддержать проект (CloudTips)](https://pay.cloudtips.ru/p/59a0c662) |
 
@@ -40,7 +48,7 @@
 Для ручной установки готового расширения в браузер выполните следующие шаги:
 
 1. **Скачайте расширение**:
-   Нажмите кнопку **[📦 Download Extension](https://syncrate.ru/SyncRate.zip)** или скачайте архив из раздела **Releases**.
+   Нажмите кнопку **[📦 Download Extension](https://github.com/askoreebipiatnica-cyber/SyncRate/releases/latest/download/SyncRate.zip)** или скачайте архив из раздела **Releases**.
 2. **Распакуйте архив**:
    Распакуйте скачанный ZIP-файл `SyncRate.zip` в любую удобную папку на вашем компьютере.
 3. **Откройте страницу расширений**:
@@ -85,7 +93,7 @@ All premium features — including advanced cryptocurrencies, official national 
 For standard manual installation into your browser, follow these simple steps:
 
 1. **Download the Extension**:
-   Click the **[📦 Download Extension](https://syncrate.ru/SyncRate.zip)** button or get the archive from the **Releases** section.
+   Click the **[📦 Download Extension](https://github.com/askoreebipiatnica-cyber/SyncRate/releases/latest/download/SyncRate.zip)** button or get the archive from the **Releases** section.
 2. **Unpack the Archive**:
    Extract the downloaded `SyncRate.zip` archive to any folder on your computer.
 3. **Open extensions manager**:

@@ -14,7 +14,6 @@
 | :--- | :--- |
 | **🌐 Website** | [Открыть промо-сайт / Visit Website](https://syncrate.ru) |
 | **📦 Download Extension** | [Скачать готовое расширение (ZIP)](SyncRate.zip) |
-| **🚀 Latest Release** | [Последний релиз на GitHub](../../releases/latest) |
 | **📖 Documentation** | [Инструкция и возможности](#-описание-возможностей) |
 | **❤️ Support Project** | [Поддержать проект (CloudTips)](https://pay.cloudtips.ru/p/59a0c662) |
 

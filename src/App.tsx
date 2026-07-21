@@ -728,28 +728,7 @@ export default function App() {
   const [lang, setLang] = useState<Language>('ru');
   const [showInstructions, setShowInstructions] = useState(false);
   const [showCapabilities, setShowCapabilities] = useState(false);
-  const [downloadUrl, setDownloadUrl] = useState<string>('https://github.com/askoreebipiatnica-cyber/SyncRate/releases/latest/download/SyncRate.zip');
-
-  useEffect(() => {
-    fetch('https://api.github.com/repos/askoreebipiatnica-cyber/SyncRate/releases/latest')
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to fetch latest release metadata');
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (data && Array.isArray(data.assets)) {
-          const zipAsset = data.assets.find((asset: any) => asset.name === 'SyncRate.zip');
-          if (zipAsset && zipAsset.browser_download_url) {
-            setDownloadUrl(zipAsset.browser_download_url);
-          }
-        }
-      })
-      .catch(err => {
-        console.warn('Using fallback direct download URL:', err);
-      });
-  }, []);
+  const [downloadUrl] = useState<string>('https://github.com/askoreebipiatnica-cyber/SyncRate/releases/latest/download/SyncRate.zip');
 
   useEffect(() => {
     const browserLang = (navigator.language || 'en').split('-')[0];

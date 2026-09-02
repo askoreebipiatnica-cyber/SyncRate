@@ -13,6 +13,17 @@ export default defineConfig(({mode}) => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      target: 'es2022',
+    },
+    esbuild: {
+      target: 'es2022',
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        target: 'es2022',
+      },
+    },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.

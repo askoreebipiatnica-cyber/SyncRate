@@ -91,29 +91,33 @@ async function startServer() {
     constructor(private collectionName: string, private docId: string, private realDocRef: any) {}
 
     async set(data: any, options?: any) {
-      try {
-        return await this.realDocRef.set(data, options);
-      } catch (e) {
-        console.warn(`[Firestore Fallback] set failed for ${this.collectionName}/${this.docId}, falling back to memory:`, e);
-        memoryStore[this.collectionName] = memoryStore[this.collectionName] || {};
-        memoryStore[this.collectionName][this.docId] = { ...data };
+      if (this.realDocRef) {
+        try {
+          return await this.realDocRef.set(data, options);
+        } catch (e) {
+          console.warn(`[Firestore Fallback] set failed for ${this.collectionName}/${this.docId}, falling back to memory:`, e);
+        }
       }
+      memoryStore[this.collectionName] = memoryStore[this.collectionName] || {};
+      memoryStore[this.collectionName][this.docId] = { ...data };
     }
 
     async get() {
-      try {
-        const snap = await this.realDocRef.get();
-        snap.data(); // Trigger potential lazy gRPC permission errors early
-        return snap;
-      } catch (e) {
-        console.warn(`[Firestore Fallback] get failed for ${this.collectionName}/${this.docId}, falling back to memory:`, e);
-        const data = memoryStore[this.collectionName]?.[this.docId] || null;
-        return {
-          exists: !!data,
-          data: () => data,
-          id: this.docId
-        };
+      if (this.realDocRef) {
+        try {
+          const snap = await this.realDocRef.get();
+          snap.data(); // Trigger potential lazy gRPC permission errors early
+          return snap;
+        } catch (e) {
+          console.warn(`[Firestore Fallback] get failed for ${this.collectionName}/${this.docId}, falling back to memory:`, e);
+        }
       }
+      const data = memoryStore[this.collectionName]?.[this.docId] || null;
+      return {
+        exists: !!data,
+        data: () => data,
+        id: this.docId
+      };
     }
   }
 
@@ -126,15 +130,17 @@ async function startServer() {
     }
 
     async add(data: any) {
-      try {
-        return await this.realCollectionRef.add(data);
-      } catch (e) {
-        const docId = "doc_" + Math.random().toString(36).substring(2, 15);
-        console.warn(`[Firestore Fallback] add failed for ${this.collectionName}/${docId}, falling back to memory:`, e);
-        memoryStore[this.collectionName] = memoryStore[this.collectionName] || {};
-        memoryStore[this.collectionName][docId] = { ...data };
-        return { id: docId };
+      if (this.realCollectionRef) {
+        try {
+          return await this.realCollectionRef.add(data);
+        } catch (e) {
+          console.warn(`[Firestore Fallback] add failed for ${this.collectionName}, falling back to memory:`, e);
+        }
       }
+      const docId = "doc_" + Math.random().toString(36).substring(2, 15);
+      memoryStore[this.collectionName] = memoryStore[this.collectionName] || {};
+      memoryStore[this.collectionName][docId] = { ...data };
+      return { id: docId };
     }
   }
 

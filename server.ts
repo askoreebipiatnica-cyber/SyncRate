@@ -14,6 +14,40 @@ async function startServer() {
   const PORT = 3000;
   console.log("NODE_ENV:", process.env.NODE_ENV);
 
+  // Security: Disable X-Powered-By header and set standard security headers
+  app.disable('x-powered-by');
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+  });
+
+  // In-memory rate limiter to mitigate DoS/brute-force attacks
+  const rateLimitBuckets: Record<string, { count: number; resetTime: number }> = {};
+  function createRateLimiter(maxRequests: number, windowMs: number) {
+    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      const ip = req.ip || req.socket.remoteAddress || 'unknown';
+      const now = Date.now();
+      const bucket = rateLimitBuckets[ip];
+
+      if (!bucket || now > bucket.resetTime) {
+        rateLimitBuckets[ip] = { count: 1, resetTime: now + windowMs };
+        return next();
+      }
+
+      if (bucket.count >= maxRequests) {
+        return res.status(429).json({ error: "Too many requests, please try again later." });
+      }
+
+      bucket.count++;
+      next();
+    };
+  }
+
+  const feedbackRateLimiter = createRateLimiter(15, 60 * 1000); // 15 requests per minute
+  const publishRateLimiter = createRateLimiter(5, 60 * 1000);   // 5 requests per minute
+
   // Initialize Firebase Firestore for database persistence of binary files and feedback
   let projectId = process.env.FIREBASE_PROJECT_ID;
   let firestoreDatabaseId = process.env.FIREBASE_DATABASE_ID;
@@ -135,11 +169,16 @@ async function startServer() {
   };
 
   // Segmented Body Parsing: Register /api/publish first with custom isolated middleware (up to 15mb)
-  app.post("/api/publish", express.json({ limit: '15mb' }), async (req, res) => {
+  app.post("/api/publish", publishRateLimiter, express.json({ limit: '15mb' }), async (req, res) => {
     const authHeader = req.headers.authorization;
     const secret = process.env.PUBLISH_SECRET;
-    const expectedSecret = secret || "default_syncrate_secret_12345";
-    if (!authHeader || authHeader !== `Bearer ${expectedSecret}`) {
+    
+    // Security: Refuse publishing if server secret is not configured
+    if (!secret) {
+      return res.status(503).json({ error: "Publishing disabled: PUBLISH_SECRET is not configured on the server." });
+    }
+
+    if (!authHeader || authHeader !== `Bearer ${secret}`) {
       return res.status(401).json({ error: "Unauthorized. Safe publish requires correct token." });
     }
 
@@ -183,14 +222,29 @@ async function startServer() {
   // Safe global JSON parsing middleware (100kb limit)
   app.use(express.json({ limit: '100kb' }));
 
+  // Helper to safely escape strings for XML attributes
+  function escapeXml(unsafe: string): string {
+    return unsafe.replace(/[<>&'"]/g, (c) => {
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case '\'': return '&apos;';
+        case '"': return '&quot;';
+        default: return c;
+      }
+    });
+  }
+
   // Update Manifest for Chrome
   app.get("/updates.xml", (req, res) => {
-    res.set("Content-Type", "application/xml");
-    const appUrl = (process.env.APP_URL || "").replace(/\/$/, "");
+    res.set("Content-Type", "application/xml; charset=utf-8");
+    const rawAppUrl = (process.env.APP_URL || "").replace(/\/$/, "");
+    const safeCodebase = escapeXml(`${rawAppUrl}/SyncRate.crx`);
     res.send(`<?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/updateflash/statustext/1.0' protocol='2.0'>
   <app appid='msjrecxeaytix2n65pvx6i'>
-    <updatecheck codebase='${appUrl}/SyncRate.crx' version='1.0.0' />
+    <updatecheck codebase='${safeCodebase}' version='1.0.0' />
   </app>
 </gupdate>`);
   });
@@ -248,18 +302,39 @@ async function startServer() {
     res.json({ status: "ok", env: process.env.NODE_ENV });
   });
 
-  // Feedback form handler
-  app.post("/api/feedback", async (req, res) => {
+  // Feedback form handler with rate-limiting and robust input validation
+  app.post("/api/feedback", feedbackRateLimiter, async (req, res) => {
     try {
       const { name, email, text, stars } = req.body;
-      if (!text) {
-        return res.status(400).json({ success: false, error: "Text field is required" });
+
+      if (!text || typeof text !== "string" || text.trim().length === 0) {
+        return res.status(400).json({ success: false, error: "Feedback text is required and cannot be empty." });
       }
+
+      if (text.length > 2000) {
+        return res.status(400).json({ success: false, error: "Feedback text is too long (maximum 2000 characters)." });
+      }
+
+      const cleanName = (typeof name === "string" ? name.trim().slice(0, 100) : "") || "Anonymous";
+      
+      let cleanEmail = "anonymous@syncrate.org";
+      if (typeof email === "string" && email.trim().length > 0) {
+        const trimmedEmail = email.trim().slice(0, 120);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmedEmail)) {
+          return res.status(400).json({ success: false, error: "Please provide a valid email address." });
+        }
+        cleanEmail = trimmedEmail;
+      }
+
+      const numStars = Number(stars);
+      const cleanStars = (!isNaN(numStars) && numStars >= 1 && numStars <= 5) ? Math.floor(numStars) : 5;
+
       await adminDb.collection("feedbacks").add({
-        name: name || "Anonymous",
-        email: email || "anonymous@syncrate.org",
-        text,
-        stars: stars || 5,
+        name: cleanName,
+        email: cleanEmail,
+        text: text.trim(),
+        stars: cleanStars,
         createdAt: new Date().toISOString()
       });
       res.json({ success: true, message: "Thank you for your feedback!" });

@@ -11,10 +11,3 @@ services:
         value: production
       - key: PORT
         value: 3000
-      # Add environment variables that need to be defined manually in the Render dashboard:
-      - key: STRIPE_SECRET_KEY
-        sync: false
-      - key: PAYANYWAY_MNT_ID
-        sync: false
-      - key: PAYANYWAY_MNT_SIGNATURE_KEY
-        sync: false

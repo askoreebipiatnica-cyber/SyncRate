@@ -144,26 +144,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     langSel.value = state.lang;
     targetSel.value = state.targetCurrency;
     sourceSel.value = state.rateSource;
-    dashSels.forEach((sel, i) => populateCurrencies(sel, state.dashboardBases[i]));
-
-    // Check Trial
-    const isTrialActive = false; // trial теперь в JWT, не в trialStart
-    let activeTier = state.appTier; // tier уже декодирован из токена выше
-
-    const updateDashboardSels = (tier) => {
-        if (tier === 'basic') {
-            dashSels[2].disabled = true;
-            dashSels[3].disabled = true;
-            dashSels[2].style.opacity = '0.5';
-            dashSels[3].style.opacity = '0.5';
-        } else {
-            dashSels[2].disabled = false;
-            dashSels[3].disabled = false;
-            dashSels[2].style.opacity = '1';
-            dashSels[3].style.opacity = '1';
-        }
-    };
-    updateDashboardSels(activeTier);
+    dashSels.forEach((sel, i) => {
+        populateCurrencies(sel, state.dashboardBases[i]);
+        sel.disabled = false;
+        sel.style.opacity = '1';
+    });
 
     // Tabs
     tabs.forEach(tab => {
@@ -228,7 +213,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (res && res.success) {
                 dashGrid.textContent = '';
-                const maxSlots = activeTier === 'basic' ? 2 : 4;
+                const maxSlots = 4;
                 state.dashboardBases.slice(0, maxSlots).forEach((base, i) => {
                     const rate = res.rates[i];
                     const card = document.createElement('div');

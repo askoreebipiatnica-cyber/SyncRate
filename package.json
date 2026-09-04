@@ -20,7 +20,6 @@
     "dotenv": "^17.2.3",
     "express": "^4.22.2",
     "file-saver": "^2.0.5",
-    "firebase-admin": "^14.3.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.546.0",
     "motion": "^12.38.0",

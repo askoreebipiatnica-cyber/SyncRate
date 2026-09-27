@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { templates } from '../src/templates';
 import JSZip from 'jszip';
 
 // Minimal elegant base64-encoded purple icons (gradient background with white accent)
@@ -22,32 +21,28 @@ function ensureDirectoryExistence(dirPath: string) {
 function writeExtensionFiles() {
   console.log('🚀 Starting unpacking and building extension into /extension ...');
 
-  // Create directories
-  ensureDirectoryExistence(OUTPUT_DIR);
-  ensureDirectoryExistence(ICONS_DIR);
-
-  // Write source files
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'manifest.json'), templates.manifest);
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'popup.html'), templates.popupHtml);
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'popup.js'), templates.popupJs);
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'background.js'), templates.background);
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'content.js'), templates.content);
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'store_ru.txt'), templates.storeRu);
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'store_en.txt'), templates.storeEn);
-
-  // Also duplicate in public/extension for web hosting / static serving
+  // Source directory is /extension
+  const folderPath = path.join(process.cwd(), 'extension');
   const PUBLIC_OUTPUT_DIR = path.join(process.cwd(), 'public', 'extension');
   const PUBLIC_ICONS_DIR = path.join(PUBLIC_OUTPUT_DIR, 'icons');
   ensureDirectoryExistence(PUBLIC_OUTPUT_DIR);
   ensureDirectoryExistence(PUBLIC_ICONS_DIR);
 
-  fs.writeFileSync(path.join(PUBLIC_OUTPUT_DIR, 'manifest.json'), templates.manifest);
-  fs.writeFileSync(path.join(PUBLIC_OUTPUT_DIR, 'popup.html'), templates.popupHtml);
-  fs.writeFileSync(path.join(PUBLIC_OUTPUT_DIR, 'popup.js'), templates.popupJs);
-  fs.writeFileSync(path.join(PUBLIC_OUTPUT_DIR, 'background.js'), templates.background);
-  fs.writeFileSync(path.join(PUBLIC_OUTPUT_DIR, 'content.js'), templates.content);
-  fs.writeFileSync(path.join(PUBLIC_OUTPUT_DIR, 'store_ru.txt'), templates.storeRu);
-  fs.writeFileSync(path.join(PUBLIC_OUTPUT_DIR, 'store_en.txt'), templates.storeEn);
+  // Copy extension files to public/extension
+  const copyDir = (src: string, dest: string) => {
+    ensureDirectoryExistence(dest);
+    const entries = fs.readdirSync(src, { withFileTypes: true });
+    for (const entry of entries) {
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+      if (entry.isDirectory()) {
+        copyDir(srcPath, destPath);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+  };
+  copyDir(folderPath, PUBLIC_OUTPUT_DIR);
 
   // Handle binary icons by preserving user-uploaded icons if they exist in either directory
   const isValidPng = (filePath: string): boolean => {
@@ -68,13 +63,10 @@ function writeExtensionFiles() {
     const publicValid = isValidPng(publicTargetPath);
 
     if (targetValid) {
-      console.log(`ℹ️ Valid icon ${filename} found in /extension/icons. Copying to public...`);
       fs.copyFileSync(targetPath, publicTargetPath);
     } else if (publicValid) {
-      console.log(`ℹ️ Valid icon ${filename} found in /public/extension/icons. Copying to /extension/icons...`);
       fs.copyFileSync(publicTargetPath, targetPath);
     } else {
-      console.log(`ℹ️ Icon ${filename} not found or corrupted. Writing fallback base64 icon...`);
       const buffer = Buffer.from(fallbackBase64, 'base64');
       fs.writeFileSync(targetPath, buffer);
       fs.writeFileSync(publicTargetPath, buffer);

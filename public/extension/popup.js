@@ -13,22 +13,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         targetCurrency: 'RUB',
         rateSource: 'market',
         dashboardBases: ['USD', 'EUR', 'RUB', 'GBP'],
-        theme: 'dark',
-        licenseKey: '',
-        sessionToken: '',
-        installId: ''
+        theme: 'dark'
     });
-
-    if (!state.installId) {
-        state.installId = 'inst-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        await chrome.storage.local.set({ installId: state.installId });
-    }
-
-    function getTierFromToken(token) {
-        return 'pro_plus';
-    }
-
-    state.appTier = 'pro_plus';
 
     let currentLang = state.lang === 'auto' ? (navigator.language.split('-')[0] || 'en') : state.lang;
     if (currentLang === 'ua') currentLang = 'uk';
@@ -191,7 +177,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 translateUI();
                 dashSels.forEach((sel, i) => populateCurrencies(sel, state.dashboardBases[i]));
-                updateDashboardSels(activeTier);
                 loadDashboard();
             }, 1000);
         });
@@ -247,7 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const feedbackBtn = document.getElementById('feedback-btn');
     if (feedbackBtn) {
         feedbackBtn.addEventListener('click', () => {
-            chrome.tabs.create({ url: API_URL + '/feedback?v=' + encodeURIComponent(CONFIG.VERSION) + '&tier=' + encodeURIComponent(activeTier) + '&installId=' + encodeURIComponent(state.installId) });
+            chrome.tabs.create({ url: API_URL + '/feedback?v=' + encodeURIComponent(CONFIG.VERSION) });
         });
     }
 

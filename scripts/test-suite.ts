@@ -302,6 +302,44 @@ async function runSuite() {
     assert.ok(fs.existsSync(icon128), "icon128.png missing");
   });
 
+  console.log("\n--- [SECTION 4: ARCHITECTURAL INTEGRITY & ZERO-TRACKING AUDIT TESTS] ---");
+
+  test("Extension code contains zero tracking IDs or session token leaks", () => {
+    const bgCode = fs.readFileSync(path.join(process.cwd(), "extension", "background.js"), "utf8");
+    const popupCode = fs.readFileSync(path.join(process.cwd(), "extension", "popup.js"), "utf8");
+    const contentCode = fs.readFileSync(path.join(process.cwd(), "extension", "content.js"), "utf8");
+
+    assert.ok(!bgCode.includes("installId"), "background.js must not contain installId");
+    assert.ok(!bgCode.includes("sessionToken"), "background.js must not contain sessionToken");
+    assert.ok(!bgCode.includes("/api/trial"), "background.js must not call /api/trial");
+    assert.ok(!bgCode.includes("/api/session"), "background.js must not call /api/session");
+
+    assert.ok(!popupCode.includes("installId"), "popup.js must not contain installId");
+    assert.ok(!popupCode.includes("updateDashboardSels"), "popup.js must not call undefined updateDashboardSels");
+    assert.ok(!popupCode.includes("activeTier"), "popup.js must not reference undefined activeTier");
+
+    assert.ok(!contentCode.includes("sessionToken"), "content.js must not contain sessionToken");
+    assert.ok(!contentCode.includes("getTierFromToken"), "content.js must not contain getTierFromToken");
+  });
+
+  test("No leaked Google API keys or credentials exist in workspace", () => {
+    const keyPrefix = ['AIza', 'Sy'].join('');
+    const checkDir = (dir: string) => {
+      const files = fs.readdirSync(dir, { withFileTypes: true });
+      for (const f of files) {
+        if (f.name === "node_modules" || f.name === ".git" || f.name === "dist" || f.name === "test-suite.ts" || f.name.endsWith(".zip") || f.name.endsWith(".crx")) continue;
+        const p = path.join(dir, f.name);
+        if (f.isDirectory()) {
+          checkDir(p);
+        } else if (f.name.endsWith(".json") || f.name.endsWith(".js") || f.name.endsWith(".ts")) {
+          const content = fs.readFileSync(p, "utf8");
+          assert.ok(!content.includes(keyPrefix), `File ${p} contains potential Google API Key leak`);
+        }
+      }
+    };
+    checkDir(process.cwd());
+  });
+
   console.log("\n=======================================================");
   console.log(` 🏆 TEST SUMMARY: ${passed} / ${total} TESTS PASSED`);
   console.log("=======================================================\n");

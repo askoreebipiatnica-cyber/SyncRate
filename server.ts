@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import crypto from "crypto";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,16 +22,31 @@ async function startServer() {
     next();
   });
 
-  // In-memory rate limiter to mitigate DoS/brute-force attacks
-  const rateLimitBuckets: Record<string, { count: number; resetTime: number }> = {};
+  // Isolated In-memory Rate Limiter with TTL cleanup to prevent memory leaks
   function createRateLimiter(maxRequests: number, windowMs: number) {
+    const buckets = new Map<string, { count: number; resetTime: number }>();
+
+    // Periodically prune expired buckets every 2 minutes
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      for (const [ip, data] of buckets.entries()) {
+        if (now > data.resetTime) {
+          buckets.delete(ip);
+        }
+      }
+    }, 2 * 60 * 1000);
+    // Unref cleanup interval so it does not keep the event loop alive on shutdown
+    if (cleanupInterval.unref) {
+      cleanupInterval.unref();
+    }
+
     return (req: express.Request, res: express.Response, next: express.NextFunction) => {
       const ip = req.ip || req.socket.remoteAddress || 'unknown';
       const now = Date.now();
-      const bucket = rateLimitBuckets[ip];
+      const bucket = buckets.get(ip);
 
       if (!bucket || now > bucket.resetTime) {
-        rateLimitBuckets[ip] = { count: 1, resetTime: now + windowMs };
+        buckets.set(ip, { count: 1, resetTime: now + windowMs });
         return next();
       }
 
@@ -46,6 +62,16 @@ async function startServer() {
   const feedbackRateLimiter = createRateLimiter(15, 60 * 1000); // 15 requests per minute
   const publishRateLimiter = createRateLimiter(5, 60 * 1000);   // 5 requests per minute
 
+  // Safe timing-safe comparison helper for authorization tokens
+  function safeCompareBearerToken(receivedHeader: string | undefined, expectedSecret: string): boolean {
+    if (!receivedHeader || !expectedSecret) return false;
+    const expectedHeader = `Bearer ${expectedSecret}`;
+    const receivedBuf = Buffer.from(receivedHeader);
+    const expectedBuf = Buffer.from(expectedHeader);
+    if (receivedBuf.length !== expectedBuf.length) return false;
+    return crypto.timingSafeEqual(receivedBuf, expectedBuf);
+  }
+
   // Segmented Body Parsing: Optional /api/publish endpoint for CI/CD updates (isolated 15mb limit)
   app.post("/api/publish", publishRateLimiter, express.json({ limit: '15mb' }), async (req, res) => {
     const authHeader = req.headers.authorization;
@@ -55,7 +81,7 @@ async function startServer() {
       return res.status(503).json({ error: "Publishing disabled: PUBLISH_SECRET is not configured on the server." });
     }
 
-    if (!authHeader || authHeader !== `Bearer ${secret}`) {
+    if (!safeCompareBearerToken(authHeader, secret)) {
       return res.status(401).json({ error: "Unauthorized. Safe publish requires correct token." });
     }
 
@@ -65,15 +91,15 @@ async function startServer() {
     try {
       if (zipBase64) {
         const buffer = Buffer.from(zipBase64, 'base64');
-        fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.zip'), buffer);
-        fs.writeFileSync(path.join(process.cwd(), 'SyncRate.zip'), buffer);
+        await fs.promises.writeFile(path.join(process.cwd(), 'public', 'SyncRate.zip'), buffer);
+        await fs.promises.writeFile(path.join(process.cwd(), 'SyncRate.zip'), buffer);
       }
       if (crxBase64) {
         const buffer = Buffer.from(crxBase64, 'base64');
-        fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
+        await fs.promises.writeFile(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
       } else if (zipBase64) {
         const buffer = Buffer.from(zipBase64, 'base64');
-        fs.writeFileSync(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
+        await fs.promises.writeFile(path.join(process.cwd(), 'public', 'SyncRate.crx'), buffer);
       }
 
       console.log("🚀 Successfully refreshed SyncRate extension assets on disk!");

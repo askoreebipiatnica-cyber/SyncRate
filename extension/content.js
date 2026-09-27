@@ -246,6 +246,7 @@ const captureOptions = { capture: true, passive: true };
 document.addEventListener('mouseup', handleSelectionEvent, captureOptions);
 document.addEventListener('pointerup', handleSelectionEvent, captureOptions);
 document.addEventListener('keyup', (e) => {
+    if (!e || typeof e.key !== 'string') return;
     if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
         clearTimeout(selectionDebounceTimer);
         selectionDebounceTimer = setTimeout(() => handleSelectionEvent(e), 200);

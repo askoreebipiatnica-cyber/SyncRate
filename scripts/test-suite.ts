@@ -2,107 +2,12 @@ import assert from "assert";
 import fs from "fs";
 import path from "path";
 import JSZip from "jszip";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const { parseCurrencyString } = require("../extension/parser.js");
 
 const BASE_URL = "http://localhost:3000";
-
-// ==========================================
-// 1. UNIT TEST: CURRENCY PARSER LOGIC
-// ==========================================
-const CRYPTO_MAP: Record<string, string> = {
-  'BTC':'BTC','BITCOIN':'BTC','БИТКОИН':'BTC','БИТОК':'BTC',
-  'ETH':'ETH','ETHEREUM':'ETH','ЭФИРИУМ':'ETH','ЭФИР':'ETH',
-  'USDT':'USDT','TETHER':'USDT','ТЕЗЕР':'USDT','BNB':'BNB',
-  'BINANCECOIN':'BNB','SOL':'SOL','SOLANA':'SOL','XRP':'XRP',
-  'DOGE':'DOGE','DOGECOIN':'DOGE','SAT':'SAT','SATOSHI':'SAT'
-};
-
-const FIAT_MAP: Record<string, string> = {
-  '$':'USD','USD':'USD','€':'EUR','EUR':'EUR','£':'GBP','GBP':'GBP',
-  '¥':'CNY','CNY':'CNY','JPY':'JPY','₣':'CHF','CHF':'CHF',
-  'A$':'AUD','AUD':'AUD','C$':'CAD','CAD':'CAD','₺':'TRY','TRY':'TRY',
-  'AED':'AED','₴':'UAH','UAH':'UAH','ГРН':'UAH','₸':'KZT','KZT':'KZT',
-  '₼':'AZN','AZN':'AZN','BR':'BYN','BYN':'BYN','₹':'INR','INR':'INR',
-  '₽':'RUB','Р':'RUB','РУБ':'RUB','RUB':'RUB'
-};
-
-const CURRENCY_MAP = { ...FIAT_MAP, ...CRYPTO_MAP };
-const CRYPTO_CODES = Object.values(CRYPTO_MAP);
-
-function parseCurrencyString(text: string) {
-  text = text.replace(/[\u00A0\u202F\u200B-\u200D\uFEFF]/g, ' ').trim();
-  if (!text || text.length > 50) return null;
-
-  const suffixRegex = /^([0-9\s.,]+)\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\.?|млн\.?|млрд\.?|трлн\.?))?\s*([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\s]{1,25})$/i;
-  const prefixRegex = /^([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\s]{1,25})\s*([0-9\s.,]+)\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\.?|млн\.?|млрд\.?|трлн\.?))?$/i;
-
-  let match = text.match(suffixRegex);
-  let isSuffix = true;
-  if (!match) {
-    match = text.match(prefixRegex);
-    isSuffix = false;
-  }
-  if (!match) return null;
-
-  const originalMatchedCur = isSuffix ? match[3] : match[1];
-  let numStr: string, curStr: string, multStr: string;
-  if (isSuffix) {
-    numStr = match[1];
-    multStr = match[2] || "";
-    curStr = match[3];
-  } else {
-    curStr = match[1];
-    numStr = match[2];
-    multStr = match[3] || "";
-  }
-
-  numStr = numStr.trim();
-  curStr = curStr.trim().toUpperCase();
-  multStr = multStr.trim().toLowerCase();
-
-  if (curStr.endsWith('.') && curStr !== 'FR.') curStr = curStr.slice(0, -1);
-  const cleanCurStr = curStr.replace(/[^A-ZА-ЯЁ$€£¥₽₺₴₸₼₹₩₪¢]/g, '');
-  let isoCode = CURRENCY_MAP[cleanCurStr] || (Object.values(CURRENCY_MAP).includes(cleanCurStr) ? cleanCurStr : null);
-  if (!isoCode) return null;
-
-  if (isoCode === 'RUB' && (cleanCurStr === 'Р' || cleanCurStr === 'P')) {
-    if (!isSuffix) return null;
-    const rawCur = originalMatchedCur.trim();
-    if (rawCur === 'P' || rawCur === 'p') return null;
-  }
-
-  let cleanNum = numStr.replace(/\s/g, '');
-  let separators = cleanNum.match(/[.,]/g);
-  let amount = 0;
-
-  if (!separators) {
-    amount = parseFloat(cleanNum);
-  } else if (separators.length === 1) {
-    let sep = separators[0];
-    let parts = cleanNum.split(sep);
-    if (parts[1].length === 3 && parts[0] !== '0' && parts[0] !== '-0' && !CRYPTO_CODES.includes(isoCode)) {
-      amount = parseFloat(cleanNum.replace(sep, ''));
-    } else {
-      amount = parseFloat(cleanNum.replace(sep, '.'));
-    }
-  } else {
-    let lastSepIdx = Math.max(cleanNum.lastIndexOf('.'), cleanNum.lastIndexOf(','));
-    amount = parseFloat(cleanNum.substring(0, lastSepIdx).replace(/[.,]/g, '') + '.' + cleanNum.substring(lastSepIdx + 1));
-  }
-
-  if (isNaN(amount)) return null;
-
-  multStr = multStr.replace('.', '');
-  if (multStr === 'k' || multStr === 'тыс' || multStr === 'к' || multStr === 'т') amount *= 1000;
-  else if (multStr === 'm' || multStr === 'млн' || multStr === 'м') amount *= 1000000;
-  else if (multStr === 'b' || multStr === 'млрд' || multStr === 'б') amount *= 1000000000;
-  else if (multStr === 't' || multStr === 'трлн') amount *= 1000000000000;
-
-  const isSatVal = isoCode === 'SAT';
-  if (isSatVal) amount *= 0.00000001;
-  const finalCur = isSatVal ? 'BTC' : isoCode;
-
-  return { amount, currency: finalCur, isSat: isSatVal };
-}
 
 // ==========================================
 // TEST EXECUTION RUNNER
@@ -194,6 +99,69 @@ async function runSuite() {
     assert.strictEqual(res.amount, 1);
     assert.strictEqual(res.currency, "BTC");
     assert.strictEqual(res.isSat, true);
+  });
+
+  test("Parses word numerals & lexical currency: '90 тысяч долларов' -> 90000 USD", () => {
+    const res = parseCurrencyString("90 тысяч долларов");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 90000);
+    assert.strictEqual(res.currency, "USD");
+  });
+
+  test("Parses word numerals & lexical currency: 'три тысячи евро' -> 3000 EUR", () => {
+    const res = parseCurrencyString("три тысячи евро");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 3000);
+    assert.strictEqual(res.currency, "EUR");
+  });
+
+  test("Parses English lexical slang: 'five hundred bucks' -> 500 USD", () => {
+    const res = parseCurrencyString("five hundred bucks");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 500);
+    assert.strictEqual(res.currency, "USD");
+  });
+
+  test("Parses fractional phrase: 'три с половиной тысячи рублей' -> 3500 RUB", () => {
+    const res = parseCurrencyString("три с половиной тысячи рублей");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 3500);
+    assert.strictEqual(res.currency, "RUB");
+  });
+
+  test("Parses complex verbal millions: 'два с половиной миллиона долларов' -> 2500000 USD", () => {
+    const res = parseCurrencyString("два с половиной миллиона долларов");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 2500000);
+    assert.strictEqual(res.currency, "USD");
+  });
+
+  test("Parses Russian slang and numerals: 'сто пятьдесят баксов' -> 150 USD", () => {
+    const res = parseCurrencyString("сто пятьдесят баксов");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 150);
+    assert.strictEqual(res.currency, "USD");
+  });
+
+  test("Parses special compound fraction: 'полтора миллиона рублей' -> 1500000 RUB", () => {
+    const res = parseCurrencyString("полтора миллиона рублей");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 1500000);
+    assert.strictEqual(res.currency, "RUB");
+  });
+
+  test("Parses compound half-million: 'полмиллиона долларов' -> 500000 USD", () => {
+    const res = parseCurrencyString("полмиллиона долларов");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 500000);
+    assert.strictEqual(res.currency, "USD");
+  });
+
+  test("Parses English compound: 'one hundred and fifty euros' -> 150 EUR", () => {
+    const res = parseCurrencyString("one hundred and fifty euros");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 150);
+    assert.strictEqual(res.currency, "EUR");
   });
 
   test("Rejects non-currency arbitrary strings", () => {

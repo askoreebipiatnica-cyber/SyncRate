@@ -43,24 +43,42 @@
 
 ---
 
-### 📦 Простая инструкция по установке (Без сборки)
+### 📦 Пошаговая инструкция по установке в браузер
 
-Для ручной установки готового расширения в браузер выполните следующие шаги:
+Расширение работает в любых современных браузерах на базе Chromium (**Google Chrome, Яндекс Браузер, Microsoft Edge, Opera, Brave**).
 
-1. **Скачайте расширение**:
-   Нажмите кнопку **[📦 Download Extension](https://github.com/askoreebipiatnica-cyber/SyncRate/releases/latest/download/SyncRate.zip)** или скачайте архив из раздела **Releases**.
-2. **Распакуйте архив**:
-   Распакуйте скачанный ZIP-файл `SyncRate.zip` в любую удобную папку на вашем компьютере.
-3. **Откройте страницу расширений**:
-   В браузере (Chrome, Edge, Opera, Brave, Яндекс) откройте страницу управления расширениями:
-   * Google Chrome: `chrome://extensions/`
-   * Microsoft Edge: `edge://extensions/`
-4. **Включите режим разработчика**:
-   Активируйте тумблер **«Режим разработчика»** (обычно находится в правом верхнем углу).
-5. **Загрузите расширение**:
-   Нажмите на кнопку **«Загрузить распакованное расширение»** (Load unpacked) в левом верхнем углу и выберите папку, в которую вы распаковали ZIP-архив (папка, где лежит файл `manifest.json`).
-6. **Готово!**
-   Расширение установлено и готово к работе. Закрепите его на панели задач браузера.
+> ⚠️ **ВАЖНОЕ ПРАВИЛО:** При установке браузер требует указать папку, в которой **напрямую находится файл `manifest.json`**.  
+> Если вы скачали архив всего репозитория (`SyncRate-main.zip`), нужные файлы лежат в подпапке **`extension`**!
+
+---
+
+#### Вариант А: Быстрая установка готового расширения (Рекомендуется)
+1. **Скачайте архив расширения**:  
+   Нажмите на прямую ссылку **[📦 Скачать SyncRate.zip](https://github.com/askoreebipiatnica-cyber/SyncRate/releases/latest/download/SyncRate.zip)**.
+2. **Распакуйте архив**:  
+   Распакуйте `SyncRate.zip` в любую постоянную папку (например, `C:\SyncRate` или `D:\Extensions\SyncRate`). Внутри распакованной папки сразу должны лежать файлы `manifest.json`, `background.js` и папка `icons`.
+3. **Откройте страницу расширений в браузере**:
+   * В **Google Chrome / Яндекс Браузере**: введите в адресную строку `chrome://extensions/` и нажмите Enter.
+   * В **Microsoft Edge**: введите `edge://extensions/` и нажмите Enter.
+4. **Включите «Режим разработчика»**:  
+   Активируйте тумблер **«Режим разработчика»** (Developer mode) в правом верхнем углу окна.
+5. **Загрузите расширение**:  
+   В левом верхнем углу нажмите кнопку **«Загрузить распакованное расширение»** (Load unpacked) и выберите распакованную папку `SyncRate` (где лежит `manifest.json`).
+6. **Готово!**  
+   Иконка SyncRate появится в панели расширений. Закрепите её булавкой для быстрого доступа.
+
+---
+
+#### Вариант Б: Если вы скачали весь репозиторий GitHub целиком (`SyncRate-main.zip` / Clone)
+1. Распакуйте архив репозитория (например, в `D:\AI\Soft\SyncRate-main`).
+2. В браузере на странице `chrome://extensions/` нажмите **«Загрузить распакованное расширение»**.
+3. **ОБЯЗАТЕЛЬНО выберите подпапку `extension`** внутри распакованного репозитория:
+   ```text
+   D:\...\SyncRate-main\extension   <--- Выбирать ИМЕННО ЭТУ папку!
+   ```
+   *(Если выбрать корневую папку `SyncRate-main`, браузер выдаст ошибку «Файл манифеста отсутствует или недоступен для чтения», так как `manifest.json` находится именно внутри подпапки `extension`).*
+
+---
 
 ---
 
@@ -88,24 +106,42 @@ All premium features — including advanced cryptocurrencies, official national 
 
 ---
 
-### 📦 Easy Installation (No Build Required)
+### 📦 Step-by-Step Browser Installation Guide
 
-For standard manual installation into your browser, follow these simple steps:
+Works in any modern Chromium-based browser (**Google Chrome, Microsoft Edge, Brave, Opera, Vivaldi, Yandex Browser**).
 
-1. **Download the Extension**:
-   Click the **[📦 Download Extension](https://github.com/askoreebipiatnica-cyber/SyncRate/releases/latest/download/SyncRate.zip)** button or get the archive from the **Releases** section.
-2. **Unpack the Archive**:
-   Extract the downloaded `SyncRate.zip` archive to any folder on your computer.
-3. **Open extensions manager**:
-   In your browser, navigate to the extensions control page:
-   * Google Chrome: `chrome://extensions/`
-   * Microsoft Edge: `edge://extensions/`
-4. **Enable Developer Mode**:
+> ⚠️ **IMPORTANT RULE:** Chromium browsers require selecting the specific folder that **directly contains the `manifest.json` file**.  
+> If you downloaded the entire repository archive (`SyncRate-main.zip`), the extension files reside inside the **`extension`** subfolder!
+
+---
+
+#### Option A: Installing the Standalone Extension Package (Recommended)
+1. **Download the archive**:  
+   Click the direct link **[📦 Download SyncRate.zip](https://github.com/askoreebipiatnica-cyber/SyncRate/releases/latest/download/SyncRate.zip)**.
+2. **Unpack the archive**:  
+   Extract `SyncRate.zip` into any permanent folder (e.g., `C:\SyncRate` or `D:\Extensions\SyncRate`). The folder will directly contain `manifest.json`, `background.js`, `content.js`, etc.
+3. **Open extensions manager in your browser**:
+   * In **Google Chrome / Brave**: enter `chrome://extensions/` in the address bar.
+   * In **Microsoft Edge**: enter `edge://extensions/` in the address bar.
+4. **Enable Developer Mode**:  
    Toggle the **"Developer mode"** switch located in the top-right corner.
-5. **Load Unpacked Extension**:
-   Click the **"Load unpacked"** button in the top-left corner, and select the folder where you extracted the ZIP archive.
-6. **All Set!**
-   The extension is installed. Pin it to your toolbar, choose your target currency, and highlight any price on any web page to see instant conversions.
+5. **Load Unpacked Extension**:  
+   Click the **"Load unpacked"** button in the top-left corner, and select the folder where you extracted `SyncRate` (the folder containing `manifest.json`).
+6. **All Set!**  
+   SyncRate is installed. Pin it to your browser toolbar for quick access.
+
+---
+
+#### Option B: If you downloaded the entire GitHub repository (`SyncRate-main.zip` or Git Clone)
+1. Extract the repository archive (e.g., to `D:\AI\Soft\SyncRate-main`).
+2. Go to `chrome://extensions/` and click **"Load unpacked"**.
+3. **Select the `extension` subfolder** inside the extracted repository:
+   ```text
+   D:\...\SyncRate-main\extension   <--- Select THIS subfolder!
+   ```
+   *(If you select the root `SyncRate-main` folder, the browser will display "Manifest file is missing or unreadable" because `manifest.json` is located inside `/extension`).*
+
+---
 
 ---
 

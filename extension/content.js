@@ -1,98 +1,194 @@
-const CRYPTO_MAP = {
-    'BTC':'BTC','BITCOIN':'BTC','БИТКОИН':'BTC','БИТОК':'BTC',
-    'ETH':'ETH','ETHEREUM':'ETH','ЭФИРИУМ':'ETH','ЭФИР':'ETH',
-    'USDT':'USDT','TETHER':'USDT','ТЕЗЕР':'USDT','BNB':'BNB','BINANCECOIN':'BNB',
-    'SOL':'SOL','SOLANA':'SOL','СОЛАНА':'SOL','XRP':'XRP','RIPPLE':'XRP','РИПЛ':'XRP',
-    'USDC':'USDC','USDCOIN':'USDC','ADA':'ADA','CARDANO':'ADA','КАРДАНО':'ADA',
-    'AVAX':'AVAX','AVALANCHE':'AVAX','АВАКС':'AVAX','DOGE':'DOGE','DOGECOIN':'DOGE','ДОГИКОИН':'DOGE','ДОГИ':'DOGE',
-    'DOT':'DOT','POLKADOT':'DOT','ПОЛКАДОТ':'DOT','TRX':'TRX','TRON':'TRX','ТРОН':'TRX',
-    'LINK':'LINK','CHAINLINK':'LINK','ЛИНК':'LINK','MATIC':'MATIC','POLYGON':'MATIC','МАТИК':'MATIC',
-    'TON':'TON','TONCOIN':'TON','ТОН':'TON','SHIB':'SHIB','SHIBAINU':'SHIB','ШИБА':'SHIB',
-    'LTC':'LTC','LITECOIN':'LTC','ЛАЙТКОИН':'LTC','BCH':'BCH','BITCOINCASH':'BCH','БИТКОИНКЕШ':'BCH',
-    'SAT':'SAT','SATOSHI':'SAT','САТОШИ':'SAT','WAVES':'WAVES','ВЕЙВС':'WAVES'
-};
-
-const FIAT_MAP = {
-    '$':'USD','USD':'USD','€':'EUR','EUR':'EUR','£':'GBP','GBP':'GBP','¥':'CNY','CNY':'CNY',
-    'JPY':'JPY','₣':'CHF','FR.':'CHF','CHF':'CHF','A$':'AUD','AUD':'AUD','C$':'CAD','CAD':'CAD',
-    '₺':'TRY','TRY':'TRY','AED':'AED','₴':'UAH','UAH':'UAH','ГРН':'UAH','ГРИВНА':'UAH','ГРИВЕН':'UAH',
-    '₸':'KZT','KZT':'KZT','ТНГ':'KZT','ТЕНГЕ':'KZT','₼':'AZN','AZN':'AZN','BGN':'BGN','LEV':'BGN',
-    'BR':'BYN','BYN':'BYN','БР':'BYN','БЕЛРУБ':'BYN','BYR':'BYN','РБ':'BYN','₹':'INR','INR':'INR',
-    'KGS':'KGS','₩':'KRW','KRW':'KRW','L':'MDL','MDL':'MDL','SM':'TJS','TJS':'TJS','TMT':'TMT',
-    'UZS':'UZS','SUM':'UZS','₪':'ILS','ILS':'ILS','¢':'USD','₽':'RUB','Р':'RUB','РУБ':'RUB',
-    'РУБ.':'RUB','РУБЛЕЙ':'RUB','RUB':'RUB','ДОЛЛАР':'USD','ДОЛЛАРОВ':'USD','ЕВРО':'EUR',
-    'ЮАНЬ':'CNY','ИЕНА':'JPY','ТЕНГЕ':'KZT'
-};
-
-const CURRENCY_MAP = { ...FIAT_MAP, ...CRYPTO_MAP };
-const CRYPTO_CODES = Object.values(CRYPTO_MAP);
+/**
+ * SyncRate - Content Script (DOM & Selection Engine)
+ * Robust selection detection for popups, modal subscription overlays, Shadow DOM & iframes.
+ * 
+ * @license Apache-2.0
+ */
 
 let hideTimeout = null;
 let currentTooltip = null;
 
-document.addEventListener('mouseup', handleSelection);
-document.addEventListener('mousedown', (e) => {
-    if (currentTooltip && currentTooltip.contains(e.target)) return;
-    removeTooltip();
-});
+// ============================================================================
+// 1. SELECTION & SHADOW DOM RESOLVER
+// ============================================================================
 
-chrome.runtime.onMessage.addListener((message) => {
-    if (message && message.action === "RENDER_IN_TOP_FRAME") {
-        const isIframe = window !== window.top;
-        if (!isIframe) {
-            processSelectionText(message.text, 0, 0, true);
+/**
+ * Recursively locates the deep active element through open ShadowRoots.
+ * @param {Document|ShadowRoot} root
+ * @returns {Element|null}
+ */
+function getDeepActiveElement(root = document) {
+    let active = root.activeElement;
+    while (active && active.shadowRoot && active.shadowRoot.activeElement) {
+        active = active.shadowRoot.activeElement;
+    }
+    return active;
+}
+
+/**
+ * Extracts text selection from normal DOM, open ShadowRoots, or input/textarea elements.
+ * @returns {{ text: string, rect: DOMRect | null }}
+ */
+function getDeepSelection() {
+    let text = '';
+    let rect = null;
+
+    // 1. Check standard window selection
+    const winSel = window.getSelection();
+    if (winSel && winSel.rangeCount > 0) {
+        const candidate = winSel.toString();
+        if (candidate && candidate.trim()) {
+            text = candidate;
+            try {
+                rect = winSel.getRangeAt(0).getBoundingClientRect();
+            } catch (e) {}
         }
     }
-});
 
-async function handleSelection(event) {
+    // 2. Check ShadowRoot selection if standard selection is empty
+    if (!text.trim()) {
+        let el = document.activeElement;
+        while (el) {
+            if (el.shadowRoot) {
+                const sRoot = el.shadowRoot;
+                if (typeof sRoot.getSelection === 'function') {
+                    const sSel = sRoot.getSelection();
+                    if (sSel && sSel.rangeCount > 0 && sSel.toString().trim()) {
+                        text = sSel.toString();
+                        try {
+                            rect = sSel.getRangeAt(0).getBoundingClientRect();
+                        } catch (e) {}
+                        break;
+                    }
+                }
+                el = sRoot.activeElement;
+            } else {
+                break;
+            }
+        }
+    }
+
+    // 3. Check selected text within active input or textarea (common in subscription inputs)
+    if (!text.trim()) {
+        const deepActive = getDeepActiveElement(document);
+        if (deepActive && (deepActive.tagName === 'INPUT' || deepActive.tagName === 'TEXTAREA')) {
+            const input = deepActive;
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            if (typeof start === 'number' && typeof end === 'number' && start !== end) {
+                text = input.value.substring(start, end);
+                try {
+                    rect = input.getBoundingClientRect();
+                } catch (e) {}
+            }
+        }
+    }
+
+    return { text, rect };
+}
+
+/**
+ * Checks if the selection or active element resides inside sensitive fields (password, credit card, CVV).
+ * @returns {boolean}
+ */
+function isSelectionInSensitiveField() {
+    const deepActive = getDeepActiveElement(document);
+    if (deepActive) {
+        const tag = deepActive.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'textarea') {
+            const type = (deepActive.getAttribute('type') || '').toLowerCase();
+            const name = (deepActive.getAttribute('name') || '').toLowerCase();
+            const id = (deepActive.getAttribute('id') || '').toLowerCase();
+            const autocomplete = (deepActive.getAttribute('autocomplete') || '').toLowerCase();
+
+            if (type === 'password' || type === 'hidden') return true;
+            if (name.includes('cc') || name.includes('card') || name.includes('cvv') || name.includes('cvc') || name.includes('secret') || name.includes('token')) return true;
+            if (id.includes('cc') || id.includes('card') || id.includes('cvv') || id.includes('cvc') || id.includes('secret') || id.includes('token')) return true;
+            if (autocomplete.includes('cc-') || autocomplete.includes('current-password')) return true;
+        }
+    }
+
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+        const node = sel.getRangeAt(0).commonAncestorContainer;
+        const el = node.nodeType === 1 ? node : node.parentElement;
+        if (el) {
+            const closestInput = el.closest('input, textarea');
+            if (closestInput) {
+                const type = (closestInput.type || '').toLowerCase();
+                const name = (closestInput.name || '').toLowerCase();
+                const id = (closestInput.id || '').toLowerCase();
+                return type === 'password' || type === 'hidden' ||
+                       name.includes('cc') || name.includes('card') || name.includes('cvv') || name.includes('secret') ||
+                       id.includes('cc') || id.includes('card') || id.includes('cvv') || id.includes('secret');
+            }
+        }
+    }
+
+    return false;
+}
+
+// ============================================================================
+// 2. PARSER INTEGRATION
+// ============================================================================
+
+function parseCurrency(text) {
+    if (typeof window !== 'undefined' && window.SyncRateParser && typeof window.SyncRateParser.parse === 'function') {
+        return window.SyncRateParser.parse(text);
+    }
+    return null;
+}
+
+// ============================================================================
+// 3. EVENT HANDLERS & MODAL/IFRAME PIPELINE
+// ============================================================================
+
+let selectionDebounceTimer = null;
+
+async function handleSelectionEvent(event) {
     try {
         if (!chrome.runtime?.id) return;
-        const selection = window.getSelection();
-        let text = selection.toString();
-        text = text.replace(/[\u00A0\u202F\u200B-\u200D\uFEFF]/g, ' ').trim();
-        if (!text || text.length > 50) return;
-
-        function isSelectionInSensitiveField() {
-            const sel = window.getSelection();
-            if (!sel.rangeCount) return false;
-            const node = sel.getRangeAt(0).commonAncestorContainer;
-            const el = node.nodeType === 1 ? node : node.parentElement;
-            if (!el) return false;
-            if (el.closest('[contenteditable="true"]')) return true;
-            const closestInput = el.closest('input, textarea');
-            if (!closestInput) return false;
-            const type = (closestInput.type || '').toLowerCase();
-            const name = (closestInput.name || '').toLowerCase();
-            const id = (closestInput.id || '').toLowerCase();
-            return type === 'password' || type === 'hidden' || 
-                   name.includes('cc') || name.includes('card') || name.includes('cvv') || name.includes('password') || name.includes('secret') ||
-                   id.includes('cc') || id.includes('card') || id.includes('cvv') || id.includes('password') || id.includes('secret');
-        }
-
         if (isSelectionInSensitiveField()) return;
 
-        const parseResult = parseCurrencyString(text);
+        const { text, rect } = getDeepSelection();
+        const cleanedText = (text || '').replace(/[\u00A0\u202F\u200B-\u200D\uFEFF]/g, ' ').trim();
+        if (!cleanedText || cleanedText.length > 80) return;
+
+        const parseResult = parseCurrency(cleanedText);
         if (!parseResult) return;
+
+        // Calculate absolute coordinates
+        let posX = 0;
+        let posY = 0;
+
+        if (rect && (rect.width > 0 || rect.height > 0)) {
+            posX = rect.left + (window.scrollX || window.pageXOffset || 0);
+            posY = rect.bottom + (window.scrollY || window.pageYOffset || 0);
+        } else if (event && (event.pageX !== undefined || event.clientX !== undefined)) {
+            posX = event.pageX || (event.clientX + (window.scrollX || 0));
+            posY = event.pageY || (event.clientY + (window.scrollY || 0));
+        }
 
         const isIframe = window !== window.top;
         if (isIframe) {
             chrome.runtime.sendMessage({
                 action: "RENDER_IN_TOP_FRAME",
-                text: text,
-                clientX: event.clientX,
-                clientY: event.clientY
+                text: cleanedText,
+                clientX: event ? event.clientX : 0,
+                clientY: event ? event.clientY : 0
             }).catch(() => {});
             return;
         }
 
-        await processSelectionText(text, event.pageX, event.pageY, false);
-    } catch (e) {}
+        await processSelectionText(cleanedText, posX, posY, false);
+    } catch (e) {
+        // Suppress unexpected browser extension context lifecycle errors
+    }
 }
 
 async function processSelectionText(text, x, y, fromIframe = false) {
     try {
-        const parseResult = parseCurrencyString(text);
+        const parseResult = parseCurrency(text);
         if (!parseResult) return;
 
         const settings = await chrome.storage.local.get({
@@ -130,86 +226,40 @@ async function processSelectionText(text, x, y, fromIframe = false) {
     } catch (e) {}
 }
 
-function parseCurrencyString(text) {
-    const suffixRegex = /^([0-9\s.,]+)\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\.?|млн\.?|млрд\.?|трлн\.?))?\s*([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\s]{1,25})$/i;
-    const prefixRegex = /^([$€£¥₽₺₴₸₼₹₩₪¢A-Za-zА-Яа-яЁё.\s]{1,25})\s*([0-9\s.,]+)\s*((?:[KMBTКМБТ](?![A-Za-zА-Яа-яЁё])|тыс\.?|млн\.?|млрд\.?|трлн\.?))?$/i;
+// ============================================================================
+// 4. CROSS-FRAME COMMUNICATION & SUBSCRIPTION MODAL SUPPORT
+// ============================================================================
 
-    let match = text.match(suffixRegex);
-    let isSuffix = true;
-    if (!match) {
-        match = text.match(prefixRegex);
-        isSuffix = false;
-    }
-    if (!match) return null;
-
-    const originalMatchedCur = isSuffix ? match[3] : match[1];
-    let numStr, curStr, multStr;
-    if (isSuffix) {
-        numStr = match[1];
-        multStr = match[2] || "";
-        curStr = match[3];
-    } else {
-        curStr = match[1];
-        numStr = match[2];
-        multStr = match[3] || "";
-    }
-
-    numStr = numStr.trim();
-    curStr = curStr.trim().toUpperCase();
-    multStr = multStr.trim().toLowerCase();
-
-    if (curStr.endsWith('.') && curStr !== 'FR.') curStr = curStr.slice(0, -1);
-    const cleanCurStr = curStr.replace(/[^A-ZА-ЯЁ$€£¥₽₺₴₸₼₹₩₪¢]/g, '');
-    let isoCode = CURRENCY_MAP[cleanCurStr] || (Object.values(CURRENCY_MAP).includes(cleanCurStr) ? cleanCurStr : null);
-    if (!isoCode) return null;
-
-    if (isoCode === 'RUB' && (cleanCurStr === 'Р' || cleanCurStr === 'P')) {
-        if (!isSuffix) return null;
-        const rawCur = originalMatchedCur.trim();
-        if (rawCur === 'P' || rawCur === 'p') return null;
-        const charBefore = text.charAt(text.length - originalMatchedCur.length - 1);
-        if (!/[\s.,]/.test(charBefore)) return null;
-    }
-
-    if (window.location.hostname.endsWith('.by') && isoCode === 'RUB' && curStr !== 'RUB') isoCode = 'BYN';
-
-    let cleanNum = numStr.replace(/\s/g, '');
-    let separators = cleanNum.match(/[.,]/g);
-    let amount = 0;
-
-    if (!separators) {
-        amount = parseFloat(cleanNum);
-    } else if (separators.length === 1) {
-        let sep = separators[0];
-        let parts = cleanNum.split(sep);
-        if (parts[1].length === 3 && parts[0] !== '0' && parts[0] !== '-0' && !CRYPTO_CODES.includes(isoCode)) {
-            amount = parseFloat(cleanNum.replace(sep, ''));
-        } else {
-            amount = parseFloat(cleanNum.replace(sep, '.'));
+chrome.runtime.onMessage.addListener((message) => {
+    if (message && message.action === "RENDER_IN_TOP_FRAME") {
+        const isIframe = window !== window.top;
+        if (!isIframe) {
+            processSelectionText(message.text, 0, 0, true);
         }
-    } else {
-        let lastSepIdx = Math.max(cleanNum.lastIndexOf('.'), cleanNum.lastIndexOf(','));
-        amount = parseFloat(cleanNum.substring(0, lastSepIdx).replace(/[.,]/g, '') + '.' + cleanNum.substring(lastSepIdx + 1));
     }
+});
 
-    if (isNaN(amount)) return null;
+// Event registration with CAPTURE phase:
+// Intercepts selections before modal overlays, checkout iframes or dialogs can stopPropagation()!
+const captureOptions = { capture: true, passive: true };
 
-    multStr = multStr.replace('.', '');
-    if (multStr === 'k' || multStr === 'тыс' || multStr === 'к' || multStr === 'т') amount *= 1000;
-    else if (multStr === 'm' || multStr === 'млн' || multStr === 'м') amount *= 1000000;
-    else if (multStr === 'b' || multStr === 'млрд' || multStr === 'б') amount *= 1000000000;
-    else if (multStr === 't' || multStr === 'трлн') amount *= 1000000000000;
-
-    if (!CRYPTO_CODES.includes(isoCode)) {
-        if (cleanCurStr === '¢') amount *= 0.01;
+document.addEventListener('mouseup', handleSelectionEvent, captureOptions);
+document.addEventListener('pointerup', handleSelectionEvent, captureOptions);
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
+        clearTimeout(selectionDebounceTimer);
+        selectionDebounceTimer = setTimeout(() => handleSelectionEvent(e), 200);
     }
+}, captureOptions);
 
-    const isSatVal = isoCode === 'SAT';
-    if (isSatVal) amount *= 0.00000001;
-    const finalCur = isSatVal ? 'BTC' : isoCode;
+document.addEventListener('mousedown', (e) => {
+    if (currentTooltip && currentTooltip.contains(e.target)) return;
+    removeTooltip();
+}, captureOptions);
 
-    return { amount, currency: finalCur, isSat: isSatVal };
-}
+// ============================================================================
+// 5. TOOLTIP RENDERER (Supports Fullscreen & High Z-Index Overlays)
+// ============================================================================
 
 function createBase(x, y, callback, fromIframe = false) {
     removeTooltip();
@@ -252,8 +302,8 @@ function createBase(x, y, callback, fromIframe = false) {
                 const scrollX = window.scrollX || window.pageXOffset || 0;
                 const scrollY = window.scrollY || window.pageYOffset || 0;
 
-                let targetX = x + 15;
-                let targetY = y + 35;
+                let targetX = x + 10;
+                let targetY = y + 15;
                 const clientXVal = targetX - scrollX;
                 const clientYVal = targetY - scrollY;
 
@@ -284,7 +334,8 @@ function createBase(x, y, callback, fromIframe = false) {
         });
     });
 
-    document.body.appendChild(t);
+    const hostContainer = document.fullscreenElement || document.body || document.documentElement;
+    hostContainer.appendChild(t);
     currentTooltip = t;
     hideTimeout = setTimeout(removeTooltip, 7000);
 }

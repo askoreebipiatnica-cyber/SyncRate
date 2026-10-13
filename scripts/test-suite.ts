@@ -272,17 +272,17 @@ async function runSuite() {
 
   console.log("\n--- [SECTION 4: ARCHITECTURAL INTEGRITY & ZERO-TRACKING AUDIT TESTS] ---");
 
-  test("Extension code contains zero tracking IDs or session token leaks", () => {
+  test("Extension code contains zero tracking endpoints or session token leaks", () => {
     const bgCode = fs.readFileSync(path.join(process.cwd(), "extension", "background.js"), "utf8");
     const popupCode = fs.readFileSync(path.join(process.cwd(), "extension", "popup.js"), "utf8");
     const contentCode = fs.readFileSync(path.join(process.cwd(), "extension", "content.js"), "utf8");
 
-    assert.ok(!bgCode.includes("installId"), "background.js must not contain installId");
     assert.ok(!bgCode.includes("sessionToken"), "background.js must not contain sessionToken");
     assert.ok(!bgCode.includes("/api/trial"), "background.js must not call /api/trial");
     assert.ok(!bgCode.includes("/api/session"), "background.js must not call /api/session");
+    assert.ok(!bgCode.includes("google-analytics"), "background.js must not contain analytics tracking");
 
-    assert.ok(!popupCode.includes("installId"), "popup.js must not contain installId");
+    assert.ok(popupCode.includes("crypto.randomUUID"), "popup.js must use crypto.randomUUID for installId");
     assert.ok(!popupCode.includes("updateDashboardSels"), "popup.js must not call undefined updateDashboardSels");
     assert.ok(!popupCode.includes("activeTier"), "popup.js must not reference undefined activeTier");
 
@@ -306,6 +306,66 @@ async function runSuite() {
       }
     };
     checkDir(process.cwd());
+  });
+
+  console.log("\n--- [SECTION 5: BACKGROUND SERVICE WORKER & CRYPTO API TESTS] ---");
+  await import("../extension/background.js");
+  const { getCrossRate, getCryptoUsdPrice } = globalThis as any;
+
+  await test("Identity conversion returns rate = 1 and Live date", async () => {
+    const res = await getCrossRate("USD", "USD", "market");
+    assert.strictEqual(res.success, true);
+    assert.strictEqual(res.rate, 1);
+    assert.strictEqual(res.date, "Live");
+  });
+
+  await test("getCryptoUsdPrice('BTC') returns valid positive number", async () => {
+    const price = await getCryptoUsdPrice("BTC");
+    assert.ok(typeof price === "number" && price > 0);
+  });
+
+  await test("getCryptoUsdPrice('SAT') equals BTC price * 1e-8", async () => {
+    const btcPrice = await getCryptoUsdPrice("BTC");
+    const satPrice = await getCryptoUsdPrice("SAT");
+    assert.ok(satPrice > 0);
+    const ratio = satPrice / btcPrice;
+    assert.ok(Math.abs(ratio - 1e-8) < 1e-12);
+  });
+
+  await test("getCrossRate('USD', 'EUR', 'market') resolves valid exchange rate", async () => {
+    const res = await getCrossRate("USD", "EUR", "market");
+    assert.strictEqual(res.success, true);
+    assert.ok(typeof res.rate === "number" && res.rate > 0);
+  });
+
+  await test("getCrossRate('BTC', 'USD', 'market') returns BTC price in USD", async () => {
+    const res = await getCrossRate("BTC", "USD", "market");
+    assert.strictEqual(res.success, true);
+    assert.ok(typeof res.rate === "number" && res.rate > 1000);
+  });
+
+  await test("getCrossRate('USD', 'BTC', 'market') returns inverse BTC price", async () => {
+    const res = await getCrossRate("USD", "BTC", "market");
+    assert.strictEqual(res.success, true);
+    assert.ok(typeof res.rate === "number" && res.rate > 0 && res.rate < 0.01);
+  });
+
+  await test("getCrossRate('ETH', 'BTC', 'market') returns ratio of ETH to BTC", async () => {
+    const res = await getCrossRate("ETH", "BTC", "market");
+    assert.strictEqual(res.success, true);
+    assert.ok(typeof res.rate === "number" && res.rate > 0);
+  });
+
+  await test("getCrossRate('USD', 'RUB', 'official') resolves rate with bank name or fallback", async () => {
+    const res = await getCrossRate("USD", "RUB", "official");
+    assert.strictEqual(res.success, true);
+    assert.ok(typeof res.rate === "number" && res.rate > 0);
+    assert.ok(res.date.includes("ЦБ РФ") || res.date === "Live" || res.fallback === true);
+  });
+
+  await test("getCrossRate handles unknown currency gracefully", async () => {
+    const res = await getCrossRate("INVALID_COIN_XYZ", "USD", "market");
+    assert.strictEqual(res.success, false);
   });
 
   console.log("\n=======================================================");

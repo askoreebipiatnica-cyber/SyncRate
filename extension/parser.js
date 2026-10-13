@@ -37,14 +37,18 @@ const CRYPTO_MAP = {
 
 const FIAT_MAP = {
   '$': 'USD', 'USD': 'USD', '€': 'EUR', 'EUR': 'EUR', '£': 'GBP', 'GBP': 'GBP',
-  '¥': 'CNY', 'CNY': 'CNY', 'JPY': 'JPY', '₣': 'CHF', 'FR.': 'CHF', 'CHF': 'CHF',
+  '¥': 'CNY', 'CNY': 'CNY', 'JPY': 'JPY', '₣': 'CHF', 'FR': 'CHF', 'CHF': 'CHF',
   'A$': 'AUD', 'AUD': 'AUD', 'C$': 'CAD', 'CAD': 'CAD', '₺': 'TRY', 'TRY': 'TRY',
-  'AED': 'AED', '₴': 'UAH', 'UAH': 'UAH', 'ГРН': 'UAH', '₸': 'KZT', 'KZT': 'KZT',
-  '₼': 'AZN', 'AZN': 'AZN', 'BGN': 'BGN', 'LEV': 'BGN', 'BR': 'BYN', 'BYN': 'BYN',
-  'БР': 'BYN', 'БЕЛРУБ': 'BYN', 'BYR': 'BYN', 'РБ': 'BYN', '₹': 'INR', 'INR': 'INR',
-  'KGS': 'KGS', '₩': 'KRW', 'KRW': 'KRW', 'L': 'MDL', 'MDL': 'MDL', 'SM': 'TJS',
-  'TJS': 'TJS', 'TMT': 'TMT', 'UZS': 'UZS', 'SUM': 'UZS', '₪': 'ILS', 'ILS': 'ILS',
+  'AED': 'AED', '₴': 'UAH', 'UAH': 'UAH', 'ГРН': 'UAH', 'ГРИВНА': 'UAH', 'ГРИВЕН': 'UAH',
+  '₸': 'KZT', 'KZT': 'KZT', 'ТНГ': 'KZT', 'ТЕНГЕ': 'KZT',
+  '₼': 'AZN', 'AZN': 'AZN', 'BGN': 'BGN', 'LEV': 'BGN',
+  'BR': 'BYN', 'BYN': 'BYN', 'БР': 'BYN', 'БЕЛРУБ': 'BYN', 'BYR': 'BYN', 'РБ': 'BYN',
+  '₹': 'INR', 'INR': 'INR', 'KGS': 'KGS', '₩': 'KRW', 'KRW': 'KRW',
+  'MDL': 'MDL', 'SM': 'TJS', 'TJS': 'TJS', 'TMT': 'TMT',
+  'UZS': 'UZS', 'SUM': 'UZS', '₪': 'ILS', 'ILS': 'ILS',
   '¢': 'USD', '₽': 'RUB', 'Р': 'RUB', 'РУБ': 'RUB', 'РУБ.': 'RUB', 'РУБЛЕЙ': 'RUB', 'RUB': 'RUB',
+  'ДОЛЛАР': 'USD', 'ДОЛЛАРА': 'USD', 'ДОЛЛАРОВ': 'USD', 'ЕВРО': 'EUR',
+  'ЮАНЬ': 'CNY', 'ИЕНА': 'JPY', 'РУБЛЬ': 'RUB', 'РУБЛЯ': 'RUB',
   'ZŁ': 'PLN', 'PLN': 'PLN', 'GEL': 'GEL', 'AMD': 'AMD'
 };
 
@@ -350,7 +354,7 @@ class LexicalCurrencyResolver {
 
 /**
  * Strategy 1: Standard Numeric + Symbol/Code Parser (Regex Fast Path)
- * Handles: $100, 50.50 €, 1500 руб, 25k USD, 1.5 млн RUB, 0.05 BTC, 100000000 SAT
+ * Handles: $100, 50.50 €, 1500 руб, 25k USD, 1.5 млн RUB, 0.05 BTC, 100000000 SAT, $1,000,000
  */
 class StandardRegexStrategy {
   parse(text) {
@@ -374,7 +378,7 @@ class StandardRegexStrategy {
     curStr = curStr.trim().toUpperCase();
     multStr = multStr.trim().toLowerCase();
 
-    if (curStr.endsWith('.') && curStr !== 'FR.') curStr = curStr.slice(0, -1);
+    if (curStr.endsWith('.')) curStr = curStr.slice(0, -1);
     const cleanCurStr = curStr.replace(/[^A-ZА-ЯЁ$€£¥₽₺₴₸₼₹₩₪¢]/g, '');
     let isoCode = ALL_CURRENCY_MAP[cleanCurStr] || (Object.values(ALL_CURRENCY_MAP).includes(cleanCurStr) ? cleanCurStr : null);
 
@@ -411,8 +415,16 @@ class StandardRegexStrategy {
         amount = parseFloat(cleanNum.replace(sep, '.'));
       }
     } else {
-      let lastSepIdx = Math.max(cleanNum.lastIndexOf('.'), cleanNum.lastIndexOf(','));
-      amount = parseFloat(cleanNum.substring(0, lastSepIdx).replace(/[.,]/g, '') + '.' + cleanNum.substring(lastSepIdx + 1));
+      // Multiple separators: check if all are identical and last block has 3 digits
+      const lastSepIdx = Math.max(cleanNum.lastIndexOf('.'), cleanNum.lastIndexOf(','));
+      const allSameSep = separators.every(s => s === separators[0]);
+      const afterLast = cleanNum.substring(lastSepIdx + 1);
+
+      if (allSameSep && afterLast.length === 3) {
+        amount = parseFloat(cleanNum.replace(/[.,]/g, ''));
+      } else {
+        amount = parseFloat(cleanNum.substring(0, lastSepIdx).replace(/[.,]/g, '') + '.' + afterLast);
+      }
     }
 
     if (isNaN(amount)) return null;
@@ -448,8 +460,7 @@ class LexicalWordStrategy {
     let currencyCode = null;
     let currencyIndex = -1;
 
-    // Scan for currency token either at end, beginning, or within 2 tokens from boundary
-    // Check end first (most common: "90 тысяч долларов", "five hundred bucks")
+    // Scan for currency token either at end, beginning, or within tokens
     for (let i = tokens.length - 1; i >= 0; i--) {
       const code = LexicalCurrencyResolver.resolve(tokens[i]);
       if (code) {
@@ -459,7 +470,6 @@ class LexicalWordStrategy {
       }
     }
 
-    // If not found at the end, check start (e.g., "долларов 500", "bucks 50")
     if (!currencyCode) {
       for (let i = 0; i < tokens.length; i++) {
         const code = LexicalCurrencyResolver.resolve(tokens[i]);

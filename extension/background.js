@@ -1,5 +1,4 @@
 const API_FIAT = "https://open.er-api.com/v6/latest/";
-const CRYPTO_API = "https://min-api.cryptocompare.com/data/price?fsym=";
 const CBRF_API = "https://www.cbr-xml-daily.ru/daily_json.js";
 const NBU_API = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";
 const NBRB_API = "https://api.nbrb.by/exrates/rates?periodicity=0";
@@ -22,49 +21,79 @@ async function fetchWithTimeout(resource, options = {}) {
     }
 }
 
-chrome.runtime.onInstalled.addListener(() => {
-    chrome.alarms.create("cleanupCache", { periodInMinutes: 60 });
-});
+// Single consolidated onInstalled listener with crypto.randomUUID installId initialization
+if (typeof chrome !== 'undefined' && chrome.runtime?.onInstalled) {
+    chrome.runtime.onInstalled.addListener(async () => {
+        try {
+            if (chrome.alarms?.create) {
+                chrome.alarms.create("cleanupCache", { periodInMinutes: 60 });
+            }
+            const stored = await chrome.storage.local.get(['installId']);
+            if (!stored.installId) {
+                const newInstallId = 'inst-' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + '-' + Math.random().toString(36).substring(2)));
+                await chrome.storage.local.set({ installId: newInstallId });
+            }
+        } catch (e) {}
+    });
+}
 
-// Добавляем слушатель будильника
-chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === "cleanupCache") {
-        cleanExpiredCache();
-    }
-});
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "RENDER_IN_TOP_FRAME") {
-        if (sender && sender.tab && sender.tab.id !== undefined) {
-            try {
-                chrome.tabs.sendMessage(sender.tab.id, request, { frameId: 0 })
-                    .catch(() => {});
-            } catch (e) {}
+// Alarm listener for periodic cache cleanup
+if (typeof chrome !== 'undefined' && chrome.alarms?.onAlarm) {
+    chrome.alarms.onAlarm.addListener((alarm) => {
+        if (alarm && alarm.name === "cleanupCache") {
+            cleanExpiredCache();
         }
-        return;
-    }
-    if (request.action === "GET_RATE") {
-        getCrossRate(request.from, request.to, request.source)
-            .then(res => sendResponse(res))
-            .catch(() => sendResponse({ success: false }));
-        return true; // Важно! Оставляем канал открытым
-    }
-    if (request.action === "GET_DASHBOARD") {
-        Promise.all(request.bases.map(b => 
-            getCrossRate(b, request.target, request.source)
-                .catch(() => ({ success: false }))
-        )).then(results => {
-            sendResponse({
-                success: true,
-                rates: results.map(r => r && r.success ? r.rate : null)
-            });
-        }).catch(() => sendResponse({ success: false, rates: [] }));
-        return true;
-    }
-});
+    });
+}
+
+// Runtime onStartup listener
+if (typeof chrome !== 'undefined' && chrome.runtime?.onStartup) {
+    chrome.runtime.onStartup.addListener(() => {
+        cleanExpiredCache();
+    });
+}
+
+// Runtime message listener for rate requests and iframe proxying
+if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        if (!request) return;
+
+        if (request.action === "RENDER_IN_TOP_FRAME") {
+            if (sender && sender.tab && sender.tab.id !== undefined && chrome.tabs?.sendMessage) {
+                try {
+                    chrome.tabs.sendMessage(sender.tab.id, request, { frameId: 0 })
+                        .catch(() => {});
+                } catch (e) {}
+            }
+            return;
+        }
+
+        if (request.action === "GET_RATE") {
+            getCrossRate(request.from, request.to, request.source)
+                .then(res => sendResponse(res))
+                .catch(() => sendResponse({ success: false }));
+            return true; // Keep message channel open for async response
+        }
+
+        if (request.action === "GET_DASHBOARD") {
+            const bases = Array.isArray(request.bases) ? request.bases : [];
+            Promise.all(bases.map(b => 
+                getCrossRate(b, request.target, request.source)
+                    .catch(() => ({ success: false }))
+            )).then(results => {
+                sendResponse({
+                    success: true,
+                    rates: results.map(r => r && r.success ? r.rate : null)
+                });
+            }).catch(() => sendResponse({ success: false, rates: [] }));
+            return true;
+        }
+    });
+}
 
 async function cleanExpiredCache() {
     try {
+        if (typeof chrome === 'undefined' || !chrome.storage?.local) return;
         const all = await chrome.storage.local.get(null);
         const now = Date.now();
         const keysToDelete = [];
@@ -92,27 +121,27 @@ async function getCryptoUsdPrice(coin) {
     // 2. Основной источник: Coinbase ("BTC-USD")
     try {
         const res = await fetchWithTimeout("https://api.coinbase.com/v2/prices/" + coin + "-USD/spot", { timeout: 2500 });
-        if (!res.ok) throw new Error("Coinbase не нашел монету " + coin);
+        if (!res.ok) throw new Error("Coinbase failed for " + coin);
         const data = await res.json();
         return parseFloat(data.data.amount);
     } catch (e) {
-        console.warn("Coinbase timeout/error for " + coin + ", falling back to Binance...");
+        // Fallback to Binance
     }
 
     // 3. Первый резерв: Binance ("BTCUSDT")
     try {
         const res = await fetchWithTimeout("https://api.binance.com/api/v3/ticker/price?symbol=" + coin + "USDT", { timeout: 2500 });
-        if (!res.ok) throw new Error("Binance не нашел монету " + coin);
+        if (!res.ok) throw new Error("Binance failed for " + coin);
         const data = await res.json();
         return parseFloat(data.price);
     } catch (e) {
-        console.warn("Binance timeout/error for " + coin + ", falling back to MEXC...");
+        // Fallback to MEXC
     }
 
     // 4. Второй резерв: MEXC ("BTCUSDT")
     try {
         const res = await fetchWithTimeout("https://api.mexc.com/api/v3/ticker/price?symbol=" + coin + "USDT", { timeout: 2500 });
-        if (!res.ok) throw new Error("MEXC не нашел монету " + coin);
+        if (!res.ok) throw new Error("MEXC failed for " + coin);
         const data = await res.json();
         return parseFloat(data.price);
     } catch (e) {
@@ -125,10 +154,11 @@ const _rateInflight = {};
 async function getCrossRate(fromCode, targetCode, sourceCode) {
     if (fromCode === targetCode) return { success: true, rate: 1, date: "Live" };
     
-    // Проверяем тип валюты до кэширования
-    const isCrypto = CRYPTO_CODES.includes(fromCode) || CRYPTO_CODES.includes(targetCode);
+    const isFromCrypto = CRYPTO_CODES.includes(fromCode);
+    const isTargetCrypto = CRYPTO_CODES.includes(targetCode);
+    const isCrypto = isFromCrypto || isTargetCrypto;
     
-    // Корректируем источник сразу, если это крипта (у нацбанков нет курсов крипты)
+    // Official National Banks have no crypto rates; automatically route to market
     if (isCrypto && sourceCode === 'official') {
         sourceCode = 'market';
     }
@@ -141,15 +171,18 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
 
     const promise = (async () => {
         try {
-            const cachedWrap = await chrome.storage.local.get([cacheKey]);
-            const cachedItem = cachedWrap[cacheKey];
-            const CACHE_TTL = isCrypto ? 60 * 1000 : (sourceCode === 'official' ? 12 * 60 * 60 * 1000 : 60 * 60 * 1000);
+            if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+                const cachedWrap = await chrome.storage.local.get([cacheKey]);
+                const cachedItem = cachedWrap ? cachedWrap[cacheKey] : null;
+                const CACHE_TTL = isCrypto ? 60 * 1000 : (sourceCode === 'official' ? 12 * 60 * 60 * 1000 : 60 * 60 * 1000);
 
-            if (cachedItem && cachedItem.timestamp && (Date.now() - cachedItem.timestamp < CACHE_TTL)) {
-                return { success: true, rate: cachedItem.rate, date: cachedItem.date };
+                if (cachedItem && cachedItem.timestamp && (Date.now() - cachedItem.timestamp < CACHE_TTL)) {
+                    return { success: true, rate: cachedItem.rate, date: cachedItem.date };
+                }
             }
 
-            let finalRate = null, dateToReturn = "";
+            let finalRate = null;
+            let dateToReturn = "";
 
             if (sourceCode === 'official') {
                 try {
@@ -221,13 +254,13 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                             }
                         }
                     }
+
                     if (!finalRate && targetUsdRate) {
-                        if (isCrypto) {
-                            finalRate = await getCryptoUsdPrice(fromCode) * targetUsdRate;
-                        } else if (fromCode === 'USD') {
+                        if (fromCode === 'USD') {
                             finalRate = targetUsdRate;
                         }
                     }
+
                     if (finalRate) {
                         dateToReturn = targetBankName;
                     } else {
@@ -239,8 +272,18 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                 }
             }
             
+            // Market Source (Handles all 4 combinations: Crypto<->Crypto, Crypto->Fiat, Fiat->Crypto, Fiat<->Fiat)
             if (!finalRate || sourceCode === 'market') {
-                if (isCrypto) {
+                if (isFromCrypto && isTargetCrypto) {
+                    // Scenario A: Crypto -> Crypto
+                    const [fromUsd, targetUsd] = await Promise.all([
+                        getCryptoUsdPrice(fromCode),
+                        getCryptoUsdPrice(targetCode)
+                    ]);
+                    finalRate = fromUsd / targetUsd;
+                    dateToReturn = "Live";
+                } else if (isFromCrypto && !isTargetCrypto) {
+                    // Scenario B: Crypto -> Fiat
                     const cryptoUsd = await getCryptoUsdPrice(fromCode);
                     if (targetCode === 'USD') {
                         finalRate = cryptoUsd;
@@ -251,7 +294,21 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                         finalRate = cryptoUsd * data.rates[targetCode];
                         dateToReturn = "Live";
                     }
+                } else if (!isFromCrypto && isTargetCrypto) {
+                    // Scenario C: Fiat -> Crypto
+                    const targetCryptoUsd = await getCryptoUsdPrice(targetCode);
+                    if (fromCode === 'USD') {
+                        finalRate = 1 / targetCryptoUsd;
+                        dateToReturn = "Live";
+                    } else {
+                        const res = await fetchWithTimeout(API_FIAT + fromCode);
+                        const data = await res.json();
+                        const fiatToUsd = data.rates['USD'];
+                        finalRate = fiatToUsd / targetCryptoUsd;
+                        dateToReturn = "Live";
+                    }
                 } else {
+                    // Scenario D: Fiat -> Fiat
                     const res = await fetchWithTimeout(API_FIAT + fromCode);
                     const data = await res.json();
                     finalRate = data.rates[targetCode];
@@ -260,12 +317,14 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
             }
             
             if (finalRate) {
-                await chrome.storage.local.set({
-                    [cacheKey]: { rate: finalRate, date: dateToReturn, timestamp: Date.now() }
-                });
+                if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+                    await chrome.storage.local.set({
+                        [cacheKey]: { rate: finalRate, date: dateToReturn, timestamp: Date.now() }
+                    });
+                }
                 return { success: true, rate: finalRate, date: dateToReturn };
             }
-            throw new Error();
+            throw new Error("Unable to determine rate");
         } catch (error) {
             return { success: false };
         }
@@ -277,6 +336,10 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
     return promise;
 }
 
+if (typeof globalThis !== 'undefined') {
+    globalThis.getCrossRate = getCrossRate;
+    globalThis.getCryptoUsdPrice = getCryptoUsdPrice;
+}
 if (typeof module !== 'undefined' && typeof exports !== 'undefined') {
-    module.exports = { getCrossRate };
+    module.exports = { getCrossRate, getCryptoUsdPrice };
 }

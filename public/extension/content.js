@@ -1,12 +1,13 @@
 /**
  * SyncRate - Content Script (DOM & Selection Engine)
  * Robust selection detection for popups, modal subscription overlays, Shadow DOM & iframes.
+ * Features Shadow DOM encapsulation for tooltip isolation against host page CSS !important.
  * 
  * @license Apache-2.0
  */
 
 let hideTimeout = null;
-let currentTooltip = null;
+let currentTooltipHost = null;
 
 // ============================================================================
 // 1. SELECTION & SHADOW DOM RESOLVER
@@ -200,11 +201,6 @@ async function processSelectionText(text, x, y, fromIframe = false) {
         let currentLang = settings.lang === 'auto' ? (navigator.language.split('-')[0] || 'en') : settings.lang;
         if (currentLang === 'ua') currentLang = 'uk';
 
-        if (parseResult.isSat) {
-            showTooltip(x, y, parseResult.amount, "Live", "BTC", currentLang, fromIframe);
-            return;
-        }
-
         const targetCurrencyUpper = (settings.targetCurrency || "RUB").trim().toUpperCase();
         if (parseResult.currency === targetCurrencyUpper) {
             showTooltip(x, y, parseResult.amount, "Live", targetCurrencyUpper, currentLang, fromIframe);
@@ -254,12 +250,12 @@ document.addEventListener('keyup', (e) => {
 }, captureOptions);
 
 document.addEventListener('mousedown', (e) => {
-    if (currentTooltip && currentTooltip.contains(e.target)) return;
+    if (currentTooltipHost && currentTooltipHost.contains(e.target)) return;
     removeTooltip();
 }, captureOptions);
 
 // ============================================================================
-// 5. TOOLTIP RENDERER (Supports Fullscreen & High Z-Index Overlays)
+// 5. TOOLTIP RENDERER (Shadow DOM Isolation & High Z-Index Overlays)
 // ============================================================================
 
 function createBase(x, y, callback, fromIframe = false) {
@@ -267,16 +263,27 @@ function createBase(x, y, callback, fromIframe = false) {
     const duplicate = document.getElementById('edge-currency-converter-tooltip');
     if (duplicate) duplicate.remove();
 
-    const t = document.createElement('div');
-    t.id = 'edge-currency-converter-tooltip';
+    // Host element attached to body / fullscreenElement
+    const host = document.createElement('div');
+    host.id = 'edge-currency-converter-tooltip';
 
-    const baseStyle = 'all: initial; visibility: hidden !important; padding: 12px 16px !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; z-index: 2147483647 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important; pointer-events: none !important; opacity: 0 !important; transition: opacity 0.2s, transform 0.2s !important; display: flex !important; flex-direction: column !important; min-width: 140px !important; background-color: #161b22 !important; color: #f0f6fc !important; border: 1px solid #30363d !important;';
-
+    // Host container positioning style
+    const hostBaseStyle = 'all: initial; pointer-events: none !important; z-index: 2147483647 !important; display: block !important;';
     if (fromIframe) {
-        t.style.cssText = baseStyle + ' position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translate(-50%, 5px) !important;';
+        host.style.cssText = hostBaseStyle + ' position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translate(-50%, 0) !important;';
     } else {
-        t.style.cssText = baseStyle + ' position: absolute !important; left: 0px !important; top: 0px !important;';
+        host.style.cssText = hostBaseStyle + ' position: absolute !important; left: 0px !important; top: 0px !important;';
     }
+
+    // Attach Open Shadow DOM for complete CSS isolation from host page
+    const shadow = host.attachShadow({ mode: 'open' });
+
+    // Inner visual card container
+    const t = document.createElement('div');
+    t.className = 'syncrate-tooltip-card';
+
+    const cardBaseStyle = 'box-sizing: border-box; visibility: hidden; padding: 12px 16px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease; display: flex; flex-direction: column; min-width: 140px; pointer-events: none;';
+    t.style.cssText = cardBaseStyle;
 
     chrome.storage.local.get({ theme: 'dark' }, (res) => {
         const isDark = res.theme === 'dark';
@@ -284,18 +291,18 @@ function createBase(x, y, callback, fromIframe = false) {
         const textColor = isDark ? '#f0f6fc' : '#1a1a1a';
         const borderColor = isDark ? '#30363d' : '#e0e0e0';
 
-        t.style.setProperty('background', bgColor, 'important');
-        t.style.setProperty('background-color', bgColor, 'important');
-        t.style.setProperty('color', textColor, 'important');
-        t.style.setProperty('border', '1px solid ' + borderColor, 'important');
+        t.style.backgroundColor = bgColor;
+        t.style.color = textColor;
+        t.style.border = '1px solid ' + borderColor;
 
         callback(t, textColor);
+        shadow.appendChild(t);
 
         requestAnimationFrame(() => {
             if (fromIframe) {
-                t.style.setProperty('opacity', '1', 'important');
-                t.style.setProperty('transform', 'translate(-50%, 0)', 'important');
-                t.style.setProperty('visibility', 'visible', 'important');
+                t.style.opacity = '1';
+                t.style.visibility = 'visible';
+                t.style.transform = 'translateY(0)';
             } else {
                 const rect = t.getBoundingClientRect();
                 const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
@@ -326,18 +333,18 @@ function createBase(x, y, callback, fromIframe = false) {
                     targetY = scrollY + 10;
                 }
 
-                t.style.setProperty('left', targetX + 'px', 'important');
-                t.style.setProperty('top', targetY + 'px', 'important');
-                t.style.setProperty('opacity', '1', 'important');
-                t.style.setProperty('transform', 'translateY(0)', 'important');
-                t.style.setProperty('visibility', 'visible', 'important');
+                host.style.setProperty('left', targetX + 'px', 'important');
+                host.style.setProperty('top', targetY + 'px', 'important');
+                t.style.opacity = '1';
+                t.style.visibility = 'visible';
+                t.style.transform = 'translateY(0)';
             }
         });
     });
 
     const hostContainer = document.fullscreenElement || document.body || document.documentElement;
-    hostContainer.appendChild(t);
-    currentTooltip = t;
+    hostContainer.appendChild(host);
+    currentTooltipHost = host;
     hideTimeout = setTimeout(removeTooltip, 7000);
 }
 
@@ -354,11 +361,11 @@ function showTooltip(x, y, val, date, target, lang, fromIframe = false) {
 
         const icon = date.includes('⚠️') ? '⚠️' : (date === 'Live' ? '⚡' : '🏛');
         const mainSpan = document.createElement('span');
-        mainSpan.style.cssText = 'color: ' + textColor + ' !important; font-family: inherit !important; font-size: 16px!important; font-weight: 800!important; margin-bottom: 4px!important; display: block !important;';
+        mainSpan.style.cssText = 'color: ' + textColor + '; font-family: inherit; font-size: 16px; font-weight: 800; margin-bottom: 4px; display: block;';
         mainSpan.textContent = formatted + ' ' + target;
 
         const subSpan = document.createElement('span');
-        subSpan.style.cssText = 'font-family: inherit !important; font-size: 11px!important; color:#8b949e!important; display: block !important;';
+        subSpan.style.cssText = 'font-family: inherit; font-size: 11px; color: #8b949e; display: block;';
         subSpan.textContent = icon + ' ' + date;
 
         t.appendChild(mainSpan);
@@ -370,8 +377,8 @@ function removeTooltip() {
     if (hideTimeout) clearTimeout(hideTimeout);
     const existing = document.getElementById('edge-currency-converter-tooltip');
     if (existing) existing.remove();
-    if (currentTooltip && currentTooltip.parentNode) {
-        try { currentTooltip.remove(); } catch (err) {}
+    if (currentTooltipHost && currentTooltipHost.parentNode) {
+        try { currentTooltipHost.remove(); } catch (err) {}
     }
-    currentTooltip = null;
+    currentTooltipHost = null;
 }

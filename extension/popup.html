@@ -45,7 +45,7 @@
 </head>
 <body>
     <div class="header">
-        <h2>⚡ SyncRate</h2>
+        <h2>⚡ SyncRate <span id="app-version-header" style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 6px; background: rgba(110, 64, 201, 0.15); color: var(--primary);">v1.1.0</span></h2>
         <div class="header-actions">
             <button class="icon-btn" id="donate-btn" title="❤️ Support Project" style="width: auto; padding: 0 10px; border-radius: 15px; border-color: rgba(229, 57, 53, 0.3); background: rgba(229, 57, 53, 0.05); color: #e53935; font-size: 11px; font-weight: bold; gap: 4px;"><span data-i18n="btn_donate">❤️ Support Project</span></button>
             <button class="icon-btn" id="feedback-btn" title="Feedback"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></button>
@@ -89,13 +89,13 @@
         </div>
         <button class="btn-save" id="btn-save-settings"><span data-i18n="btn_save">Сохранить</span></button>
         <div style="margin-top: 20px; font-size: 10px; color: var(--subtext); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px;">
-            <span>SyncRate Community</span>
+            <span id="app-version-settings">SyncRate Community v1.1.0</span>
             <a href="#" id="update-link" style="color: var(--primary); text-decoration: none; font-weight: 700;" data-i18n="check_updates">Проверить обновления</a>
             <span id="new-version-badge" class="update-badge">NEW</span>
         </div>
     </div>
     <div class="footer">
-        SyncRate Community Edition
+        <span id="app-version-footer">SyncRate Community Edition v1.1.0</span>
         <span class="legal">© 2026 SyncRate. Open Source under Apache-2.0 License.</span>
     </div>
     <script src="popup.js"></script>

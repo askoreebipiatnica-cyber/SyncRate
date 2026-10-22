@@ -164,6 +164,34 @@ async function runSuite() {
     assert.strictEqual(res.currency, "EUR");
   });
 
+  test("Parses cryptocurrency TON without abbreviation homonym conflict: 50 TON -> 50 TON", () => {
+    const res = parseCurrencyString("50 TON");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 50);
+    assert.strictEqual(res.currency, "TON");
+  });
+
+  test("Parses Cyrillic TON without multiplier conflict: 100 ТОН -> 100 TON", () => {
+    const res = parseCurrencyString("100 ТОН");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 100);
+    assert.strictEqual(res.currency, "TON");
+  });
+
+  test("Parses lexical word TON: '25 тонов' -> 25 TON", () => {
+    const res = parseCurrencyString("25 тонов");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 25);
+    assert.strictEqual(res.currency, "TON");
+  });
+
+  test("Parses trillion multiplier 'т': '10 т USD' -> 10000000000000 USD", () => {
+    const res = parseCurrencyString("10 т USD");
+    assert.ok(res);
+    assert.strictEqual(res.amount, 10000000000000);
+    assert.strictEqual(res.currency, "USD");
+  });
+
   test("Rejects non-currency arbitrary strings", () => {
     assert.strictEqual(parseCurrencyString("Hello World"), null);
     assert.strictEqual(parseCurrencyString("Just a 456 number"), null);
@@ -183,8 +211,8 @@ async function runSuite() {
     const res = await fetch(`${BASE_URL}/version.json`);
     assert.strictEqual(res.status, 200);
     const data = await res.json() as any;
-    assert.strictEqual(data.version, "1.0.0");
-    assert.ok(data.notes.includes("Open Source"));
+    assert.strictEqual(data.version, "1.1.0");
+    assert.ok(data.notes.includes("SyncRate") || data.notes.includes("Open Source"));
   });
 
   await test("GET /updates.xml returns secure XML manifest", async () => {
@@ -193,7 +221,14 @@ async function runSuite() {
     const text = await res.text();
     assert.ok(text.includes("<gupdate"));
     assert.ok(text.includes("msjrecxeaytix2n65pvx6i"));
+    assert.ok(text.includes("version='1.1.0'"));
     assert.ok(!text.includes("<script>"));
+  });
+
+  await test("GET /feedback redirects to /#feedback", async () => {
+    const res = await fetch(`${BASE_URL}/feedback`, { redirect: "manual" });
+    assert.ok(res.status === 301 || res.status === 302);
+    assert.ok(res.headers.get("location")?.includes("#feedback"));
   });
 
   await test("Security Headers are properly configured", async () => {
@@ -361,6 +396,13 @@ async function runSuite() {
     assert.strictEqual(res.success, true);
     assert.ok(typeof res.rate === "number" && res.rate > 0);
     assert.ok(res.date.includes("ЦБ РФ") || res.date === "Live" || res.fallback === true);
+  });
+
+  await test("getCrossRate fallback for pair without official bank (e.g. USD -> KZT official) caches with fallback flag", async () => {
+    const res = await getCrossRate("USD", "KZT", "official");
+    assert.strictEqual(res.success, true);
+    assert.ok(typeof res.rate === "number" && res.rate > 0);
+    assert.strictEqual(res.fallback, true);
   });
 
   await test("getCrossRate handles unknown currency gracefully", async () => {

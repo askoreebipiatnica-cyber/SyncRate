@@ -177,7 +177,12 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                 const CACHE_TTL = isCrypto ? 60 * 1000 : (sourceCode === 'official' ? 12 * 60 * 60 * 1000 : 60 * 60 * 1000);
 
                 if (cachedItem && cachedItem.timestamp && (Date.now() - cachedItem.timestamp < CACHE_TTL)) {
-                    return { success: true, rate: cachedItem.rate, date: cachedItem.date };
+                    return { 
+                        success: true, 
+                        rate: cachedItem.rate, 
+                        date: cachedItem.date,
+                        ...(cachedItem.fallback ? { fallback: true } : {})
+                    };
                 }
             }
 
@@ -268,6 +273,20 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                     }
                 } catch (e) {
                     const fallbackResult = await getCrossRate(fromCode, targetCode, 'market');
+                    if (fallbackResult && fallbackResult.success) {
+                        const fallbackWithMeta = { ...fallbackResult, fallback: true };
+                        if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+                            await chrome.storage.local.set({
+                                [cacheKey]: { 
+                                    rate: fallbackWithMeta.rate, 
+                                    date: fallbackWithMeta.date, 
+                                    fallback: true, 
+                                    timestamp: Date.now() 
+                                }
+                            });
+                        }
+                        return fallbackWithMeta;
+                    }
                     return { ...fallbackResult, fallback: true };
                 }
             }

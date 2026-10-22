@@ -33,6 +33,7 @@ function writeExtensionFiles() {
     ensureDirectoryExistence(dest);
     const entries = fs.readdirSync(src, { withFileTypes: true });
     for (const entry of entries) {
+      if (entry.name.endsWith('.test.js') || entry.name.endsWith('.txt') || entry.name.startsWith('.')) continue;
       const srcPath = path.join(src, entry.name);
       const destPath = path.join(dest, entry.name);
       if (entry.isDirectory()) {
@@ -87,6 +88,7 @@ async function createZipArchive() {
   const addDirectoryToZip = (zipInstance: JSZip, localDir: string, relativePath: string = '') => {
     const files = fs.readdirSync(localDir);
     for (const file of files) {
+      if (file.endsWith('.test.js') || file.endsWith('.txt') || file.startsWith('.')) continue;
       const fullPath = path.join(localDir, file);
       const fileRelativePath = relativePath ? `${relativePath}/${file}` : file;
       const stat = fs.statSync(fullPath);

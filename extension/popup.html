@@ -75,7 +75,35 @@
         </div>
         <div class="setting-group"><label data-i18n="lbl_target">Ваша национальная валюта</label>
             <select id="sel-target">
-                <option value="RUB" data-i18n="cur_rub">🇷🇺 Российский рубль (RUB)</option><option value="EUR" data-i18n="cur_eur">🇪🇺 Euro (EUR)</option><option value="USD" data-i18n="cur_usd">🇺🇸 US Dollar (USD)</option><option value="CNY" data-i18n="cur_cny">🇨🇳 Chinese Yuan (CNY)</option><option value="KZT" data-i18n="cur_kzt">🇰🇿 Казахский тенге (KZT)</option><option value="UAH" data-i18n="cur_uah">🇺🇦 Українська гривня (UAH)</option><option value="BYN" data-i18n="cur_byn">🇧🇾 Беларускі рубель (BYN)</option><option value="GBP" data-i18n="cur_gbp">🇬🇧 British Pound (GBP)</option>
+                <optgroup label="🌍 Фиатные" data-i18n-label="opt_fiat">
+                    <option value="RUB" data-i18n="cur_rub">🇷🇺 Российский рубль (RUB)</option>
+                    <option value="USD" data-i18n="cur_usd">🇺🇸 Доллар США (USD)</option>
+                    <option value="EUR" data-i18n="cur_eur">🇪🇺 Евро (EUR)</option>
+                    <option value="GBP" data-i18n="cur_gbp">🇬🇧 Британский фунт (GBP)</option>
+                    <option value="CNY" data-i18n="cur_cny">🇨🇳 Китайский юань (CNY)</option>
+                    <option value="KZT" data-i18n="cur_kzt">🇰🇿 Казахский тенге (KZT)</option>
+                    <option value="UAH" data-i18n="cur_uah">🇺🇦 Украинская гривна (UAH)</option>
+                    <option value="BYN" data-i18n="cur_byn">🇧🇾 Белорусский рубль (BYN)</option>
+                    <option value="TRY" data-i18n="cur_try">🇹🇷 Турецкая лира (TRY)</option>
+                    <option value="CHF" data-i18n="cur_chf">🇨🇭 Швейцарский франк (CHF)</option>
+                    <option value="JPY" data-i18n="cur_jpy">🇯🇵 Японская иена (JPY)</option>
+                    <option value="CAD" data-i18n="cur_cad">🇨🇦 Канадский доллар (CAD)</option>
+                    <option value="AED" data-i18n="cur_aed">🇦🇪 Дирхам ОАЭ (AED)</option>
+                </optgroup>
+                <optgroup label="🪙 Крипта" data-i18n-label="opt_crypto">
+                    <option value="USDT">🪙 USDT</option>
+                    <option value="BTC">🪙 BTC</option>
+                    <option value="ETH">🪙 ETH</option>
+                    <option value="SOL">🪙 SOL</option>
+                    <option value="BNB">🪙 BNB</option>
+                    <option value="XRP">🪙 XRP</option>
+                    <option value="ADA">🪙 ADA</option>
+                    <option value="DOGE">🪙 DOGE</option>
+                    <option value="DOT">🪙 DOT</option>
+                    <option value="MATIC">🪙 MATIC</option>
+                    <option value="SHIB">🪙 SHIB</option>
+                    <option value="LTC">🪙 LTC</option>
+                </optgroup>
             </select>
         </div>
         <div class="setting-group"><label><span data-i18n="lbl_source">Источник курса</span></label>

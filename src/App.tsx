@@ -60,8 +60,8 @@ const translations = {
     desc_basic: 'Только USD. 2 слота в дашборде.',
     desc_pro: '8 валют (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 слота. Темная тема.',
     desc_pro_plus: '160+ валют, Нацбанки (СНГ, ЕС), Топ-30 Крипты. Безлимитные слоты.',
-    legal_notice: 'ЮРИДИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ',
-    legal_desc: 'Этот инструмент предназначен для авторизованных разработчиков. Реверс-инжиниринг, несанкционированное распространение или модификация ядра SyncRate строго запрещены и защищены международными законами об авторском праве и DMCA.',
+    legal_notice: 'ОТКРЫТЫЙ ИСХОДНЫЙ КОД (APACHE 2.0)',
+    legal_desc: 'SyncRate — проект с открытым исходным кодом, распространяемый по свободной лицензии Apache 2.0. Все вычисления и конвертации выполняются локально в браузере. Мы уважаем вашу конфиденциальность: расширение не собирает личные данные и не содержит скрытой телеметрии.',
     copyright: '© 2026 SyncRate. Все права защищены.',
     bundling: 'Сборка...',
     download_zip_desc: 'Загрузите полный исходный код расширения SyncRate для ручной установки.',
@@ -152,8 +152,8 @@ const translations = {
     desc_basic: 'Only USD. 2 dashboard slots.',
     desc_pro: '8 currencies (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 slots. Dark mode.',
     desc_pro_plus: '160+ fiats, National Banks (CIS, EU), Top-30 Crypto. Unlimited slots.',
-    legal_notice: 'LEGAL NOTICE',
-    legal_desc: 'This tool is provided for authorized developers only. Reverse engineering, unauthorized distribution, or modification of the SyncRate core engine is strictly prohibited and protected under international copyright and DMCA laws.',
+    legal_notice: 'OPEN SOURCE LICENSE (APACHE-2.0)',
+    legal_desc: 'SyncRate is a free and open-source project distributed under the Apache-2.0 License. All conversions and parsing occur strictly locally within your browser. We respect your privacy: zero telemetry and no tracking data are collected.',
     copyright: '© 2026 SyncRate. All rights reserved.',
     bundling: 'Bundling...',
     download_zip_desc: 'Download the complete source code for SyncRate for manual installation.',
@@ -244,8 +244,8 @@ const translations = {
     desc_basic: '仅限美元。2个仪表板插槽。',
     desc_pro: '8 种货币 (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED)。4 个插槽。深色模式。',
     desc_pro_plus: '160+ 法定货币，国家银行（独联体，欧盟），前30名加密货币。无限插槽。',
-    legal_notice: '法律声明',
-    legal_desc: '此工具仅供授权开发人员使用。严禁对 SyncRate 核心引擎进行逆向工程、未经授权的分发或修改，并受国际版权法和 DMCA 的保护。',
+    legal_notice: '开源许可证 (APACHE 2.0)',
+    legal_desc: 'SyncRate 是基于 Apache 2.0 许可证分发的自由开源项目。所有货币转换和数据解析均在浏览器本地进行。我们尊重您的隐私：不收集个人信息，零遥测，无后台追踪。',
     copyright: '© 2026 SyncRate。保留所有权利。',
     bundling: '打包中...',
     download_zip_desc: '下载 SyncRate 的完整源代码，用于手动安装。',
@@ -326,8 +326,8 @@ const translations = {
     desc_basic: 'Тек USD. Дашбордта 2 слот.',
     desc_pro: '8 валюта (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 слот. Қараңғы тақырып.',
     desc_pro_plus: '160+ валюта, Ұлттық банктер (ТМД, ЕО), Топ-30 Крипто. Шексіз слоттар.',
-    legal_notice: 'ҚҰҚЫҚТЫҚ ЕСКЕРТУ',
-    legal_desc: 'Бұл құрал тек уәкілетті әзірлеушілерге арналған. SyncRate негізгі қозғалтқышын кері инжинирингтеуге, рұқсатсыз таратуға немесе өзгертуге қатаң тыйым салынады және халықаралық авторлық құқық және DMCA заңдарымен қорғалады.',
+    legal_notice: 'АШЫҚ БАСТАПҚЫ КОД (APACHE 2.0)',
+    legal_desc: 'SyncRate — Apache 2.0 лицензиясы бойынша еркін таратылатын ашық бастапқы кодты жоба. Барлық есептеулер браузеріңізде жергілікті түрде орындалады. Жоба пайдаланушы құпиялылығын құрметтейді және жеке деректерді немесе телеметрияны жинамайды.',
     copyright: '© 2026 SyncRate. Барлық құқықтар қорғалған.',
     bundling: 'Жинақтау...',
     download_zip_desc: 'Қолмен орнату үшін SyncRate кеңейтімінің толық бастапқы кодын жүктеңіз.',
@@ -408,8 +408,8 @@ const translations = {
     desc_basic: 'Nur USD. 2 Dashboard-Slots.',
     desc_pro: '8 Währungen (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 Slots. Dunkelmodus.',
     desc_pro_plus: '160+ Fiats, Nationalbanken (GUS, EU), Top-30 Krypto. Unbegrenzte Slots.',
-    legal_notice: 'RECHTLICHER HINWEIS',
-    legal_desc: 'Dieses Tool wird nur für autorisierte Entwickler bereitgestellt. Reverse Engineering, unbefugte Verbreitung oder Modifikation der SyncRate Core Engine ist strengstens untersagt.',
+    legal_notice: 'OPEN-SOURCE-LIZENZ (APACHE 2.0)',
+    legal_desc: 'SyncRate ist ein freies Open-Source-Projekt unter der Apache-2.0-Lizenz. Alle Berechnungen und Konvertierungen erfolgen lokal in Ihrem Browser. Wir respektieren Ihre Privatsphäre: Es werden keinerlei Telemetrie- oder Tracking-Daten gesammelt.',
     copyright: '© 2026 SyncRate. Alle Rechte vorbehalten.',
     bundling: 'Bündelung...',
     download_zip_desc: 'Laden Sie den vollständigen Quellcode von SyncRate für die manuelle Installation herunter.',
@@ -490,8 +490,8 @@ const translations = {
     desc_basic: 'Тільки USD. 2 слоти дашборду.',
     desc_pro: '8 валют (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 слоти. Темна тема.',
     desc_pro_plus: '160+ фіатів, Нацбанки (СНД, ЄС), топ-30 крипто. Безлімітні слоти.',
-    legal_notice: 'ЮРИДИЧНЕ ПОВІДОМЛЕННЯ',
-    legal_desc: 'Цей інструмент надається тільки для авторизованих розробників. Реверс-інжиніринг, несанкціоноване розповсюдження або модифікація SyncRate Core Engine суворо заборонені та захищені міжнародними законами про авторське право та DMCA.',
+    legal_notice: 'ВІДКРИТИЙ ВИХІДНИЙ КОД (APACHE 2.0)',
+    legal_desc: 'SyncRate — вільний проект із відкритим вихідним кодом, що розповсюджується за ліцензією Apache 2.0. Усі розрахунки відбуваються локально у вашому браузері. Ми поважаємо вашу приватність: розширення не збирає персональні дані та не використовує трекінг.',
     copyright: '© 2026 SyncRate. Всі права захищені.',
     bundling: 'Збірка...',
     download_zip_desc: 'Завантажте повний вихідний код SyncRate для ручного встановлення.',
@@ -581,8 +581,8 @@ const translations = {
     desc_basic: 'Solo USD. 2 ranuras en el panel.',
     desc_pro: '8 monedas (USD, EUR, GBP, CHF, JPY, CNY, CAD, AED). 4 ranuras. Modo oscuro.',
     desc_pro_plus: '160+ fiats, Bancos Nacionales (GUS, UE), Top-30 Cripto. Ranuras ilimitadas.',
-    legal_notice: 'AVISO LEGAL',
-    legal_desc: 'Esta herramienta se proporciona solo para desarrolladores autorizados. La ingeniería inversa, distribución no autorizada o modificación del motor central de SyncRate está estrictamente prohibida.',
+    legal_notice: 'LICENCIA DE CÓDIGO ABIERTO (APACHE 2.0)',
+    legal_desc: 'SyncRate es un proyecto libre y de código abierto distribuido bajo la Licencia Apache 2.0. Todas las conversiones y análisis se realizan localmente en su navegador. Respetamos su privacidad: cero telemetría y sin seguimiento de datos personales.',
     copyright: '© 2026 SyncRate. Todos los derechos reservados.',
     bundling: 'Empaquetando...',
     download_zip_desc: 'Descarga el código fuente completo de SyncRate para instalación manual.',
@@ -731,6 +731,14 @@ export default function App() {
   const [showInstructions, setShowInstructions] = useState(false);
   const [activeInstructionStep, setActiveInstructionStep] = useState(0);
   const [showCapabilities, setShowCapabilities] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackName, setFeedbackName] = useState('');
+  const [feedbackEmail, setFeedbackEmail] = useState('');
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackStars, setFeedbackStars] = useState(5);
+  const [feedbackSending, setFeedbackSending] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackError, setFeedbackError] = useState('');
   const [downloadUrl] = useState<string>('https://github.com/askoreebipiatnica-cyber/SyncRate/releases/latest/download/SyncRate.zip');
 
   useEffect(() => {
@@ -742,12 +750,55 @@ export default function App() {
     else if (browserLang === 'kk') setLang('kk');
     else if (browserLang === 'es') setLang('es');
     else setLang('en');
+
+    if (window.location.hash === '#feedback' || window.location.pathname.startsWith('/feedback')) {
+      setShowFeedbackModal(true);
+    }
+    const onHashChange = () => {
+      if (window.location.hash === '#feedback') {
+        setShowFeedbackModal(true);
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   const t = translations[lang];
 
-  const handleDownload = () => {
-    window.open('https://chromewebstore.google.com/detail/syncrate', '_blank');
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!feedbackText.trim()) return;
+    setFeedbackSending(true);
+    setFeedbackError('');
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: feedbackName.trim() || undefined,
+          email: feedbackEmail.trim() || undefined,
+          text: feedbackText.trim(),
+          stars: feedbackStars
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setFeedbackSent(true);
+        setTimeout(() => {
+          setShowFeedbackModal(false);
+          setFeedbackSent(false);
+          setFeedbackText('');
+          setFeedbackName('');
+          setFeedbackEmail('');
+        }, 2000);
+      } else {
+        setFeedbackError(data.error || 'Failed to submit feedback.');
+      }
+    } catch {
+      setFeedbackError('Network error. Please try again later.');
+    } finally {
+      setFeedbackSending(false);
+    }
   };
 
   return (
@@ -759,7 +810,7 @@ export default function App() {
       </div>
 
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-[#0d1117]/80 backdrop-blur-xl border-bottom border-[#30363d] px-6 py-4">
+      <nav className="sticky top-0 z-50 bg-[#0d1117]/80 backdrop-blur-xl border-b border-[#30363d] px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-[#6e40c9] to-[#8957e5] rounded-lg flex items-center justify-center">
@@ -1111,7 +1162,7 @@ export default function App() {
                         <Download className="w-6 h-6 animate-bounce" />
                       </div>
                       <div className="text-xs font-mono px-3 py-1 bg-[#0d1117] rounded-lg border border-[#30363d] text-[#58a6ff]">
-                        SyncRate.zip (1.0.0)
+                        SyncRate.zip (1.1.0)
                       </div>
                     </div>
                   )}
@@ -1359,6 +1410,190 @@ export default function App() {
           </motion.div>
         )}
 
+        {showFeedbackModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#0d1117]/90 backdrop-blur-sm"
+            onClick={() => {
+              setShowFeedbackModal(false);
+              if (window.location.hash === '#feedback') {
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+              }
+            }}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-[#161b22] border border-[#30363d] rounded-[2.5rem] p-8 md:p-10 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6e40c9]/10 border border-[#6e40c9]/30 text-[#a371f7] text-xs font-bold uppercase tracking-wider mb-2">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    SyncRate Community
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-black tracking-tight text-[#f0f6fc]">
+                    {lang === 'ru' ? 'Обратная связь' : 'Feedback & Ideas'}
+                  </h3>
+                  <p className="text-sm text-[#8b949e] mt-1">
+                    {lang === 'ru' 
+                      ? 'Поделитесь впечатлениями, предложите функцию или сообщите о баге' 
+                      : 'Share your impressions, suggest a feature, or report an issue'}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => {
+                    setShowFeedbackModal(false);
+                    if (window.location.hash === '#feedback') {
+                      history.replaceState(null, '', window.location.pathname + window.location.search);
+                    }
+                  }} 
+                  className="text-[#8b949e] hover:text-white transition-colors p-1 rounded-lg hover:bg-[#30363d]"
+                  aria-label="Close"
+                >
+                  <AlertCircle className="w-7 h-7 rotate-45" />
+                </button>
+              </div>
+
+              {feedbackSent ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto mb-4 text-green-400">
+                    <CheckCircle2 className="w-8 h-8" />
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2">
+                    {lang === 'ru' ? 'Спасибо за отзыв!' : 'Thank you for your feedback!'}
+                  </h4>
+                  <p className="text-sm text-[#8b949e] max-w-xs mx-auto mb-6">
+                    {lang === 'ru' 
+                      ? 'Ваше сообщение успешно получено разработчиками. Мы внимательно изучаем каждый отклик.' 
+                      : 'Your message has been received by our development team. We review every note.'}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowFeedbackModal(false);
+                      setFeedbackSent(false);
+                      if (window.location.hash === '#feedback') {
+                        history.replaceState(null, '', window.location.pathname + window.location.search);
+                      }
+                    }}
+                    className="px-6 py-2.5 rounded-xl bg-[#6e40c9] hover:bg-[#8957e5] text-white font-bold text-sm transition-all"
+                  >
+                    {lang === 'ru' ? 'Закрыть' : 'Close'}
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+                  {feedbackError && (
+                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-medium flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      {feedbackError}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#8b949e] uppercase tracking-wider mb-1.5">
+                      {lang === 'ru' ? 'Ваша оценка' : 'Rating'}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setFeedbackStars(star)}
+                          className="p-1 hover:scale-110 transition-transform focus:outline-none"
+                        >
+                          <Star
+                            className={`w-6 h-6 ${
+                              star <= feedbackStars
+                                ? 'text-yellow-400 fill-yellow-400'
+                                : 'text-[#30363d]'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                      <span className="text-xs text-[#8b949e] ml-2 font-mono">
+                        {feedbackStars}/5
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-[#8b949e] uppercase tracking-wider mb-1.5">
+                        {lang === 'ru' ? 'Имя (опционально)' : 'Name (optional)'}
+                      </label>
+                      <input
+                        type="text"
+                        value={feedbackName}
+                        onChange={(e) => setFeedbackName(e.target.value)}
+                        placeholder={lang === 'ru' ? 'Алексей' : 'Alex'}
+                        className="w-full px-4 py-2.5 rounded-xl bg-[#0d1117] border border-[#30363d] focus:border-[#6e40c9] text-sm text-[#f0f6fc] placeholder-[#484f58] outline-none transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#8b949e] uppercase tracking-wider mb-1.5">
+                        {lang === 'ru' ? 'Email (опционально)' : 'Email (optional)'}
+                      </label>
+                      <input
+                        type="email"
+                        value={feedbackEmail}
+                        onChange={(e) => setFeedbackEmail(e.target.value)}
+                        placeholder="alex@example.com"
+                        className="w-full px-4 py-2.5 rounded-xl bg-[#0d1117] border border-[#30363d] focus:border-[#6e40c9] text-sm text-[#f0f6fc] placeholder-[#484f58] outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#8b949e] uppercase tracking-wider mb-1.5">
+                      {lang === 'ru' ? 'Сообщение *' : 'Message *'}
+                    </label>
+                    <textarea
+                      required
+                      rows={4}
+                      value={feedbackText}
+                      onChange={(e) => setFeedbackText(e.target.value)}
+                      placeholder={
+                        lang === 'ru'
+                          ? 'Что понравилось, какую валюту добавить или какую ошибку вы заметили?'
+                          : 'What did you like, what currency would you like to see, or what issue did you encounter?'
+                      }
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#0d1117] border border-[#30363d] focus:border-[#6e40c9] text-sm text-[#f0f6fc] placeholder-[#484f58] outline-none transition-colors resize-none"
+                    />
+                  </div>
+
+                  <div className="pt-2 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowFeedbackModal(false);
+                        if (window.location.hash === '#feedback') {
+                          history.replaceState(null, '', window.location.pathname + window.location.search);
+                        }
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-[#21262d] hover:bg-[#30363d] text-sm font-bold text-[#c9d1d9] transition-all cursor-pointer"
+                    >
+                      {lang === 'ru' ? 'Отмена' : 'Cancel'}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={feedbackSending || !feedbackText.trim()}
+                      className="px-6 py-2.5 rounded-xl bg-[#6e40c9] hover:bg-[#8957e5] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold text-white transition-all flex items-center gap-2 shadow-lg shadow-[#6e40c9]/20 cursor-pointer"
+                    >
+                      {feedbackSending && <RefreshCw className="w-4 h-4 animate-spin" />}
+                      {lang === 'ru' ? 'Отправить' : 'Send Feedback'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+
       </AnimatePresence>
 
       {/* Feedback Section */}
@@ -1377,15 +1612,14 @@ export default function App() {
                   {t.feedback_desc}
                 </p>
               </div>
-              <a 
-                href="/feedback"
-                target="_blank"
-                rel="noreferrer"
+              <button 
+                type="button"
+                onClick={() => setShowFeedbackModal(true)}
                 className="inline-flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-black text-lg hover:bg-[#c9d1d9] transition-all active:scale-95 cursor-pointer"
               >
                 <Sparkles className="w-6 h-6" />
                 {t.btn_feedback}
-              </a>
+              </button>
             </motion.div>
 
             <motion.div 
@@ -1431,9 +1665,13 @@ export default function App() {
             {lang === 'ru' ? 'Поддержать проект' : 'Support Development (Donate)'}
           </a>
           <span>•</span>
-          <a href="/feedback" target="_blank" rel="noreferrer" className="hover:text-white transition-colors underline decoration-[#6e40c9] cursor-pointer">
+          <button 
+            type="button" 
+            onClick={() => setShowFeedbackModal(true)} 
+            className="hover:text-white transition-colors underline decoration-[#6e40c9] cursor-pointer"
+          >
             {lang === 'ru' ? 'Портал обратной связи' : 'Feedback Portal'}
-          </a>
+          </button>
         </div>
         <p className="text-sm text-[#8b949e] font-medium">
           {t.copyright}

@@ -111,7 +111,9 @@ const LEXICAL_CURRENCY_DICTIONARY = {
   'сатоши': 'SAT', 'сатошей': 'SAT', 'сатошиков': 'SAT', 'satoshi': 'SAT', 'sats': 'SAT',
   'эфир': 'ETH', 'эфира': 'ETH', 'эфириум': 'ETH', 'эфириума': 'ETH', 'ethereum': 'ETH',
   'тезер': 'USDT', 'тизер': 'USDT', 'tether': 'USDT',
-  'солана': 'SOL', 'соланы': 'SOL', 'solana': 'SOL'
+  'солана': 'SOL', 'соланы': 'SOL', 'solana': 'SOL',
+  'тон': 'TON', 'тона': 'TON', 'тонов': 'TON', 'тону': 'TON', 'тонами': 'TON',
+  'ton': 'TON', 'toncoin': 'TON', 'тонкоин': 'TON', 'тонкоинов': 'TON'
 };
 
 const ALL_CURRENCY_MAP = { ...FIAT_MAP, ...CRYPTO_MAP };
@@ -206,7 +208,7 @@ class NumberWordsConverter {
     // 1,000,000,000,000
     'триллион': 1000000000000, 'триллиона': 1000000000000, 'триллионов': 1000000000000,
     'трлн': 1000000000000, 'трлн.': 1000000000000, 'trillion': 1000000000000, 'trillions': 1000000000000,
-    't': 1000000000000
+    't': 1000000000000, 'т': 1000000000000
   };
 
   /**
@@ -430,10 +432,10 @@ class StandardRegexStrategy {
     if (isNaN(amount)) return null;
 
     multStr = multStr.replace('.', '');
-    if (multStr === 'k' || multStr === 'тыс' || multStr === 'к' || multStr === 'т') amount *= 1000;
+    if (multStr === 'k' || multStr === 'тыс' || multStr === 'к') amount *= 1000;
     else if (multStr === 'm' || multStr === 'млн' || multStr === 'м') amount *= 1000000;
     else if (multStr === 'b' || multStr === 'млрд' || multStr === 'б') amount *= 1000000000;
-    else if (multStr === 't' || multStr === 'трлн') amount *= 1000000000000;
+    else if (multStr === 't' || multStr === 'трлн' || multStr === 'т') amount *= 1000000000000;
 
     if (!CRYPTO_CODES.includes(isoCode) && cleanCurStr === '¢') {
       amount *= 0.01;

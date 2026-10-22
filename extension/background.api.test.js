@@ -90,7 +90,15 @@ export async function runApiTests() {
     assert.ok(res.date.includes("ЦБ РФ") || res.date === "Live" || res.fallback === true);
   });
 
-  // 9. Graceful error handling for unknown currency
+  // 9. Official bank fallback caching
+  await it("getCrossRate fallback for pair without official bank (e.g. USD -> KZT official) caches with fallback flag", async () => {
+    const res = await getCrossRate("USD", "KZT", "official");
+    assert.strictEqual(res.success, true);
+    assert.ok(typeof res.rate === "number" && res.rate > 0);
+    assert.strictEqual(res.fallback, true);
+  });
+
+  // 10. Graceful error handling for unknown currency
   await it("getCrossRate handles unknown currency gracefully", async () => {
     const res = await getCrossRate("INVALID_COIN_XYZ", "USD", "market");
     assert.strictEqual(res.success, false);

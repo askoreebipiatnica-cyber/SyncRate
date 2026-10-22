@@ -135,7 +135,7 @@ async function startServer() {
     res.send(`<?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/updateflash/statustext/1.0' protocol='2.0'>
   <app appid='msjrecxeaytix2n65pvx6i'>
-    <updatecheck codebase='${safeCodebase}' version='1.0.0' />
+    <updatecheck codebase='${safeCodebase}' version='1.1.0' />
   </app>
 </gupdate>`);
   });
@@ -143,7 +143,7 @@ async function startServer() {
   // Version info
   app.get("/version.json", (req, res) => {
     res.json({
-      version: "1.0.0",
+      version: "1.1.0",
       notes: "Open Source Edition: Added National Banks and Top-30 Crypto support. Fully free, private, and open-source.",
       date: "2026-03-31"
     });
@@ -214,6 +214,11 @@ async function startServer() {
       console.error("Error handling feedback:", err);
       res.status(500).json({ success: false, error: "Internal server error" });
     }
+  });
+
+  // Feedback portal page route (serves the static feedback page when available)
+  app.get("/feedback", (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'public', 'feedback.html'));
   });
 
   // Serve static files from public

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SyncRate — Feedback Portal / Портал обратной связи</title>
+  <style>
+    :root { --bg: #0d1117; --text: #f0f6fc; --card: #161b22; --border: #30363d; --primary: #6e40c9; --subtext: #8b949e; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { width: 100%; max-width: 520px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p { color: var(--subtext); font-size: 13px; line-height: 1.5; }
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--subtext); margin: 14px 0 6px; text-transform: uppercase; }
+    input, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 13px; outline: none; font-family: inherit; }
+    textarea { resize: vertical; min-height: 96px; }
+    button { margin-top: 18px; width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    button:hover { background: #8957e5; }
+    #status { margin-top: 14px; font-size: 12px; font-weight: 600; }
+    #status.ok { color: #3fb950; }
+    #status.err { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>💬 SyncRate Feedback / Обратная связь</h1>
+    <p>Мы всегда рады конструктивной обратной связи. Опишите проблему или предложение — разработчик свяжется с вами.</p>
+    <form id="feedback-form">
+      <label for="name">Name / Имя</label>
+      <input id="name" name="name" type="text" maxlength="80" placeholder="Optional" />
+      <label for="email">Email (optional, for reply) / Email (необязательно)</label>
+      <input id="email" name="email" type="email" maxlength="120" placeholder="you@example.com" />
+      <label for="text">Message / Сообщение</label>
+      <textarea id="text" name="text" maxlength="2000" placeholder="Tell us about the issue or suggestion..." required></textarea>
+      <label for="stars">Rating / Оценка</label>
+      <select id="stars" name="stars"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — OK</option><option value="2">2 — Bad</option><option value="1">1 — Terrible</option></select>
+      <button type="submit">Send / Отправить</button>
+      <div id="status"></div>
+    </form>
+  </div>
+  <script>
+    const form = document.getElementById('feedback-form');
+    const statusEl = document.getElementById('status');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        text: document.getElementById('text').value.trim(),
+        stars: Number(document.getElementById('stars').value)
+      };
+      statusEl.className = '';
+      statusEl.textContent = 'Sending...';
+      try {
+        const res = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success) {
+          statusEl.className = 'ok';
+          statusEl.textContent = data.message || 'Thank you for your feedback!';
+          form.reset();
+        } else {
+          statusEl.className = 'err';
+          statusEl.textContent = (data && data.error) || 'Failed to send feedback.';
+        }
+      } catch (err) {
+        statusEl.className = 'err';
+        statusEl.textContent = 'Network error. Please try again later.';
+      }
+    });
+  </script>
+</body>
+</html>

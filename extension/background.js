@@ -268,6 +268,16 @@ async function getCrossRate(fromCode, targetCode, sourceCode) {
                     }
                 } catch (e) {
                     const fallbackResult = await getCrossRate(fromCode, targetCode, 'market');
+                    // Persist fallback (market) rate into cache so subsequent 'official' requests reuse it
+                    if (fallbackResult && fallbackResult.success) {
+                        try {
+                            if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+                                await chrome.storage.local.set({
+                                    [cacheKey]: { rate: fallbackResult.rate, date: fallbackResult.date, timestamp: Date.now() }
+                                });
+                            }
+                        } catch (storageErr) {}
+                    }
                     return { ...fallbackResult, fallback: true };
                 }
             }

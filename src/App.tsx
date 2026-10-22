@@ -746,10 +746,6 @@ export default function App() {
 
   const t = translations[lang];
 
-  const handleDownload = () => {
-    window.open('https://chromewebstore.google.com/detail/syncrate', '_blank');
-  };
-
   return (
     <div className="min-h-screen bg-[#0d1117] text-[#f0f6fc] font-sans selection:bg-[#6e40c9]/30 overflow-x-hidden">
       {/* Background Orbs */}
@@ -759,7 +755,7 @@ export default function App() {
       </div>
 
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-[#0d1117]/80 backdrop-blur-xl border-bottom border-[#30363d] px-6 py-4">
+      <nav className="sticky top-0 z-50 bg-[#0d1117]/80 backdrop-blur-xl border-b border-[#30363d] px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-[#6e40c9] to-[#8957e5] rounded-lg flex items-center justify-center">
@@ -1111,7 +1107,7 @@ export default function App() {
                         <Download className="w-6 h-6 animate-bounce" />
                       </div>
                       <div className="text-xs font-mono px-3 py-1 bg-[#0d1117] rounded-lg border border-[#30363d] text-[#58a6ff]">
-                        SyncRate.zip (1.0.0)
+                        SyncRate.zip (1.1.0)
                       </div>
                     </div>
                   )}

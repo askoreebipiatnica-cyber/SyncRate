@@ -118,6 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     langSel.value = state.lang;
+    populateCurrencies(targetSel, state.targetCurrency);
     targetSel.value = state.targetCurrency;
     sourceSel.value = state.rateSource;
     dashSels.forEach((sel, i) => {
@@ -166,6 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!DICT[currentLang]) currentLang = 'en';
 
                 translateUI();
+                populateCurrencies(targetSel, state.targetCurrency);
                 dashSels.forEach((sel, i) => populateCurrencies(sel, state.dashboardBases[i]));
                 loadDashboard();
             }, 1000);
